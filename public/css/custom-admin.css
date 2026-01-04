@@ -1,0 +1,176 @@
+/* Google Font: Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #4F46E5; /* Indigo 600 */
+    --primary-hover: #4338CA;
+    --secondary-color: #64748B; /* Slate 500 */
+    --success-color: #10B981;
+    --info-color: #3B82F6;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --light-bg: #F3F4F6;
+    --card-bg: #FFFFFF;
+    --text-main: #1F2937;
+    --text-muted: #6B7280;
+    --sidebar-bg: #1E293B; /* Slate 800 */
+    --sidebar-active: #4F46E5;
+}
+
+body {
+    font-family: 'Inter', sans-serif !important;
+    background-color: var(--light-bg) !important;
+    color: var(--text-main);
+}
+
+/* Navbar */
+.main-header {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.main-header .nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 500;
+}
+
+/* Sidebar */
+.main-sidebar {
+    background-color: var(--sidebar-bg) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+}
+
+.brand-link {
+    background-color: rgba(0,0,0,0.1) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+.nav-sidebar .nav-item .nav-link.active {
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4) !important;
+    font-weight: 600;
+}
+
+.nav-sidebar .nav-item .nav-link {
+    color: #CBD5E1 !important;
+}
+
+.nav-sidebar .nav-item .nav-link:hover {
+    background-color: rgba(255,255,255,0.05) !important;
+    color: #fff !important;
+}
+
+.nav-header {
+    color: #94A3B8 !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Content Wrapper */
+.content-wrapper {
+    background-color: var(--light-bg) !important;
+}
+
+/* Cards */
+.card {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    /* transform: translateY(-2px); */
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Small Boxes (Dashboard) */
+.small-box {
+    border-radius: 16px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+}
+
+.small-box .inner {
+    padding: 20px 24px;
+}
+
+.small-box h3 {
+    font-weight: 700;
+    font-size: 2.5rem;
+}
+
+.small-box p {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.small-box-footer {
+    background: rgba(0, 0, 0, 0.1) !important;
+    padding: 8px 0;
+    font-weight: 500;
+}
+
+/* Custom Colors for Small Boxes to match palette */
+.bg-info { background-color: var(--info-color) !important; }
+.bg-success { background-color: var(--success-color) !important; }
+.bg-warning { background-color: var(--warning-color) !important; color: #fff !important; }
+.bg-danger { background-color: var(--danger-color) !important; }
+.bg-primary { background-color: var(--primary-color) !important; }
+
+/* Tables */
+.table thead th {
+    border-top: none !important;
+    border-bottom: 2px solid #E5E7EB !important;
+    font-weight: 600;
+    color: var(--text-muted);
+    background-color: #F8FAFC;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.table td {
+    vertical-align: middle !important;
+    border-top: 1px solid #F1F5F9 !important;
+    color: var(--text-main);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px !important;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}

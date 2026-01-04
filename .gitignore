@@ -1,0 +1,48 @@
+# ------------------------------------------------
+# 1. KEAMANAN (Sangat Penting)
+# ------------------------------------------------
+# File .env berisi password & config database.
+# Jangan pernah di-upload! Gunakan .env.example sebagai contoh.
+.env
+.env.backup
+.env.production
+agents.md
+
+# ------------------------------------------------
+# 2. DEPENDENCIES (Composer)
+# ------------------------------------------------
+# Folder ini berisi ribuan file library. Cukup install via 'composer install'
+/vendor
+composer.phar
+
+# ------------------------------------------------
+# 3. STORAGE & DATABASE (Sesuai Request)
+# ------------------------------------------------
+# Abaikan database SQLite agar tidak menimpa data server saat pull/push
+/storage/*.sqlite
+/storage/*.db
+
+# Abaikan dokumen sensitif pelamar (KTP, Ijazah, dll)
+/storage/documents/*
+!/storage/documents/.gitkeep
+
+# Abaikan foto profil pelamar
+/storage/photos/*
+!/storage/photos/.gitkeep
+
+# Abaikan aset yang di-upload user (Logo/Favicon custom)
+/storage/assets/*
+!/storage/assets/.gitkeep
+
+# Abaikan cache atau log error jika ada
+/storage/logs/*
+/storage/cache/*
+
+# ------------------------------------------------
+# 4. SISTEM OPERASI & EDITOR
+# ------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
