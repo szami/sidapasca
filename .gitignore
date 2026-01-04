@@ -7,6 +7,7 @@
 .env.backup
 .env.production
 agents.md
+*.zip
 
 # ------------------------------------------------
 # 2. DEPENDENCIES (Composer)
