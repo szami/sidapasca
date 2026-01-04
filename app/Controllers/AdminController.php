@@ -11,7 +11,8 @@ class AdminController
     {
         // Render Admin Login View if not logged in
         if (!isset($_SESSION['admin'])) {
-            echo \App\Utils\View::render('auth.admin_login');
+            $error = isset($_GET['error']) ? 'Username atau password salah!' : null;
+            echo \App\Utils\View::render('auth.admin_login', ['error' => $error]);
             return;
         }
 

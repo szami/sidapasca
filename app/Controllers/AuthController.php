@@ -138,7 +138,7 @@ class AuthController
 
             response()->redirect('/admin');
         } else {
-            response()->redirect('/admin/login?error=1');
+            response()->redirect('/admin?error=1');
         }
     }
 
