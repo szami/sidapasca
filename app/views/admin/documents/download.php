@@ -252,6 +252,9 @@
                 
                 <!-- Action Column -->
                 <td class="text-center">
+                    <a href="/admin/participants/edit/${p.id}" target="_blank" class="btn btn-xs btn-warning mr-1" title="Edit Data Peserta">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
                     <a href="${externalLink}" target="_blank" class="btn btn-xs btn-primary" title="Cek di Server Utama (Administrator)">
                         <i class="fas fa-search"></i> View
                     </a>
