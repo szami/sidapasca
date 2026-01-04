@@ -127,6 +127,7 @@ class EmailService
             '{prodi}' => $participant['nama_prodi'] ?? '',
             '{semester}' => $participant['semester_nama'] ?? '',
             '{email}' => $participant['email'] ?? '',
+            '{no_billing}' => $participant['no_billing'] ?? '',
         ];
 
         return str_replace(array_keys($replacements), array_values($replacements), $text);

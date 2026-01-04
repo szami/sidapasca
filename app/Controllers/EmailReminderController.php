@@ -114,7 +114,8 @@ class EmailReminderController
         }
 
         // Actual mode - send to selected participants
-        $participantIds = Request::get('participant_ids', []); // Array of IDs
+        // Actual mode - send to selected participants
+        $participantIds = Request::get('participant_ids') ?? []; // Array of IDs
 
         if (empty($participantIds)) {
             header('Location: /admin/email/reminders/send?error=no_participants');

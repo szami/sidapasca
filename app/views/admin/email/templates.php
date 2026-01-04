@@ -75,7 +75,8 @@
             <form id="templateForm" method="POST">
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <strong>Placeholder:</strong> {nama}, {nomor_peserta}, {prodi}, {semester}, {email}
+                        <strong>Placeholder:</strong> {nama}, {nomor_peserta}, {prodi}, {semester}, {email},
+                        {no_billing}
                     </div>
 
                     <input type="hidden" id="templateId" name="id">

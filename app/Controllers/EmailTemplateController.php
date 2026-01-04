@@ -34,7 +34,8 @@ class EmailTemplateController
         $data = [
             'name' => Request::get('name'),
             'subject' => Request::get('subject'),
-            'body' => Request::get('body', false), // Don't sanitize HTML
+            // 'body' => Request::get('body', false), // Don't sanitize HTML
+            'body' => $_POST['body'] ?? '', // Use raw POST to ensure HTML is preserved and avoid type errors
             'description' => Request::get('description')
         ];
 
@@ -51,7 +52,8 @@ class EmailTemplateController
         $data = [
             'name' => Request::get('name'),
             'subject' => Request::get('subject'),
-            'body' => Request::get('body', false), // Don't sanitize HTML
+            // 'body' => Request::get('body', false), // Don't sanitize HTML
+            'body' => $_POST['body'] ?? '', // Use raw POST to ensure HTML is preserved and avoid type errors
             'description' => Request::get('description')
         ];
 
