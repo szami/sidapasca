@@ -140,65 +140,24 @@
                         </li>
 
                         <li class="nav-header">OPERASIONAL</li>
+                        <?php
+                        $role = \App\Utils\RoleHelper::getRole();
+                        $isSuperadmin = \App\Utils\RoleHelper::isSuperadmin();
+                        $isAdmin = \App\Utils\RoleHelper::isAdmin();
+                        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+                        ?>
+
+                        <!-- DASHBOARD - All users -->
                         <li class="nav-item">
-                            <a href="/admin/verification/physical" class="nav-link">
-                                <i class="nav-icon fas fa-check-double"></i>
-                                <p>Verifikasi Fisik</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/scheduler" class="nav-link">
-                                <i class="nav-icon fas fa-calendar-check"></i>
-                                <p>Penjadwalan Ujian</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/cat-schedule" class="nav-link">
-                                <i class="nav-icon fas fa-calendar-alt"></i>
-                                <p>Jadwal CAT</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/attendance-list" class="nav-link">
-                                <i class="nav-icon fas fa-clipboard-list"></i>
-                                <p>Daftar Hadir Peserta</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/attendance" class="nav-link">
-                                <i class="nav-icon fas fa-user-check"></i>
-                                <p>Presensi Ujian</p>
+                            <a href="/admin" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
                             </a>
                         </li>
 
-                        <li class="nav-header">EMAIL REMINDER</li>
-                        <li class="nav-item">
-                            <a href="/admin/email/config" class="nav-link">
-                                <i class="nav-icon fas fa-cog"></i>
-                                <p>Konfigurasi Email</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/email/templates" class="nav-link">
-                                <i class="nav-icon fas fa-file-invoice"></i>
-                                <p>Template Email</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/email/reminders/send" class="nav-link">
-                                <i class="nav-icon fas fa-paper-plane"></i>
-                                <p>Kirim Reminder</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/email/reminders" class="nav-link">
-                                <i class="nav-icon fas fa-history"></i>
-                                <p>Riwayat Reminder</p>
-                            </a>
-                        </li>
-
-                        <?php if (($_SESSION['admin_role'] ?? 'superadmin') === 'superadmin'): ?>
-                            <li class="nav-header">DATA MASTER</li>
+                        <!-- MASTER DATA - Admin & Superadmin only -->
+                        <?php if (!$isAdminProdi): ?>
+                            <li class="nav-header">MASTER DATA</li>
                             <li class="nav-item">
                                 <a href="/admin/semesters" class="nav-link">
                                     <i class="nav-icon fas fa-calendar-alt"></i>
@@ -206,17 +165,86 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="/admin/master/rooms" class="nav-link">
+                                <a href="/admin/exam-rooms" class="nav-link">
                                     <i class="nav-icon fas fa-door-open"></i>
                                     <p>Ruang Ujian</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="/admin/master/sessions" class="nav-link">
+                                <a href="/admin/exam-sessions" class="nav-link">
                                     <i class="nav-icon fas fa-clock"></i>
                                     <p>Sesi Ujian</p>
                                 </a>
                             </li>
+                        <?php endif; ?>
+
+                        <!-- PARTICIPANTS - All users -->
+                        <li class="nav-header">
+                            <?php echo $isAdminProdi ? 'DATA PRODI' : 'PESERTA'; ?>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/participants" class="nav-link">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Data Peserta</p>
+                            </a>
+                        </li>
+
+                        <!-- EXAM MANAGEMENT - Admin & Superadmin only -->
+                        <?php if (!$isAdminProdi): ?>
+                            <li class="nav-item">
+                                <a href="/admin/exam-scheduler" class="nav-link">
+                                    <i class="nav-icon fas fa-user-check"></i>
+                                    <p>Jadwalkan Ujian</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/exam-card" class="nav-link">
+                                    <i class="nav-icon fas fa-id-card"></i>
+                                    <p>Kartu Ujian</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/attendance" class="nav-link">
+                                    <i class="nav-icon fas fa-clipboard-check"></i>
+                                    <p>Kehadiran Ujian</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- REPORTS - All users -->
+                        <li class="nav-header">LAPORAN</li>
+                        <li class="nav-item">
+                            <a href="/admin/reports" class="nav-link">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Laporan</p>
+                            </a>
+                        </li>
+
+                        <!-- EMAIL - Admin & Superadmin only -->
+                        <?php if (!$isAdminProdi): ?>
+                            <li class="nav-header">KOMUNIKASI</li>
+                            <li class="nav-item">
+                                <a href="/admin/email/config" class="nav-link">
+                                    <i class="nav-icon fas fa-envelope-open-text"></i>
+                                    <p>Konfigurasi Email</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/email/templates" class="nav-link">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>Template Email</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/email/reminders" class="nav-link">
+                                    <i class="nav-icon fas fa-paper-plane"></i>
+                                    <p>Reminder Email</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- TOOLS - Admin & Superadmin only -->
+                        <?php if (!$isAdminProdi): ?>
                             <li class="nav-header">TOOLS</li>
 
                             <li class="nav-item">
@@ -232,13 +260,22 @@
                                 </a>
                             </li>
 
-
                             <li class="nav-item">
                                 <a href="/admin/participants/export" class="nav-link">
                                     <i class="nav-icon fas fa-file-excel"></i>
                                     <p>Export Data</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="/admin/documents/download" class="nav-link">
+                                    <i class="nav-icon fas fa-file-archive"></i>
+                                    <p>Download Berkas</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- SYSTEM SETTINGS - Admin & Superadmin only -->
+                        <?php if (!$isAdminProdi): ?>
                             <li class="nav-header">PENGATURAN SYSTEM</li>
                             <li class="nav-item">
                                 <a href="/admin/exam-card/design" class="nav-link">
@@ -252,6 +289,16 @@
                                     <p>Pengaturan</p>
                                 </a>
                             </li>
+                        <?php endif; ?>
+
+                        <!-- User Management - Superadmin only -->
+                        <?php if ($isSuperadmin): ?>
+                            <li class="nav-item">
+                                <a href="/admin/users" class="nav-link">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>Manajemen User</p>
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a href="/admin/system/update" class="nav-link">
                                     <i class="nav-icon fas fa-sync"></i>
@@ -259,6 +306,15 @@
                                 </a>
                             </li>
                         <?php endif; ?>
+
+                        <!-- Change Password - All users -->
+                        <li class="nav-header">AKUN</li>
+                        <li class="nav-item">
+                            <a href="/admin/change-password" class="nav-link">
+                                <i class="nav-icon fas fa-key"></i>
+                                <p>Ganti Password</p>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
                 <!-- /.sidebar-menu -->
@@ -288,7 +344,15 @@
 
         <footer class="main-footer">
             <div class="float-right d-none d-sm-block">
-                <b>Version</b> 1.0.0
+                <?php
+                $versionFile = __DIR__ . '/../../../version.json';
+                $version = '1.0.0';
+                if (file_exists($versionFile)) {
+                    $versionData = json_decode(file_get_contents($versionFile), true);
+                    $version = $versionData['version'] ?? '1.0.0';
+                }
+                ?>
+                <b>Version</b> <?php echo $version; ?>
             </div>
             <strong>Copyright &copy; <?php echo date('Y'); ?> <a href="#">Pascasarjana ULM</a>.</strong> All rights
             reserved.

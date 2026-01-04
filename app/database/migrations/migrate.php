@@ -249,6 +249,52 @@ try {
         }
     }
 
+    // 12. Add role and prodi_id to users table (User Management System)
+    echo "Checking users table for role management columns...\n";
+    $cols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasRole = false;
+    $hasProdiId = false;
+
+    foreach ($cols as $col) {
+        if ($col['name'] === 'role')
+            $hasRole = true;
+        if ($col['name'] === 'prodi_id')
+            $hasProdiId = true;
+    }
+
+    if (!$hasRole) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'admin'");
+        echo "Added role column to users.\n";
+    } else {
+        echo "Column role already exists.\n";
+    }
+
+    if (!$hasProdiId) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN prodi_id VARCHAR(50) NULL");
+        echo "Added prodi_id column to users.\n";
+    } else {
+        echo "Column prodi_id already exists.\n";
+    }
+
+    // Upgrade existing admin to superadmin
+    $pdo->exec("UPDATE users SET role = 'superadmin' WHERE username = 'admin' AND role != 'superadmin'");
+    echo "Ensured admin user has superadmin role.\n";
+
+    // 13. Update Logs Table (NEW - Auto Update System)
+    $update_logs = "CREATE TABLE IF NOT EXISTS update_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        version_from VARCHAR(20),
+        version_to VARCHAR(20),
+        status VARCHAR(20),
+        message TEXT,
+        performed_by INTEGER,
+        backup_file VARCHAR(255),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(performed_by) REFERENCES users(id)
+    )";
+    $pdo->exec($update_logs);
+    echo "Update Logs table migrated.\n";
+
     // Seed Admin
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :u");
     $stmt->execute([':u' => 'admin']);

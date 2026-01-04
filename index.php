@@ -116,6 +116,24 @@ $app->get('/admin/email/reminders/{id}', 'App\Controllers\EmailReminderControlle
 
 $app->get('/admin/system/update', 'App\Controllers\SystemController@update');
 $app->post('/admin/system/perform-update', 'App\Controllers\SystemController@performUpdate');
+$app->get('/admin/system/check-update', 'App\Controllers\SystemController@checkUpdate');
+
+// --- Admin - User Management (Superadmin only) ---
+$app->get('/admin/users', 'App\Controllers\UserController@index');
+$app->get('/admin/users/create', 'App\Controllers\UserController@create');
+$app->post('/admin/users/store', 'App\Controllers\UserController@store');
+$app->get('/admin/users/edit/{id}', 'App\Controllers\UserController@edit');
+$app->post('/admin/users/update/{id}', 'App\Controllers\UserController@update');
+$app->get('/admin/users/delete/{id}', 'App\Controllers\UserController@destroy');
+
+// --- Change Password (All users) ---
+$app->get('/admin/change-password', 'App\Controllers\UserController@changePasswordForm');
+$app->post('/admin/change-password', 'App\Controllers\UserController@changePassword');
+
+// --- Document Download (Admin & Superadmin) ---
+$app->get('/admin/documents/download', 'App\Controllers\DocumentDownloadController@index');
+$app->post('/admin/documents/preview', 'App\Controllers\DocumentDownloadController@preview');
+$app->post('/admin/documents/generate-zip', 'App\Controllers\DocumentDownloadController@generateZip');
 
 // --- Admin - Participants ---
 // Participant CRUD Routes

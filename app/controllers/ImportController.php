@@ -457,6 +457,12 @@ class ImportController
             'semester_id' => $semesterId
         ];
 
+        // LOGIC: Jika ada nomor peserta, berarti sudah bayar
+        // Nomor peserta hanya diberikan ke peserta yang sudah melakukan pembayaran
+        if (!empty($nomor_peserta)) {
+            $updateData['status_pembayaran'] = 1;
+        }
+
         // Payment Check - ONLY if mode is 'full' (or standard/custom status handles it)
         // If importMode is 'update_no_peserta', we SKIP payment check.
         // If importMode is 'full' (Standard/Status), we check payment.

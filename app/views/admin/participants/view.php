@@ -99,9 +99,11 @@
                 </div>
             </div>
             <div class="text-right">
-                <a href="/admin/participants/edit/<?php echo $p['id']; ?>" class="btn btn-light btn-lg">
-                    <i class="fas fa-edit mr-2"></i>Edit Data
-                </a>
+                <?php if ((\App\Utils\RoleHelper::isSuperadmin())): ?>
+                    <a href="/admin/participants/edit/<?php echo $p['id']; ?>" class="btn btn-light btn-lg">
+                        <i class="fas fa-edit mr-2"></i>Edit Data
+                    </a>
+                <?php endif; ?>
                 <a href="/admin/participants" class="btn btn-outline-light btn-lg ml-2">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali
                 </a>
@@ -419,8 +421,8 @@
                             </a>
                         </div>
                         <div class="border rounded" style="height: 700px; overflow: auto;">
-                            <iframe src="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>" 
-                                width="100%" height="100%" style="border: none;">
+                            <iframe src="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>" width="100%"
+                                height="100%" style="border: none;">
                             </iframe>
                         </div>
                     <?php else: ?>
@@ -479,13 +481,13 @@
                                     <i class="fas fa-file-pdf mr-1 text-primary"></i>
                                     <?php echo htmlspecialchars($p['transkrip_s2_filename']); ?>
                                 </h6>
-                                <a href="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>" target="_blank"
-                                    class="btn btn-sm btn-primary">
+                                <a href="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
+                                    target="_blank" class="btn btn-sm btn-primary">
                                     <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
                                 </a>
                             </div>
                             <div class="border rounded" style="height: 700px; overflow: auto;">
-                                <iframe src="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>" 
+                                <iframe src="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
                                     width="100%" height="100%" style="border: none;">
                                 </iframe>
                             </div>

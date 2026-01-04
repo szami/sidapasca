@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "updated_at": "2026-01-04 00:06:00",
+    "git_commit": null,
+    "git_branch": "main",
+    "history": [
+        {
+            "version": "1.0.0",
+            "date": "2026-01-04 00:06:00",
+            "user": "admin",
+            "status": "initial"
+        }
+    ]
+}

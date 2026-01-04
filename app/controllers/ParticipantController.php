@@ -30,6 +30,7 @@ class ParticipantController
         // Default filter logic based on the new menu grouping
         $filter = Request::get('filter') ?? 'exam_ready';
         $prodiFilter = Request::get('prodi') ?? 'all'; // NEW: Prodi filter
+        $paymentFilter = Request::get('payment') ?? 'all'; // NEW: Payment filter
         $hideExamNumber = false;
         $hideBilling = false;
         $hidePaymentStatus = false;
@@ -43,6 +44,8 @@ class ParticipantController
         switch ($filter) {
             case 'exam_ready':
                 $whereClause .= " AND (p.nomor_peserta IS NOT NULL AND p.nomor_peserta != '')";
+                $hideBilling = true; // Hide billing since they already paid
+                $hidePaymentStatus = true; // Hide payment status (already paid)
                 $title = "Data Peserta Ujian";
                 break;
             case 'pending':
@@ -53,9 +56,10 @@ class ParticipantController
                 $title = "Formulir Masuk (Pending)";
                 break;
             case 'lulus':
-                $whereClause .= " AND p.status_berkas = 'lulus' AND (p.nomor_peserta IS NULL OR p.nomor_peserta = '')";
-                $hideExamNumber = true;
-                $title = "Peserta Lulus Berkas (Belum No. Ujian)";
+                // Show ALL lulus berkas (regardless of payment/exam number)
+                $whereClause .= " AND p.status_berkas = 'lulus'";
+                $hideExamNumber = true; // Hide exam number since not all have it yet
+                $title = "Peserta Lulus Berkas";
                 break;
             case 'gagal':
                 $whereClause .= " AND p.status_berkas = 'gagal'";
@@ -69,11 +73,26 @@ class ParticipantController
                 break;
         }
 
+        // NEW: Payment status filter
+        if ($paymentFilter === 'paid') {
+            $whereClause .= " AND p.status_pembayaran = 1";
+        } elseif ($paymentFilter === 'unpaid') {
+            $whereClause .= " AND (p.status_pembayaran = 0 OR p.status_pembayaran IS NULL)";
+        }
+
         // NEW: Add prodi filter
         if ($prodiFilter !== 'all') {
             // Escape prodi name for SQL safety
             $prodiFilterEscaped = str_replace("'", "''", $prodiFilter);
             $whereClause .= " AND p.nama_prodi = '$prodiFilterEscaped'";
+        }
+
+        // ROLE-BASED: Auto-filter by prodi for admin_prodi
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $adminProdiId = \App\Utils\RoleHelper::getProdiId();
+            if ($adminProdiId) {
+                $whereClause .= " AND p.kode_prodi = '$adminProdiId'";
+            }
         }
 
         // Get distinct prodi list for filter dropdown with counts (from active semester only)
@@ -96,16 +115,30 @@ class ParticipantController
 
         $participants = $db->query($sql)->fetchAll();
 
+        // Pass permission info to view
+        $canCRUD = \App\Utils\RoleHelper::canCRUD();
+        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+        $prodiName = '';
+
+        if ($isAdminProdi && !empty($participants)) {
+            // Get prodi name from first participant
+            $prodiName = $participants[0]['nama_prodi'] ?? '';
+        }
+
         echo \App\Utils\View::render('admin.participants.index', [
             'participants' => $participants,
             'activeSemester' => $activeSemester,
             'filter' => $filter,
             'prodiFilter' => $prodiFilter, // NEW
+            'paymentFilter' => $paymentFilter, // NEW
             'prodiList' => $prodiList, // NEW
             'hideExamNumber' => $hideExamNumber,
             'hideBilling' => $hideBilling,
             'hidePaymentStatus' => $hidePaymentStatus,
-            'pageTitle' => $title
+            'pageTitle' => $title,
+            'canCRUD' => $canCRUD,
+            'isAdminProdi' => $isAdminProdi,
+            'prodiName' => $prodiName
         ]);
     }
 

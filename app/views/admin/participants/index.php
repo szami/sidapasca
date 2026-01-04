@@ -24,32 +24,8 @@
             <div class="card-body">
                 <!-- Filter Section -->
                 <div class="row mb-4">
-                    <div class="col-md-8">
-                        <label class="font-weight-bold"><i class="fas fa-filter mr-1"></i>  Filter Status Berkas</label>
-                        <div class="btn-group d-block" role="group">
-                            <a href="?filter=all&prodi=<?php echo $prodiFilter; ?>" 
-                               class="btn btn-sm <?php echo $filter === 'all' ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                                📋 Semua
-                            </a>
-                            <a href="?filter=pending&prodi=<?php echo $prodiFilter; ?>" 
-                               class="btn btn-sm <?php echo $filter === 'pending' ? 'btn-warning' : 'btn-outline-warning'; ?>">
-                                📝 Formulir Masuk
-                            </a>
-                            <a href="?filter=gagal&prodi=<?php echo $prodiFilter; ?>" 
-                               class="btn btn-sm <?php echo $filter === 'gagal' ? 'btn-danger' : 'btn-outline-danger'; ?>">
-                                ❌ Gagal Pemberkasan
-                            </a>
-                            <a href="?filter=lulus&prodi=<?php echo $prodiFilter; ?>" 
-                               class="btn btn-sm <?php echo $filter === 'lulus' ? 'btn-success' : 'btn-outline-success'; ?>">
-                                ✅ Lulus Pemberkasan
-                            </a>
-                            <a href="?filter=exam_ready&prodi=<?php echo $prodiFilter; ?>" 
-                               class="btn btn-sm <?php echo $filter === 'exam_ready' ? 'btn-info' : 'btn-outline-info'; ?>">
-                                🎫 Peserta Ujian
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
+                    <?php if (!($isAdminProdi ?? false)): ?>
+                    <div class="col-md-6">
                         <label class="font-weight-bold"><i class="fas fa-graduation-cap mr-1"></i> Program Studi</label>
                         <select id="prodiFilter" class="form-control form-control-sm" onchange="filterByProdi()">
                             <option value="all" <?php echo $prodiFilter === 'all' ? 'selected' : ''; ?>>
@@ -64,10 +40,42 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php else: ?>
+                    <div class="col-md-6">
+                        <label class="font-weight-bold"><i class="fas fa-graduation-cap mr-1"></i> Program Studi Anda</label>
+                        <div class="alert alert-info mb-0 py-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong><?php echo htmlspecialchars($prodiName ?? 'Prodi Anda'); ?></strong>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
+                <!-- Payment Status Filter - Only show for "lulus" filter -->
+                <?php if ($filter === 'lulus'): ?>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="font-weight-bold"><i class="fas fa-money-bill-wave mr-1"></i> Filter Status Pembayaran</label>
+                        <div class="btn-group d-block" role="group">
+                            <a href="?filter=<?php echo $filter; ?>&prodi=<?php echo $prodiFilter; ?>&payment=all" 
+                               class="btn btn-sm <?php echo ($paymentFilter ?? 'all') === 'all' ? 'btn-secondary' : 'btn-outline-secondary'; ?>">
+                                📊 Semua
+                            </a>
+                            <a href="?filter=<?php echo $filter; ?>&prodi=<?php echo $prodiFilter; ?>&payment=paid" 
+                               class="btn btn-sm <?php echo ($paymentFilter ?? 'all') === 'paid' ? 'btn-success' : 'btn-outline-success'; ?>">
+                                ✅ Lunas
+                            </a>
+                            <a href="?filter=<?php echo $filter; ?>&prodi=<?php echo $prodiFilter; ?>&payment=unpaid" 
+                               class="btn btn-sm <?php echo ($paymentFilter ?? 'all') === 'unpaid' ? 'btn-warning' : 'btn-outline-warning'; ?>">
+                                ⏳ Belum Bayar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Active Filters Display -->
-                <?php if ($filter !== 'all' || $prodiFilter !== 'all'): ?>
+                <?php if ($filter !== 'all' || $prodiFilter !== 'all' || ($paymentFilter ?? 'all') !== 'all'): ?>
                     <div class="alert alert-info alert-dismissible mb-3 py-2">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                         <strong><i class="fas fa-filter mr-1"></i> Filter Aktif:</strong>
@@ -77,7 +85,12 @@
                         <?php if ($prodiFilter !== 'all'): ?>
                             <span class="badge badge-primary"><?php echo htmlspecialchars($prodiFilter); ?></span>
                         <?php endif; ?>
-                        <a href="?filter=all&prodi=all" class="badge badge-secondary ml-2">
+                        <?php if (($paymentFilter ?? 'all') !== 'all'): ?>
+                            <span class="badge badge-<?php echo $paymentFilter === 'paid' ? 'success' : 'warning'; ?>">
+                                Pembayaran: <?php echo $paymentFilter === 'paid' ? 'Lunas' : 'Belum Bayar'; ?>
+                            </span>
+                        <?php endif; ?>
+                        <a href="?filter=all&prodi=all&payment=all" class="badge badge-secondary ml-2">
                             <i class="fas fa-times"></i> Reset Semua Filter
                         </a>
                     </div>

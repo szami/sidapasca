@@ -2,7 +2,7 @@
 
 **Sistem Informasi & Data Admisi Program Pascasarjana Universitas Lambung Mangkurat**
 
-![Version](https://img.shields.io/badge/version-1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?logo=php)
 ![Database](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)
 ![Status](https://img.shields.io/badge/status-production-success)
@@ -15,7 +15,7 @@ SIDA Pasca ULM is a comprehensive web-based application designed to manage the a
 
 **Live Environment:** `http://pmb-pps-ulm.test`  
 **Timezone:** Asia/Makassar (WITA / UTC+8)  
-**Current Version:** v1.0.1 (Production)
+**Current Version:** v1.0.2 (Production)
 
 ---
 
@@ -25,13 +25,15 @@ SIDA Pasca ULM is a comprehensive web-based application designed to manage the a
 - **📊 Dashboard Monitoring**: Real-time statistics of admission data per program
 - **👥 Participant Management**: Complete CRUD operations with advanced filtering
 - **📥 Excel Import**: Bulk import for registration, status updates, and payment data
+- **📤 Excel Export**: Detailed recapitulation of particpant data (biodata, education, docs)
 - **✅ Document Verification**: Physical document verification workflow with checklist
 - **🏛️ Exam Room Management**: Configure exam rooms with capacity management
 - **📅 Exam Scheduling**: Assign participants to exam sessions and rooms
 - **📝 Attendance Tracking**: Record and manage exam attendance
 - **📧 Email Reminder System**: Send mass notifications with template builder
 - **🎫 CAT Schedule**: Print exam schedules for posting at room entrances
-- **⚙️ System Settings**: Configurable branding (logo, favicon, app name)
+- **📄 Dynamic PDF Generator**: Cards & Forms with configurable letterhead & single-page layout
+- **⚙️ System Settings**: Configurable branding (logo, favicon, app name, letterheads)
 - **💾 Database Tools**: Backup, restore, and semester-based data cleanup
 
 ### Participant Features
@@ -44,7 +46,7 @@ SIDA Pasca ULM is a comprehensive web-based application designed to manage the a
 - **🔄 Multi-semester Support**: Manage multiple admission periods
 - **💳 Payment Tracking**: Transaction ID, payment date, and method recording
 - **📎 Document Management**: Upload and manage applicant documents (KTP, Ijazah, Transkrip, Photo)
-- **🎨 Customizable Templates**: Dynamic exam card templates
+- **🎨 Customizable Templates**: Dynamic exam card & form templates with HTML support
 - **🔒 Security**: bcrypt password hashing, SQL injection protection, session-based auth
 
 ---

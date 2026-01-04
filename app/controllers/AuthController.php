@@ -80,23 +80,31 @@ class AuthController
 
     public function adminLogin()
     {
-        // Admin specific login if needed, or unified.
         // For simplicity, let's say /admin has basic auth or a separate login.
         // agents.md implies "users (Admin login)".
         // Let's make a simple Basic Auth or hardcoded for now, or use Leaf Auth properly?
         // "Auth: Gunakan Session management bawaan Leaf."
 
-        // Let's implement Admin Login route logic here if posted
-        $username = Request::get('username');
-        $password = Request::get('password');
+        // Let's implement Admin Login route
+        $username = request()->get('username');
+        $password = request()->get('password');
 
         $user = \App\Models\User::where('username', $username)->first();
+
         if ($user && password_verify($password, $user['password'])) {
+            // Set session variables with role information
             $_SESSION['admin'] = $user['id'];
-            $_SESSION['admin_role'] = $user['role'] ?? 'superadmin'; // Default fallback
+            $_SESSION['admin_role'] = $user['role'] ?? 'admin'; // Default to admin if no role
+            $_SESSION['admin_username'] = $user['username'];
+
+            // Set prodi_id if admin_prodi
+            if ($user['role'] === 'admin_prodi' && isset($user['prodi_id'])) {
+                $_SESSION['admin_prodi_id'] = $user['prodi_id'];
+            }
+
             response()->redirect('/admin');
         } else {
-            response()->redirect('/admin?error=1'); // /admin shows login if not auth
+            response()->redirect('/admin/login?error=1');
         }
     }
 

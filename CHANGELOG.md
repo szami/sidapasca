@@ -15,6 +15,39 @@ First stable production release of SIDA Pasca ULM (Sistem Informasi & Data Admis
 
 ---
 
+## [1.0.2] - 2026-01-04
+
+### 🔧 Fixed & Enhanced - PDF Generation
+- **Registration Form Optimization**:
+  - Implemented single-page layout for efficiency.
+  - Removed unwanted borders and gray background for a cleaner "paper-like" look.
+  - Fixed photo cropping issues by allowing dynamic page sizing.
+  - Reduced font sizes and padding for compact presentation.
+  
+- **Dynamic Letterhead**:
+  - Implemented `[kop_surat]` placeholder support in Exam Cards.
+  - Added logic to fetch letterhead from `exam_card_letterhead` or `exam_form_letterhead` settings.
+  - Fallback to default letterhead if setting is empty.
+  
+- **Photo Path Resolution**:
+  - Fixed incorrect path depth in `ExamCardGenerator` ensuring photos display correctly.
+
+### 📊 Enhanced - Excel Recapitulation
+- **Expanded Data Points**:
+  - Added comprehensive biodata columns: Place/Date of Birth, Full Address, Contact Info, Job Details.
+  - Added full education history (S1 & S2): Year In/Out, University, Faculty, Program, GPA, Title.
+  
+- **Format Improvements**:
+  - Formatted "Date of Birth" to `dd-mm-yyyy`.
+  - Removed "Status Pemberkasan" column as requested.
+  - Retained and styled valid documentation checklist.
+
+### 🐛 Fixed
+- **Exam Card**: Fixed `[kop_surat]` not being replaced in the template parser.
+- **Registration Form**: Fixed `page` CSS causing overflow and cutoff in DOMPDF.
+
+---
+
 ## [1.0.1] - 2026-01-04
 
 ### 🎉 Added - Email Reminder System
