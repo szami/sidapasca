@@ -127,7 +127,8 @@
                             </div>
                             <div class="text-white">
                                 <h4 class="font-bold">Login Sistem</h4>
-                                <p class="text-sm text-blue-200">Gunakan akun dari admisipasca</p>
+                                <p class="text-sm text-blue-200">Silakan isi informasi sesuai yang terdata di
+                                    admisipasca.ulm.ac.id</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-4 mb-6">
@@ -137,7 +138,7 @@
                             </div>
                             <div class="text-white">
                                 <h4 class="font-bold">Cek Data</h4>
-                                <p class="text-sm text-blue-200">Pastikan biodata anda benar</p>
+                                <p class="text-sm text-blue-200">Pastikan data anda benar</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-4">

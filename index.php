@@ -169,7 +169,19 @@ $app->get('/dashboard', function () {
     }
     // Load Participant Data
     $participant = \App\Models\Participant::find($_SESSION['user']);
-    echo \App\Utils\View::render('participant.dashboard', ['participant' => $participant]);
+
+    // Fetch Exam Room Info if assigned
+    $examRoom = null;
+    if (!empty($participant['ruang_ujian'])) {
+        // Query manually since we don't have a direct relationship method yet
+        $db = \App\Utils\Database::connection();
+        $examRoom = $db->query("SELECT * FROM exam_rooms WHERE nama_ruang = ?", [$participant['ruang_ujian']])->first();
+    }
+
+    echo \App\Utils\View::render('participant.dashboard', [
+        'participant' => $participant,
+        'examRoom' => $examRoom
+    ]);
 });
 // Exam Card
 $app->get('/participant/exam-card', 'App\Controllers\ExamCardController@download');

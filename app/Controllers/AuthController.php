@@ -51,10 +51,44 @@ class AuthController
         }
 
         // Validate DOB (Password)
-        if ($participant['tgl_lahir'] !== $password) {
+        // Validate DOB (Password)
+        // Check strict string equality first (fastest)
+        $isValidDate = false;
+
+        // DB is YYYY-MM-DD
+        if ($participant['tgl_lahir'] === $password) {
+            $isValidDate = true;
+        } else {
+            // Flexible parsing to handle browser input (Y-m-d) vs User Expectation
+            try {
+                // 1. Normalize Database Date
+                $dbDateObj = date_create($participant['tgl_lahir']);
+                $dbDateStandard = $dbDateObj ? date_format($dbDateObj, 'Y-m-d') : null;
+
+                // 2. Normalize Input Date
+                // HTML5 input type="date" sends Y-m-d
+                $inputDateObj = date_create_from_format('Y-m-d', $password);
+
+                // If not Y-m-d, try d-m-Y (fallback)
+                if (!$inputDateObj) {
+                    $inputDateObj = date_create_from_format('d-m-Y', $password);
+                }
+
+                $inputDateStandard = $inputDateObj ? date_format($inputDateObj, 'Y-m-d') : 'invalid';
+
+                // Compare normalized Y-m-d strings
+                if ($dbDateStandard && $inputDateStandard && $dbDateStandard === $inputDateStandard) {
+                    $isValidDate = true;
+                }
+            } catch (\Exception $e) {
+                // Ignore parsing errors
+            }
+        }
+
+        if (!$isValidDate) {
             $captcha = \App\Utils\SimpleCaptcha::generate();
             echo \App\Utils\View::render('auth.login', [
-                'errors' => ['Tanggal lahir salah (Format: YYYY-MM-DD)'],
+                'errors' => ['Tanggal lahir salah. Pastikan tanggal lahir sesuai dengan data pendaftaran (dd-mm-yyyy).'],
                 'captcha' => $captcha
             ]);
             return;
