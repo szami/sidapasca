@@ -44,7 +44,9 @@ class EmailReminder
 
     public static function create($data)
     {
-        return Database::connection()->insert('email_reminders')->params($data)->execute();
+        $db = Database::connection();
+        $db->insert('email_reminders')->params($data)->execute();
+        return $db->lastInsertId();
     }
 
     public static function updateStatus($id, $status, $counts = [])
@@ -80,7 +82,9 @@ class EmailReminder
 
     public static function createLog($data)
     {
-        return Database::connection()->insert('email_logs')->params($data)->execute();
+        $db = Database::connection();
+        $db->insert('email_logs')->params($data)->execute();
+        return $db->lastInsertId();
     }
 
     public static function updateLog($id, $status, $errorMessage = null)
