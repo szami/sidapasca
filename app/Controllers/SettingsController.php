@@ -20,12 +20,14 @@ class SettingsController
 
         // Get current settings
         $allow_download = Setting::get('allow_exam_card_download', '0');
+        $allow_delete = Setting::get('allow_delete', '1');
 
         // Get all semesters for clean database feature
         $semesters = \App\Models\Semester::all();
 
         echo View::render('admin.settings.index', [
             'allow_download' => $allow_download,
+            'allow_delete' => $allow_delete,
             'semesters' => $semesters
         ]);
     }
@@ -39,9 +41,11 @@ class SettingsController
 
         // Handle Checkbox
         $allow_download = isset($data['allow_exam_card_download']) ? '1' : '0';
+        $allow_delete = isset($data['allow_delete']) ? '1' : '0';
 
         Setting::ensureTableExists();
         Setting::set('allow_exam_card_download', $allow_download);
+        Setting::set('allow_delete', $allow_delete);
 
         // Save App Name & Timezone
         if (isset($data['app_name'])) {

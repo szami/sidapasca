@@ -101,9 +101,11 @@ class DocumentDownloadController
                 'id' => $p['id'],
                 'nomor_peserta' => $p['nomor_peserta'] ?? '-',
                 'nama_lengkap' => $p['nama_lengkap'],
+                'email' => $p['email'] ?? '-',
                 'nama_prodi' => $p['nama_prodi'],
                 'status_berkas' => $p['status_berkas'],
-                'docs' => $docs
+                'docs' => $docs,
+                'is_s3' => (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false)
             ];
 
             // Estimate size (rough)

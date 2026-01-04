@@ -207,9 +207,11 @@
                                         <?php if (($_SESSION['admin_role'] ?? 'superadmin') === 'superadmin'): ?>
                                             <a href="/admin/participants/edit/<?php echo $p['id']; ?>"
                                                 class="btn btn-xs btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
-                                            <a href="/admin/participants/delete/<?php echo $p['id']; ?>"
-                                                class="btn btn-xs btn-danger" onclick="return confirm('Hapus data ini?')"
-                                                title="Hapus"><i class="fas fa-trash"></i></a>
+                                            <?php if (\App\Models\Setting::get('allow_delete', '1') == '1'): ?>
+                                                <a href="/admin/participants/delete/<?php echo $p['id']; ?>"
+                                                    class="btn btn-xs btn-danger" onclick="return confirm('Hapus data ini?')"
+                                                    title="Hapus"><i class="fas fa-trash"></i></a>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>

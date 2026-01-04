@@ -204,14 +204,33 @@
         const statusFilter = document.getElementById('statusFilter');
         document.getElementById('previewStatus').textContent = statusFilter.options[statusFilter.selectedIndex].text;
 
+        const thead = document.querySelector('#previewTable thead tr');
+        thead.innerHTML = `
+            <th>No</th>
+            <th>No Peserta</th>
+            <th>Nama</th>
+            <th>Prodi</th>
+            <th>Status</th>
+            <th class="text-center">Form</th>
+            <th class="text-center">KTP</th>
+            <th class="text-center">Foto</th>
+            <th class="text-center">Ijz S1</th>
+            <th class="text-center">Trn S1</th>
+            <th class="text-center">Kartu</th>
+            <th class="text-center bg-light">Ijz S2</th>
+            <th class="text-center bg-light">Trn S2</th>
+            <th class="text-center">Aksi</th>
+        `;
+
         const tbody = document.getElementById('previewTableBody');
         tbody.innerHTML = '';
 
         data.participants.forEach((p, index) => {
-            const isS3 = p.docs.ijazah_s2 !== null;
-            const s2Status = isS3 ?
-                (p.docs.ijazah_s2 && p.docs.transkrip_s2 ? '✅' : '❌') :
-                '-';
+            // S3 Logic
+            const isS3 = p.is_s3;
+
+            // Link to external system (using email/1 per user request)
+            const externalLink = `https://admisipasca.ulm.ac.id/administrator/formulir/view/${p.email}/1`;
 
             const row = `
             <tr>
@@ -226,7 +245,17 @@
                 <td class="text-center">${p.docs.ijazah_s1 ? '✅' : '❌'}</td>
                 <td class="text-center">${p.docs.transkrip_s1 ? '✅' : '❌'}</td>
                 <td class="text-center">${p.docs.kartu ? '✅' : '❌'}</td>
-                <td class="text-center">${s2Status}</td>
+                
+                <!-- S3 Columns -->
+                <td class="text-center bg-light">${isS3 ? (p.docs.ijazah_s2 ? '✅' : '❌') : '-'}</td>
+                <td class="text-center bg-light">${isS3 ? (p.docs.transkrip_s2 ? '✅' : '❌') : '-'}</td>
+                
+                <!-- Action Column -->
+                <td class="text-center">
+                    <a href="${externalLink}" target="_blank" class="btn btn-xs btn-primary" title="Cek di Server Utama (Administrator)">
+                        <i class="fas fa-search"></i> View
+                    </a>
+                </td>
             </tr>
         `;
             tbody.innerHTML += row;

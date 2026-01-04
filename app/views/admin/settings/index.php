@@ -75,6 +75,17 @@
                         <small class="text-muted">Jika diaktifkan, tombol download akan muncul di dashboard
                             peserta.</small>
                     </div>
+
+                    <div class="form-group border-top pt-3">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="customSwitchDelete"
+                                name="allow_delete" value="1" <?php echo ($allow_delete ?? '1') == '1' ? 'checked' : ''; ?>>
+                            <label class="custom-control-label text-danger" for="customSwitchDelete">Tampilkan Tombol
+                                Hapus (Danger Zone)</label>
+                        </div>
+                        <small class="text-muted">Jika dinonaktifkan, tombol hapus (tong sampah) akan disembunyikan dari
+                            semua halaman admin (Daftar Peserta & User).</small>
+                    </div>
                 </div>
                 <div class="card-footer text-right">
                     <button type="submit" class="btn btn-primary px-4">

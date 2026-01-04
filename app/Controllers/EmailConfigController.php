@@ -33,6 +33,8 @@ class EmailConfigController
         $this->checkAuth();
 
         $data = [
+            'driver' => Request::get('driver') ?? 'smtp',
+            'api_url' => Request::get('api_url'),
             'smtp_host' => Request::get('smtp_host'),
             'smtp_port' => Request::get('smtp_port'),
             'smtp_username' => Request::get('smtp_username'),
@@ -69,19 +71,60 @@ class EmailConfigController
     {
         $this->checkAuth();
 
-        $config = [
-            'smtp_host' => Request::get('smtp_host'),
-            'smtp_port' => Request::get('smtp_port'),
-            'smtp_username' => Request::get('smtp_username'),
-            'smtp_password' => Request::get('smtp_password'),
-            'smtp_encryption' => Request::get('smtp_encryption'),
-        ];
+        // 1. Suppress HTML errors to ensure clean JSON
+        ini_set('display_errors', 0);
+        error_reporting(E_ALL);
+
+        // Allow enough time for SMTP timeout (15s + overhead)
+        set_time_limit(45);
+
+        // 2. Start fresh output buffer to capture any stray output
+        ob_start();
 
         try {
+            $inputPassword = Request::get('smtp_password');
+
+            // If password input is empty, try to get from database
+            if (empty($inputPassword)) {
+                $existingConfig = EmailConfiguration::get();
+                $password = $existingConfig['smtp_password'] ?? '';
+            } else {
+                $password = $inputPassword;
+            }
+
+            $config = [
+                'driver' => Request::get('driver'),
+                'api_url' => Request::get('api_url'),
+                'smtp_host' => Request::get('smtp_host'),
+                'smtp_port' => Request::get('smtp_port'),
+                'smtp_username' => Request::get('smtp_username'),
+                'smtp_password' => $password,
+                'smtp_encryption' => Request::get('smtp_encryption'),
+            ];
+
             EmailService::testConnection($config);
+
+            // Clean buffer before sending successful JSON
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
             echo json_encode(['success' => true, 'message' => 'Koneksi berhasil!']);
-        } catch (\Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+
+        } catch (\Throwable $e) {
+            // Clean buffer before sending error JSON
+            if (ob_get_length())
+                ob_clean();
+            header('Content-Type: application/json');
+
+            $errorMessage = 'Error: ' . $e->getMessage();
+            $json = json_encode(['success' => false, 'message' => $errorMessage]);
+
+            if ($json === false) {
+                // JSON Encode failed (likely binary chars), send safe minimal error
+                echo json_encode(['success' => false, 'message' => 'Error: JSON Encode Failed. Log contains invalid characters.']);
+            } else {
+                echo $json;
+            }
         }
         exit;
     }

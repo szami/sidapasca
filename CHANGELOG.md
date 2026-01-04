@@ -15,6 +15,29 @@ First stable production release of SIDA Pasca ULM (Sistem Informasi & Data Admis
 
 ---
 
+## [1.0.4] - 2026-01-04
+
+### 🚀 Added - Google Apps Script Email Driver
+- **Alternative Email Sending Method**:
+  - Implementation of GAS (Google Apps Script) Webhook driver for sending emails.
+  - Useful for environments where standard SMTP ports are blocked or restricted.
+  - Supports custom "From Name" via payload parameter.
+  
+- **Configuration UI**:
+  - Added "Driver" selection (SMTP vs GAS) in Email Configuration.
+  - Conditional UI fields based on selected driver.
+  - moved "From Name" and "From Email" fields to global scope (visible for both drivers).
+
+### 🔧 Fixed & Improved
+- **Local SSL Compatibility**:
+  - Bypassed SSL certificate verification (`CURLOPT_SSL_VERIFYPEER = false`) for GAS requests to resolve local development environment issues (Laragon).
+  
+- **Reminder Filtering Logic**:
+  - Improved "Lulus belum bayar" filter to automatically exclude participants who already not have `nomor_peserta`.
+  - Ensures participants with exam numbers are treated as "Paid/Verified" regardless of payment status flag.
+
+---
+
 ## [1.0.3-p2] - 2026-01-04
 
 ### 🐛 Fixed - Hosting Compatibility
@@ -561,8 +584,7 @@ No breaking changes from v0.9.0
 ## Support
 
 For questions, issues, or feature requests:
-- Email: support@pasca.ulm.ac.id
-- Documentation: See `agents.md` for technical details
+- Email: shabirin.mukhlish@ulm.ac.id
 - Database: See ERD documentation for schema details
 
 ---

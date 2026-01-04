@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
     <!-- Chart.js -->
@@ -32,6 +34,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <!-- Toastr -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Summernote JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs4.min.js"></script>
 </head>
@@ -125,6 +129,13 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a href="/admin/verification/physical" class="nav-link">
+                                <i class="nav-icon fas fa-tasks"></i>
+                                <p>Verifikasi Berkas</p>
+                            </a>
+                        </li>
+
                         <li class="nav-header">PESERTA UJIAN</li>
                         <li class="nav-item">
                             <a href="/admin/participants?filter=exam_ready" class="nav-link">
@@ -189,13 +200,13 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="/admin/exam-rooms" class="nav-link">
+                                <a href="/admin/master/rooms" class="nav-link">
                                     <i class="nav-icon fas fa-door-open"></i>
                                     <p>Ruang Ujian</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="/admin/exam-sessions" class="nav-link">
+                                <a href="/admin/master/sessions" class="nav-link">
                                     <i class="nav-icon fas fa-clock"></i>
                                     <p>Sesi Ujian</p>
                                 </a>
@@ -216,7 +227,7 @@
                         <!-- EXAM MANAGEMENT - Admin & Superadmin only -->
                         <?php if (!$isAdminProdi): ?>
                             <li class="nav-item">
-                                <a href="/admin/exam-scheduler" class="nav-link">
+                                <a href="/admin/scheduler" class="nav-link">
                                     <i class="nav-icon fas fa-user-check"></i>
                                     <p>Jadwalkan Ujian</p>
                                 </a>

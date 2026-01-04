@@ -2,8 +2,11 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title"><i class="fas fa-history mr-2"></i> Riwayat Reminder Email</h3>
+                <a href="/admin/email/reminders/send" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Buat Reminder
+                </a>
             </div>
 
             <div class="card-body">

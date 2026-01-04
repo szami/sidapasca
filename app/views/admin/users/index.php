@@ -78,10 +78,12 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <?php if ($user['id'] != $_SESSION['admin']): ?>
-                                <a href="/admin/users/delete/<?php echo $user['id']; ?>" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Yakin ingin menghapus user <?php echo htmlspecialchars($user['username']); ?>?')">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                                <?php if (\App\Models\Setting::get('allow_delete', '1') == '1'): ?>
+                                    <a href="/admin/users/delete/<?php echo $user['id']; ?>" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Yakin ingin menghapus user <?php echo htmlspecialchars($user['username']); ?>?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </td>
                     </tr>

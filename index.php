@@ -18,7 +18,8 @@ require __DIR__ . '/config/db.php';
 $app = new Leaf\App();
 
 // Routes
-$app->get('/', 'App\Controllers\AuthController@loginView');
+$app->get('/', 'App\Controllers\HomeController@index');
+$app->get('/login', 'App\Controllers\AuthController@loginView');
 $app->post('/login', 'App\Controllers\AuthController@login');
 $app->get('/logout', 'App\Controllers\AuthController@logout');
 

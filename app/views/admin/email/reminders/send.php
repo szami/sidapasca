@@ -109,7 +109,8 @@
                             <tbody>
                                 <?php foreach ($participants as $p): ?>
                                 <tr data-status-berkas="<?php echo $p['status_berkas']; ?>" 
-                                    data-status-bayar="<?php echo $p['status_pembayaran'] ?? 'belum'; ?>">
+                                    data-status-bayar="<?php echo $p['status_pembayaran'] ?? 'belum'; ?>"
+                                    data-nomor-peserta="<?php echo $p['nomor_peserta'] ?? ''; ?>">
                                     <td>
                                         <input type="checkbox" name="participant_ids[]" 
                                                value="<?php echo $p['id']; ?>" class="participant-checkbox">
@@ -230,11 +231,16 @@ $(document).ready(function() {
             dt.search('').draw();
             $('.participant-checkbox:visible').prop('checked', true);
         } else if (preset === 'unpaid') {
-            // Show only lulus but not lunas
+            // Show only lulus but not lunas AND no nomor_peserta
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                 var row = $('#participantTable tbody tr').eq(dataIndex);
                 var statusBerkas = row.data('status-berkas');
                 var statusBayar = row.data('status-bayar');
+                var nomorPeserta = row.data('nomor-peserta');
+                
+                // Exclude if already has nomor peserta (assumed paid)
+                if (nomorPeserta && nomorPeserta.toString().trim() !== '') return false;
+                
                 return statusBerkas === 'lulus' && statusBayar !== 'lunas';
             });
             dt.draw();

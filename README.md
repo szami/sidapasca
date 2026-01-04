@@ -30,7 +30,7 @@ SIDA Pasca ULM is a comprehensive web-based application designed to manage the a
 - **🏛️ Exam Room Management**: Configure exam rooms with capacity management
 - **📅 Exam Scheduling**: Assign participants to exam sessions and rooms
 - **📝 Attendance Tracking**: Record and manage exam attendance
-- **📧 Email Reminder System**: Send mass notifications with template builder
+- **📧 Email Reminder System**: Send mass notifications with template builder (SMTP & Google Apps Script)
 - **🎫 CAT Schedule**: Print exam schedules for posting at room entrances
 - **📄 Dynamic PDF Generator**: Cards & Forms with configurable letterhead & single-page layout
 - **⚙️ System Settings**: Configurable branding (logo, favicon, app name, letterheads)
@@ -436,7 +436,7 @@ This software is the property of Universitas Lambung Mangkurat and is protected 
 ## 📞 Support
 
 **Technical Support:**
-- Email: pascasarjana@ulm.ac.id
+- Email: shabirin.mukhlish@ulm.ac.id
 - Issues: Internal ticketing system
 
 **Maintainer:**
