@@ -15,6 +15,23 @@ First stable production release of SIDA Pasca ULM (Sistem Informasi & Data Admis
 
 ---
 
+## [1.0.3-p2] - 2026-01-04
+
+### 🐛 Fixed - Hosting Compatibility
+- **Auto Update Safety**:
+  - Handled `Call to undefined function exec()` error on shared hosting where `exec` is disabled/removed.
+  - Added safety checks in `GitHelper` to verify if `exec` exists before calling.
+  - Usage of `exec` is now properly namespaced as `\exec` to prevent namespace resolution errors.
+
+## [1.0.3-p1] - 2026-01-04
+
+### 🐛 Fixed - Linux Compatibility
+- **Directory Structure**:
+  - Renamed `app/utils` to `app/Utils`.
+  - Renamed `app/controllers` to `app/Controllers`.
+  - Renamed `app/models` to `app/Models`.
+  - Fixed case-sensitivity autoloading issues on Linux servers.
+
 ## [1.0.3] - 2026-01-04
 
 ### 🔄 Improved & Refined
