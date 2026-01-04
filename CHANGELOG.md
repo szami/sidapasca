@@ -15,6 +15,21 @@ First stable production release of SIDA Pasca ULM (Sistem Informasi & Data Admis
 
 ---
 
+## [1.0.3] - 2026-01-04
+
+### 🔄 Improved & Refined
+- **Excel Export Logic**:
+  - Implemented smart column filtering for S2/S3.
+  - "Education S2" and "Documents S2" columns are now hidden for S2 study programs exports.
+  - Columns remain visible for S3 study programs or Superadmin (all data) exports.
+  
+- **Admin Sidebar UI**:
+  - Cleaned up navigation menu organization.
+  - Moved "Tools" section to be exclusively for Superadmin/Admin (hidden for Admin Prodi).
+  - Improved menu hierarchy and readability.
+
+---
+
 ## [1.0.2] - 2026-01-04
 
 ### 🔧 Fixed & Enhanced - PDF Generation

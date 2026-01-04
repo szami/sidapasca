@@ -2,7 +2,7 @@
 
 **Sistem Informasi & Data Admisi Program Pascasarjana Universitas Lambung Mangkurat**
 
-![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?logo=php)
 ![Database](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)
 ![Status](https://img.shields.io/badge/status-production-success)
@@ -15,7 +15,7 @@ SIDA Pasca ULM is a comprehensive web-based application designed to manage the a
 
 **Live Environment:** `http://pmb-pps-ulm.test`  
 **Timezone:** Asia/Makassar (WITA / UTC+8)  
-**Current Version:** v1.0.2 (Production)
+**Current Version:** v1.0.3 (Production)
 
 ---
 

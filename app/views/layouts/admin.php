@@ -139,7 +139,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-header">OPERASIONAL</li>
+
                         <?php
                         $role = \App\Utils\RoleHelper::getRole();
                         $isSuperadmin = \App\Utils\RoleHelper::isSuperadmin();
@@ -147,13 +147,37 @@
                         $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
                         ?>
 
-                        <!-- DASHBOARD - All users -->
-                        <li class="nav-item">
-                            <a href="/admin" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
+
+                        <!-- TOOLS - Admin & Superadmin only -->
+                        <?php if (!$isAdminProdi): ?>
+                            <li class="nav-header">TOOLS</li>
+
+                            <li class="nav-item">
+                                <a href="/admin/import" class="nav-link">
+                                    <i class="nav-icon fas fa-file-import"></i>
+                                    <p>Import Data</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/document-import" class="nav-link">
+                                    <i class="nav-icon fas fa-images"></i>
+                                    <p>Import Berkas</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/admin/participants/export" class="nav-link">
+                                    <i class="nav-icon fas fa-file-excel"></i>
+                                    <p>Export Data</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/documents/download" class="nav-link">
+                                    <i class="nav-icon fas fa-file-archive"></i>
+                                    <p>Download Berkas</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
 
                         <!-- MASTER DATA - Admin & Superadmin only -->
                         <?php if (!$isAdminProdi): ?>
@@ -197,12 +221,7 @@
                                     <p>Jadwalkan Ujian</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="/admin/exam-card" class="nav-link">
-                                    <i class="nav-icon fas fa-id-card"></i>
-                                    <p>Kartu Ujian</p>
-                                </a>
-                            </li>
+
                             <li class="nav-item">
                                 <a href="/admin/attendance" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-check"></i>
@@ -210,15 +229,6 @@
                                 </a>
                             </li>
                         <?php endif; ?>
-
-                        <!-- REPORTS - All users -->
-                        <li class="nav-header">LAPORAN</li>
-                        <li class="nav-item">
-                            <a href="/admin/reports" class="nav-link">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Laporan</p>
-                            </a>
-                        </li>
 
                         <!-- EMAIL - Admin & Superadmin only -->
                         <?php if (!$isAdminProdi): ?>
@@ -243,36 +253,6 @@
                             </li>
                         <?php endif; ?>
 
-                        <!-- TOOLS - Admin & Superadmin only -->
-                        <?php if (!$isAdminProdi): ?>
-                            <li class="nav-header">TOOLS</li>
-
-                            <li class="nav-item">
-                                <a href="/admin/import" class="nav-link">
-                                    <i class="nav-icon fas fa-file-import"></i>
-                                    <p>Import Data</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/document-import" class="nav-link">
-                                    <i class="nav-icon fas fa-images"></i>
-                                    <p>Import Berkas</p>
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a href="/admin/participants/export" class="nav-link">
-                                    <i class="nav-icon fas fa-file-excel"></i>
-                                    <p>Export Data</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/documents/download" class="nav-link">
-                                    <i class="nav-icon fas fa-file-archive"></i>
-                                    <p>Download Berkas</p>
-                                </a>
-                            </li>
-                        <?php endif; ?>
 
                         <!-- SYSTEM SETTINGS - Admin & Superadmin only -->
                         <?php if (!$isAdminProdi): ?>

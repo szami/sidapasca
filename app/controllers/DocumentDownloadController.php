@@ -185,8 +185,15 @@ class DocumentDownloadController
             return;
         }
 
+        // Determine S3 columns visibility
+        $showS3Columns = true;
+        if ($prodiId !== 'all' && !empty($participants)) {
+            $pName = $participants[0]['nama_prodi'] ?? '';
+            $showS3Columns = (stripos($pName, 'S3') !== false || stripos($pName, 'DOKTOR') !== false);
+        }
+
         // Generate Excel summary
-        $excelPath = $this->generateExcelSummary($participants, $status);
+        $excelPath = $this->generateExcelSummary($participants, $status, $showS3Columns);
         $zip->addFile($excelPath, '0_REKAPITULASI.xlsx');
 
         $baseStoragePath = dirname(__DIR__, 2) . '/storage';
@@ -326,13 +333,13 @@ class DocumentDownloadController
         return $docs;
     }
 
-    private function generateExcelSummary($participants, $status)
+    private function generateExcelSummary($participants, $status, $showS3Columns = true)
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Rekapitulasi');
 
-        // Headers
+        // Headers Construction
         $headers = [
             'No',
             'No Peserta',
@@ -361,25 +368,39 @@ class DocumentDownloadController
             'S1 Fakultas',
             'S1 Prodi',
             'S1 IPK',
-            'S1 Gelar',
-            // Pendidikan S2 (Conditional, but we list it)
-            'S2 Tahun Masuk',
-            'S2 Tahun Tamat',
-            'S2 Perguruan Tinggi',
-            'S2 Fakultas',
-            'S2 Prodi',
-            'S2 IPK',
-            'S2 Gelar',
-            // Checklist Dokumen
+            'S1 Gelar'
+        ];
+
+        // S2 Headers (Only if S3/Superadmin)
+        if ($showS3Columns) {
+            $headers = array_merge($headers, [
+                'S2 Tahun Masuk',
+                'S2 Tahun Tamat',
+                'S2 Perguruan Tinggi',
+                'S2 Fakultas',
+                'S2 Prodi',
+                'S2 IPK',
+                'S2 Gelar'
+            ]);
+        }
+
+        // Checklist Common
+        $headers = array_merge($headers, [
             'Formulir',
             'KTP',
             'Foto',
             'Ijazah S1',
             'Transkrip S1',
-            'Kartu',
-            'Ijazah S2',
-            'Transkrip S2',
-        ];
+            'Kartu'
+        ]);
+
+        // Checklist S2 (Only if S3/Superadmin)
+        if ($showS3Columns) {
+            $headers = array_merge($headers, [
+                'Ijazah S2',
+                'Transkrip S2'
+            ]);
+        }
 
         // Set Headers
         foreach ($headers as $col => $header) {
@@ -400,8 +421,7 @@ class DocumentDownloadController
         $row = 2;
         foreach ($participants as $i => $p) {
             $docs = $this->checkDocumentCompleteness($p);
-            $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false);
-            // $isS3Logic = $docs['ijazah_s2'] !== null; // Old logic
+            $isS3Applicant = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false);
 
             $colIdx = 1;
             // Basic
@@ -412,7 +432,6 @@ class DocumentDownloadController
 
             // Identitas
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['tempat_lahir'] ?? '-');
-            // Format Date: d-m-Y
             $tglLahir = !empty($p['tgl_lahir']) ? date('d-m-Y', strtotime($p['tgl_lahir'])) : '-';
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $tglLahir);
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['alamat_ktp'] ?? '-');
@@ -438,24 +457,36 @@ class DocumentDownloadController
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s1_ipk'] ?? '-');
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s1_gelar'] ?? '-');
 
-            // Pendidikan S2
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_tahun_masuk'] ?? '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_tahun_tamat'] ?? '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_perguruan_tinggi'] ?? '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_fakultas'] ?? '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_prodi'] ?? '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_ipk'] ?? '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $p['s2_gelar'] ?? '-');
+            // Pendidikan S2 (Only if Show S3 Columns)
+            if ($showS3Columns) {
+                // If it's a mixed dataset (Superadmin), only show S2 data if the *row* is S3
+                // If it's single Prodi S3, isS3Applicant is always true.
+                // If it's single Prodi S2, showS3Columns is false, so we skip this block entirely.
+                $hasS2Data = $isS3Applicant;
 
-            // Checklist Dokumen
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_tahun_masuk'] ?? '-') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_tahun_tamat'] ?? '-') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_perguruan_tinggi'] ?? '-') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_fakultas'] ?? '-') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_prodi'] ?? '-') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_ipk'] ?? '-') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $hasS2Data ? ($p['s2_gelar'] ?? '-') : '-');
+            }
+
+            // Checklist Dokumen Common
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $docs['formulir'] ? '✅' : '❌');
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $docs['ktp'] ? '✅' : '❌');
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $docs['foto'] ? '✅' : '❌');
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $docs['ijazah_s1'] ? '✅' : '❌');
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $docs['transkrip_s1'] ? '✅' : '❌');
             $sheet->setCellValueByColumnAndRow($colIdx++, $row, $docs['kartu'] ? '✅' : '❌');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $isS3 ? ($docs['ijazah_s2'] ? '✅' : '❌') : '-');
-            $sheet->setCellValueByColumnAndRow($colIdx++, $row, $isS3 ? ($docs['transkrip_s2'] ? '✅' : '❌') : '-');
+
+            // Checklist S2 (Only if Show S3 Columns)
+            if ($showS3Columns) {
+                // Same logic, show real status only if applicant is S3
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $isS3Applicant ? ($docs['ijazah_s2'] ? '✅' : '❌') : '-');
+                $sheet->setCellValueByColumnAndRow($colIdx++, $row, $isS3Applicant ? ($docs['transkrip_s2'] ? '✅' : '❌') : '-');
+            }
 
             $row++;
         }
