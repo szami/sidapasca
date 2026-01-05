@@ -65,6 +65,7 @@ $app->get('/logout', 'App\Controllers\AuthController@logout');
 // Admin Routes
 $app->get('/admin', 'App\Controllers\AdminController@dashboard');
 $app->post('/admin/login', 'App\Controllers\AuthController@adminLogin');
+$app->get('/admin/logout', 'App\Controllers\AuthController@adminLogout'); // Explicit Admin Logout
 $app->get('/admin/import', 'App\Controllers\ImportController@index'); // --- Admin - Data Master ---
 $app->post('/admin/import', 'App\Controllers\ImportController@import');
 

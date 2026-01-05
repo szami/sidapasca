@@ -175,4 +175,10 @@ class AuthController
         session_destroy();
         response()->redirect('/');
     }
+
+    public function adminLogout()
+    {
+        session_destroy();
+        response()->redirect('/admin');
+    }
 }

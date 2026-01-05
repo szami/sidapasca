@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-01-06
+
+### 🔧 Fixed
+- **Admin Logout**: Fixed admin logout redirecting to the root page instead of the admin login page.
+
+---
+
 ## [1.2.0] - 2026-01-06
 
 ### 🎓 Added - Assessment & Graduation System
