@@ -38,6 +38,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Summernote JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs4.min.js"></script>
+
+    <script>
+        // Global App URL for JS (Handles subdirectory hosting)
+        const APP_URL = "<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>";
+    </script>
 </head>
 
 <body class="hold-transition sidebar-mini">
@@ -61,9 +66,11 @@
                             <?php if ($showPeriode): ?>
                                 <span class="badge badge-primary ml-1">Periode <?php echo $activeSem['periode']; ?></span>
                             <?php endif; ?>
-                            <a href="/admin/semesters" class="ml-2 text-muted" title="Pengaturan Semester">
-                                <i class="fas fa-cog fa-xs"></i>
-                            </a>
+                            <?php if (\App\Utils\RoleHelper::isSuperadmin()): ?>
+                                <a href="/admin/semesters" class="ml-2 text-muted" title="Pengaturan Semester">
+                                    <i class="fas fa-cog fa-xs"></i>
+                                </a>
+                            <?php endif; ?>
                         </span>
                     <?php else: ?>
                         <a href="/admin" class="nav-link">Home</a>
@@ -97,16 +104,44 @@
 
             <!-- Sidebar -->
             <div class="sidebar">
+                <!-- Sidebar user panel -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    <div class="image">
+                        <i class="fas fa-user-circle fa-2x text-light"></i>
+                    </div>
+                    <div class="info">
+                        <a href="#" class="d-block"><?php echo \App\Utils\RoleHelper::getUsername() ?? 'User'; ?></a>
+                        <span class="badge <?php echo \App\Utils\RoleHelper::getRoleBadgeClass(); ?> text-xs">
+                            <?php echo \App\Utils\RoleHelper::getRoleDisplayName(); ?>
+                        </span>
+                    </div>
+                </div>
+
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
                         <?php
-                        $role = \App\Utils\RoleHelper::getRole();
+                        // Get role permissions
+                        $canEditParticipant = \App\Utils\RoleHelper::canEditParticipant();
+                        $canValidatePhysical = \App\Utils\RoleHelper::canValidatePhysical();
+                        $canManageSchedule = \App\Utils\RoleHelper::canManageSchedule();
+                        $canManageUsers = \App\Utils\RoleHelper::canManageUsers();
+                        $canImportExport = \App\Utils\RoleHelper::canImportExport();
+                        $canManageSettings = \App\Utils\RoleHelper::canManageSettings();
+                        $canManageEmail = \App\Utils\RoleHelper::canManageEmail();
+                        $canPrintCards = \App\Utils\RoleHelper::canPrintCards();
+                        $canPrintSchedule = \App\Utils\RoleHelper::canPrintSchedule();
+                        $canManageMasterData = \App\Utils\RoleHelper::canManageMasterData();
+                        $canDownloadDocuments = \App\Utils\RoleHelper::canDownloadDocuments();
+                        $canViewReports = \App\Utils\RoleHelper::canViewReports();
                         $isSuperadmin = \App\Utils\RoleHelper::isSuperadmin();
-                        $isAdmin = \App\Utils\RoleHelper::isAdmin();
                         $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+                        $isUPKH = \App\Utils\RoleHelper::isUPKH();
+                        $isTU = \App\Utils\RoleHelper::isTU();
                         ?>
+
+                        <!-- DASHBOARD -->
                         <li class="nav-item">
                             <a href="/admin" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -114,28 +149,31 @@
                             </a>
                         </li>
 
+                        <!-- ADMISI & PESERTA -->
+                        <li class="nav-header">ADMISI & PESERTA</li>
 
-                        <li class="nav-header">ADMISI PASCA</li>
-                        <li class="nav-item">
-                            <a href="/admin/participants?filter=pending" class="nav-link">
-                                <i class="nav-icon fas fa-file-signature"></i>
-                                <p>Formulir Masuk</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/participants?filter=lulus" class="nav-link">
-                                <i class="nav-icon fas fa-user-check"></i>
-                                <p>Lulus Berkas</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/participants?filter=gagal" class="nav-link">
-                                <i class="nav-icon fas fa-user-times"></i>
-                                <p>Gagal Berkas</p>
-                            </a>
-                        </li>
+                        <?php if (!$isTU): ?>
+                            <li class="nav-item">
+                                <a href="/admin/participants?filter=pending" class="nav-link">
+                                    <i class="nav-icon fas fa-file-signature"></i>
+                                    <p>Formulir Masuk</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/participants?filter=lulus" class="nav-link">
+                                    <i class="nav-icon fas fa-user-check"></i>
+                                    <p>Lulus Berkas</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/participants?filter=gagal" class="nav-link">
+                                    <i class="nav-icon fas fa-user-times"></i>
+                                    <p>Gagal Berkas</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
 
-                        <?php if (!$isAdminProdi): ?>
+                        <?php if ($canValidatePhysical): ?>
                             <li class="nav-item">
                                 <a href="/admin/verification/physical" class="nav-link">
                                     <i class="nav-icon fas fa-tasks"></i>
@@ -144,47 +182,23 @@
                             </li>
                         <?php endif; ?>
 
-                        <li class="nav-header">PESERTA UJIAN</li>
                         <li class="nav-item">
                             <a href="/admin/participants?filter=exam_ready" class="nav-link">
                                 <i class="nav-icon fas fa-id-card-alt"></i>
-                                <p>Data Peserta</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/laporan" class="nav-link">
-                                <i class="nav-icon fas fa-file-alt"></i>
-                                <p>Laporan Admisi</p>
+                                <p>Data Peserta Ujian</p>
                             </a>
                         </li>
 
-
-
-
-
-                        <!-- TOOLS - Admin & Superadmin only -->
-                        <?php if (!$isAdminProdi): ?>
-                            <li class="nav-header">TOOLS</li>
-
+                        <?php if ($canViewReports): ?>
                             <li class="nav-item">
-                                <a href="/admin/import" class="nav-link">
-                                    <i class="nav-icon fas fa-file-import"></i>
-                                    <p>Import Data</p>
+                                <a href="/admin/laporan" class="nav-link">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>Laporan Admisi</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="/admin/document-import" class="nav-link">
-                                    <i class="nav-icon fas fa-images"></i>
-                                    <p>Import Berkas</p>
-                                </a>
-                            </li>
+                        <?php endif; ?>
 
-                            <li class="nav-item">
-                                <a href="/admin/participants/export" class="nav-link">
-                                    <i class="nav-icon fas fa-file-excel"></i>
-                                    <p>Export Data</p>
-                                </a>
-                            </li>
+                        <?php if ($canDownloadDocuments): ?>
                             <li class="nav-item">
                                 <a href="/admin/documents/download" class="nav-link">
                                     <i class="nav-icon fas fa-file-archive"></i>
@@ -193,26 +207,87 @@
                             </li>
                         <?php endif; ?>
 
-                        <!-- Tools for Admin Prodi -->
-                        <?php if ($isAdminProdi): ?>
-                            <li class="nav-header">TOOLS</li>
-                            <li class="nav-item">
-                                <a href="/admin/documents/download" class="nav-link">
-                                    <i class="nav-icon fas fa-file-archive"></i>
-                                    <p>Download Berkas</p>
-                                </a>
-                            </li>
+                        <!-- PENJADWALAN & UJIAN -->
+                        <?php if ($canManageSchedule || $canPrintSchedule): ?>
+                            <li class="nav-header">MANAJEMEN UJIAN</li>
+
+                            <?php if ($canManageSchedule): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/scheduler" class="nav-link">
+                                        <i class="nav-icon fas fa-calendar-alt"></i>
+                                        <p>Jadwalkan Ujian</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/attendance" class="nav-link">
+                                        <i class="nav-icon fas fa-clipboard-check"></i>
+                                        <p>Kehadiran Ujian</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if ($canPrintSchedule): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/cat-schedule" class="nav-link">
+                                        <i class="nav-icon fas fa-print"></i>
+                                        <p>Cetak Jadwal</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/attendance-list" class="nav-link">
+                                        <i class="nav-icon fas fa-list-alt"></i>
+                                        <p>Cetak Daftar Hadir</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
                         <?php endif; ?>
 
-                        <!-- MASTER DATA - Admin & Superadmin only -->
-                        <?php if (!$isAdminProdi): ?>
+                        <!-- ASSESSMENT & KELULUSAN -->
+                        <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin() || $isAdminProdi): ?>
+                            <li class="nav-header">PENILAIAN & KELULUSAN</li>
+
+                            <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin()): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/assessment/components" class="nav-link">
+                                        <i class="nav-icon fas fa-list-ul"></i>
+                                        <p>Komponen Nilai</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/assessment/scores" class="nav-link">
+                                        <i class="nav-icon fas fa-pen-fancy"></i>
+                                        <p>Proses Nilai</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/graduation/quotas" class="nav-link">
+                                        <i class="nav-icon fas fa-chart-pie"></i>
+                                        <p>Daya Tampung</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if ($isAdminProdi): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/assessment/bidang" class="nav-link">
+                                        <i class="nav-icon fas fa-pen-nib"></i>
+                                        <p>Penilaian Bidang</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <!-- MASTER DATA -->
+                        <?php if ($canManageMasterData): ?>
                             <li class="nav-header">MASTER DATA</li>
-                            <li class="nav-item">
-                                <a href="/admin/semesters" class="nav-link">
-                                    <i class="nav-icon fas fa-calendar-alt"></i>
-                                    <p>Semester</p>
-                                </a>
-                            </li>
+                            <?php if ($isSuperadmin): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/semesters" class="nav-link">
+                                        <i class="nav-icon fas fa-layer-group"></i>
+                                        <p>Semester</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
                             <li class="nav-item">
                                 <a href="/admin/master/rooms" class="nav-link">
                                     <i class="nav-icon fas fa-door-open"></i>
@@ -227,104 +302,72 @@
                             </li>
                         <?php endif; ?>
 
-                        <!-- PARTICIPANTS - All users -->
-                        <li class="nav-header">
-                            <?php echo $isAdminProdi ? 'DATA PRODI' : 'PESERTA'; ?>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/participants" class="nav-link">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Data Peserta</p>
-                            </a>
-                        </li>
+                        <!-- SYSTEM TOOLS -->
+                        <?php if ($canImportExport || $canManageSettings || $canManageEmail || $canManageUsers): ?>
+                            <li class="nav-header">SYSTEM & TOOLS</li>
 
-                        <!-- EXAM MANAGEMENT - Admin & Superadmin only -->
-                        <?php if (!$isAdminProdi): ?>
-                            <li class="nav-item">
-                                <a href="/admin/scheduler" class="nav-link">
-                                    <i class="nav-icon fas fa-user-check"></i>
-                                    <p>Jadwalkan Ujian</p>
-                                </a>
-                            </li>
+                            <?php if ($canImportExport): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/import" class="nav-link">
+                                        <i class="nav-icon fas fa-file-import"></i>
+                                        <p>Import Data</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/document-import" class="nav-link">
+                                        <i class="nav-icon fas fa-images"></i>
+                                        <p>Import Berkas</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
 
-                            <li class="nav-item">
-                                <a href="/admin/attendance" class="nav-link">
-                                    <i class="nav-icon fas fa-clipboard-check"></i>
-                                    <p>Kehadiran Ujian</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/cat-schedule" class="nav-link">
-                                    <i class="nav-icon fas fa-print"></i>
-                                    <p>Cetak Jadwal</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/attendance-list" class="nav-link">
-                                    <i class="nav-icon fas fa-list-alt"></i>
-                                    <p>Cetak Daftar Hadir</p>
-                                </a>
-                            </li>
+                            <?php if ($canManageEmail): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/email/templates" class="nav-link">
+                                        <i class="nav-icon fas fa-envelope"></i>
+                                        <p>Template Email</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/email/reminders" class="nav-link">
+                                        <i class="nav-icon fas fa-paper-plane"></i>
+                                        <p>Reminder Email</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if ($canManageSettings): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/exam-card/design" class="nav-link">
+                                        <i class="nav-icon fas fa-paint-brush"></i>
+                                        <p>Desain Kartu Ujian</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/settings" class="nav-link">
+                                        <i class="nav-icon fas fa-cogs"></i>
+                                        <p>Pengaturan Sistem</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if ($canManageUsers): ?>
+                                <li class="nav-item">
+                                    <a href="/admin/users" class="nav-link">
+                                        <i class="nav-icon fas fa-users-cog"></i>
+                                        <p>Manajemen User</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/system/update" class="nav-link">
+                                        <i class="nav-icon fas fa-sync"></i>
+                                        <p>Update Sistem</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
                         <?php endif; ?>
 
-                        <!-- EMAIL - Admin & Superadmin only -->
-                        <?php if (!$isAdminProdi): ?>
-                            <li class="nav-header">KOMUNIKASI</li>
-                            <li class="nav-item">
-                                <a href="/admin/email/config" class="nav-link">
-                                    <i class="nav-icon fas fa-envelope-open-text"></i>
-                                    <p>Konfigurasi Email</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/email/templates" class="nav-link">
-                                    <i class="nav-icon fas fa-file-alt"></i>
-                                    <p>Template Email</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/email/reminders" class="nav-link">
-                                    <i class="nav-icon fas fa-paper-plane"></i>
-                                    <p>Reminder Email</p>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-
-                        <!-- SYSTEM SETTINGS - Admin & Superadmin only -->
-                        <?php if (!$isAdminProdi): ?>
-                            <li class="nav-header">PENGATURAN SYSTEM</li>
-                            <li class="nav-item">
-                                <a href="/admin/exam-card/design" class="nav-link">
-                                    <i class="nav-icon fas fa-paint-brush"></i>
-                                    <p>Desain Kartu Ujian</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/settings" class="nav-link">
-                                    <i class="nav-icon fas fa-cogs"></i>
-                                    <p>Pengaturan</p>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-                        <!-- User Management - Superadmin only -->
-                        <?php if ($isSuperadmin): ?>
-                            <li class="nav-item">
-                                <a href="/admin/users" class="nav-link">
-                                    <i class="nav-icon fas fa-users-cog"></i>
-                                    <p>Manajemen User</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="/admin/system/update" class="nav-link">
-                                    <i class="nav-icon fas fa-sync"></i>
-                                    <p>Update Sistem</p>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-                        <!-- Change Password - All users -->
+                        <!-- AKUN -->
                         <li class="nav-header">AKUN</li>
                         <li class="nav-item">
                             <a href="/admin/change-password" class="nav-link">

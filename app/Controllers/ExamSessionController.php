@@ -131,4 +131,66 @@ class ExamSessionController
         Database::connection()->delete('exam_sessions')->where('id', $id)->execute();
         response()->redirect('/admin/master/sessions');
     }
+    public function apiData()
+    {
+        if (!isset($_SESSION['admin'])) {
+            response()->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+        $semesterId = $activeSemester['id'] ?? null;
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 0;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 's.id',
+            1 => 's.nama_sesi',
+            2 => 's.tanggal',
+            3 => 's.waktu_mulai',
+            4 => 'r.nama_ruang',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 's.id';
+
+        // Base WHERE
+        $whereClause = "WHERE s.semester_id = '$semesterId'";
+
+        // Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (s.nama_sesi LIKE '%$searchEscaped%' 
+                             OR r.nama_ruang LIKE '%$searchEscaped%'
+                             OR r.fakultas LIKE '%$searchEscaped%')";
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM exam_sessions s WHERE s.semester_id = '$semesterId'";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM exam_sessions s LEFT JOIN exam_rooms r ON s.exam_room_id = r.id $whereClause";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT s.*, r.nama_ruang, r.fakultas 
+                FROM exam_sessions s 
+                LEFT JOIN exam_rooms r ON s.exam_room_id = r.id 
+                $whereClause 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
+        ]);
+    }
 }

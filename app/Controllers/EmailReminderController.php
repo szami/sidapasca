@@ -198,4 +198,74 @@ class EmailReminderController
             'logs' => $logs
         ]);
     }
+    public function apiData()
+    {
+        $this->checkAuth();
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+        $semesterId = $activeSemester['id'] ?? null;
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 2;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 'p.id',
+            1 => 'p.nomor_peserta',
+            2 => 'p.nama_lengkap',
+            3 => 'p.nama_prodi',
+            4 => 'p.email',
+            5 => 'p.status_berkas',
+            6 => 'p.status_pembayaran',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'p.nama_lengkap';
+
+        // Filter Params
+        $preset = Request::get('preset') ?? 'all';
+
+        // Base WHERE
+        $whereClause = "WHERE p.semester_id = '$semesterId'";
+
+        // Apply Preset
+        if ($preset === 'unpaid') {
+            $whereClause .= " AND p.status_berkas = 'lulus' AND (p.nomor_peserta IS NULL OR p.nomor_peserta = '')";
+        }
+
+        // Global Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (p.nama_lengkap LIKE '%$searchEscaped%' 
+                             OR p.email LIKE '%$searchEscaped%'
+                             OR p.nomor_peserta LIKE '%$searchEscaped%'
+                             OR p.nama_prodi LIKE '%$searchEscaped%')";
+        }
+
+        // record counts
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM participants p WHERE p.semester_id = '$semesterId'";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM participants p $whereClause";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        // data fetching
+        $sql = "SELECT p.* FROM participants p 
+                $whereClause 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
+        ]);
+    }
 }

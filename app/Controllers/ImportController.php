@@ -10,8 +10,8 @@ class ImportController
 {
     public function index()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canImportExport()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
         $semesters = \App\Models\Semester::all();
@@ -356,6 +356,11 @@ class ImportController
             'status_berkas' => $defaultStatus,
         ];
 
+        // LOGIC: If 'lulus', automatically valid payment (Online Verification implies Payment Check)
+        if ($defaultStatus === 'lulus') {
+            $saveData['status_pembayaran'] = 1;
+        }
+
         // ADD: Conditional Billing and Payment Status for Legacy
         if ($isLegacy) {
             if (!empty($no_billing)) {
@@ -457,6 +462,16 @@ class ImportController
             'semester_id' => $semesterId
         ];
 
+        // LOGIC: If defaultStatus is explicit (lulus/gagal), update status
+        // We avoid updating 'pending' to not overwrite existing manual verification
+        if ($defaultStatus !== 'pending') {
+            $updateData['status_berkas'] = $defaultStatus;
+
+            if ($defaultStatus === 'lulus') {
+                $updateData['status_pembayaran'] = 1;
+            }
+        }
+
         // LOGIC: Jika ada nomor peserta, berarti sudah bayar
         // Nomor peserta hanya diberikan ke peserta yang sudah melakukan pembayaran
         if (!empty($nomor_peserta)) {
@@ -552,7 +567,7 @@ class ImportController
 
     public function autoDownload()
     {
-        if (!isset($_SESSION['admin'])) {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canImportExport()) {
             response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             return;
         }

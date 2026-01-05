@@ -13,12 +13,12 @@ class Semester
 
     public static function find($id)
     {
-        return Database::connection()->select('semesters')->where('id', $id)->first();
+        return Database::connection()->select('semesters')->where('id', $id)->fetchAssoc();
     }
 
     public static function getActive()
     {
-        return Database::connection()->select('semesters')->where('is_active', 1)->first();
+        return Database::connection()->select('semesters')->where('is_active', 1)->fetchAssoc();
     }
 
     public static function create($data)

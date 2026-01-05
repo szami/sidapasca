@@ -32,8 +32,25 @@ try {
     }
 }
 
+// Global Maintenance Mode Check (Force Logout)
+if (\App\Utils\Database::connection() && \App\Models\Setting::get('maintenance_mode', 'off') === 'on') {
+    $isAdmin = isset($_SESSION['admin']);
+    $isSuperadmin = $isAdmin && ($_SESSION['admin_role'] ?? 'admin') === 'superadmin';
+    $isLoggedIn = $isAdmin || isset($_SESSION['user']);
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+
+    // Expel non-superadmins from protected pages
+    if ($isLoggedIn && !$isSuperadmin && $uri !== '/logout') {
+        session_destroy();
+        $target = $isAdmin ? '/admin?error=maintenance' : '/login?error=maintenance';
+        header("Location: $target");
+        exit;
+    }
+}
+
 // Init Leaf
 $app = new Leaf\App();
+$app->setBasePath(dirname($_SERVER['SCRIPT_NAME']));
 
 // Setup Routes (Available even if DB fails, assuming we handle it manually in Controller)
 $app->get('/setup', 'App\Controllers\SetupController@index');
@@ -66,6 +83,7 @@ $app->get('/admin/semesters/delete/{id}', 'App\Controllers\SemesterController@de
 $app->get('/admin/semesters/clean/{id}', 'App\Controllers\SemesterController@cleanParticipants');
 
 // Master Ruang Ujian
+$app->get('/api/master/rooms', 'App\Controllers\ExamRoomController@apiData');
 $app->get('/admin/master/rooms', 'App\Controllers\ExamRoomController@index');
 $app->get('/admin/master/rooms/create', 'App\Controllers\ExamRoomController@create');
 $app->post('/admin/master/rooms/store', 'App\Controllers\ExamRoomController@store');
@@ -74,6 +92,7 @@ $app->post('/admin/master/rooms/update/{id}', 'App\Controllers\ExamRoomControlle
 $app->get('/admin/master/rooms/delete/{id}', 'App\Controllers\ExamRoomController@destroy');
 
 // Master Sesi Ujian
+$app->get('/api/master/sessions', 'App\Controllers\ExamSessionController@apiData');
 $app->get('/admin/master/sessions', 'App\Controllers\ExamSessionController@index');
 $app->get('/admin/master/sessions/create', 'App\Controllers\ExamSessionController@create');
 $app->post('/admin/master/sessions/store', 'App\Controllers\ExamSessionController@store');
@@ -82,6 +101,7 @@ $app->post('/admin/master/sessions/update/{id}', 'App\Controllers\ExamSessionCon
 $app->get('/admin/master/sessions/delete/{id}', 'App\Controllers\ExamSessionController@destroy');
 
 // Scheduler
+$app->get('/api/scheduler', 'App\Controllers\ExamSchedulerController@apiData');
 $app->get('/admin/scheduler', 'App\Controllers\ExamSchedulerController@index');
 $app->get('/admin/scheduler/rooms', 'App\Controllers\ExamSchedulerController@roomView'); // NEW
 $app->post('/admin/scheduler/assign', 'App\Controllers\ExamSchedulerController@assign');
@@ -114,6 +134,7 @@ $app->get('/admin/document-import/bulk', 'App\Controllers\DocumentImportControll
 $app->post('/admin/document-import/save-cookie', 'App\Controllers\DocumentImportController@saveSessionCookie');
 
 // Physical Verification Routes
+$app->get('/api/verification/physical', 'App\Controllers\DocumentVerificationController@apiData');
 $app->get('/admin/verification/physical', 'App\Controllers\DocumentVerificationController@index');
 $app->get('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@verify');
 $app->post('/admin/verification/physical/{id}/save', 'App\Controllers\DocumentVerificationController@save');
@@ -122,10 +143,13 @@ $app->get('/admin/verification/physical/import/template', 'App\Controllers\Docum
 $app->post('/admin/verification/physical/import', 'App\Controllers\DocumentVerificationController@import');
 
 // Email Reminder Routes
+$app->get('/api/email/reminders/history', 'App\Controllers\EmailReminderController@apiHistory');
+$app->get('/api/email/reminders/participants', 'App\Controllers\EmailReminderController@apiData');
 $app->get('/admin/email/config', 'App\Controllers\EmailConfigController@index');
 $app->post('/admin/email/config/save', 'App\Controllers\EmailConfigController@save');
 $app->post('/admin/email/config/test', 'App\Controllers\EmailConfigController@testConnection');
 
+$app->get('/api/email/templates', 'App\Controllers\EmailTemplateController@apiData');
 $app->get('/admin/email/templates', 'App\Controllers\EmailTemplateController@index');
 $app->post('/admin/email/templates/create', 'App\Controllers\EmailTemplateController@create');
 $app->post('/admin/email/templates/update/{id}', 'App\Controllers\EmailTemplateController@update');
@@ -140,6 +164,35 @@ $app->get('/admin/email/reminders/{id}', 'App\Controllers\EmailReminderControlle
 $app->get('/admin/system/update', 'App\Controllers\SystemController@update');
 $app->post('/admin/system/perform-update', 'App\Controllers\SystemController@performUpdate');
 $app->get('/admin/system/check-update', 'App\Controllers\SystemController@checkUpdate');
+
+// Assessment Module
+$app->get('/admin/assessment/components', 'App\Controllers\AssessmentController@components');
+$app->post('/admin/assessment/components/store', 'App\Controllers\AssessmentController@storeComponent');
+$app->get('/admin/assessment/components/delete/{id}', 'App\Controllers\AssessmentController@deleteComponent');
+
+$app->get('/api/assessment/scores', 'App\Controllers\AssessmentController@apiData');
+$app->get('/admin/assessment/scores', 'App\Controllers\AssessmentController@scores');
+$app->get('/admin/assessment/scores/get/{id}', 'App\Controllers\AssessmentController@getScores');
+$app->post('/admin/assessment/scores/save/{id}', 'App\Controllers\AssessmentController@saveScore');
+$app->get('/admin/assessment/scores/export', 'App\Controllers\AssessmentController@exportTemplate');
+$app->get('/admin/assessment/scores/export-final', 'App\Controllers\AssessmentController@exportFinal');
+$app->post('/admin/assessment/scores/import', 'App\Controllers\AssessmentController@importScores');
+$app->post('/admin/assessment/scores/import-tpa', 'App\Controllers\AssessmentController@importTPA');
+$app->post('/admin/assessment/scores/save-final', 'App\Controllers\AssessmentController@saveFinalDecision');
+$app->post('/admin/assessment/scores/import-final', 'App\Controllers\AssessmentController@importFinal');
+
+// Admin Prodi Bidang Page
+$app->get('/admin/assessment/bidang', 'App\Controllers\AssessmentController@bidangScores');
+$app->get('/admin/assessment/bidang/export', 'App\Controllers\AssessmentController@exportBidangReport');
+$app->get('/admin/assessment/bidang/reset', 'App\Controllers\AssessmentController@resetBidangScores');
+$app->post('/admin/assessment/threshold/save', 'App\Controllers\AssessmentController@saveMinimumThreshold');
+$app->post('/admin/assessment/threshold/save-tpa', 'App\Controllers\AssessmentController@saveTpaThreshold');
+$app->post('/admin/assessment/schedule/save', 'App\Controllers\AssessmentController@saveBidangSchedule');
+
+// Graduation Module
+$app->get('/api/master/quotas', 'App\Controllers\GraduationController@apiData');
+$app->get('/admin/graduation/quotas', 'App\Controllers\GraduationController@quotas');
+$app->post('/admin/graduation/quotas/save', 'App\Controllers\GraduationController@saveQuotas');
 
 // --- Admin - User Management (Superadmin only) ---
 $app->get('/admin/users', 'App\Controllers\UserController@index');
@@ -160,8 +213,10 @@ $app->post('/admin/documents/generate-zip', 'App\Controllers\DocumentDownloadCon
 
 // --- Admin - Participants ---
 // Participant CRUD Routes
+$app->get('/api/participants', 'App\Controllers\ParticipantController@apiData');
 $app->get('/admin/participants', 'App\Controllers\ParticipantController@index');
 $app->get('/admin/participants/view/{id}', 'App\Controllers\ParticipantController@view');
+$app->get('/admin/participants/documents/{id}', 'App\Controllers\ParticipantController@documents'); // Document management
 $app->get('/admin/participants/edit/{id}', 'App\Controllers\ParticipantController@edit');
 $app->get('/admin/participants/export', 'App\Controllers\ParticipantController@exportExcel');
 $app->post('/admin/participants/update/{id}', 'App\Controllers\ParticipantController@update');
@@ -197,7 +252,7 @@ $app->get('/dashboard', function () {
     if (!empty($participant['ruang_ujian'])) {
         // Query manually since we don't have a direct relationship method yet
         $db = \App\Utils\Database::connection();
-        $examRoom = $db->query("SELECT * FROM exam_rooms WHERE nama_ruang = ?", [$participant['ruang_ujian']])->first();
+        $examRoom = $db->query("SELECT * FROM exam_rooms WHERE nama_ruang = ?")->bind($participant['ruang_ujian'])->fetchAssoc();
     }
 
     echo \App\Utils\View::render('participant.dashboard', [

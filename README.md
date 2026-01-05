@@ -2,7 +2,7 @@
 
 **Sistem Informasi & Data Admisi Program Pascasarjana Universitas Lambung Mangkurat**
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?logo=php)
 ![Database](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)
 ![Status](https://img.shields.io/badge/status-production-success)
@@ -15,7 +15,7 @@ SIDA Pasca ULM is a comprehensive web-based application designed to manage the a
 
 **Live Environment:** `http://pmb-pps-ulm.test`  
 **Timezone:** Asia/Makassar (WITA / UTC+8)  
-**Current Version:** v1.0.3 (Production)
+**Current Version:** v1.2.0 (Production)
 
 ---
 
@@ -179,12 +179,12 @@ php -S localhost:8000
 ```
 pmb-pps-ulm/
 ├── app/
-│   ├── controllers/          # Application logic (15 controllers)
+│   ├── controllers/          # Application logic (25 controllers)
 │   │   ├── AdminController.php
 │   │   ├── ParticipantController.php
 │   │   ├── ImportController.php
 │   │   └── ...
-│   ├── models/               # Database models (6 models)
+│   ├── models/               # Database models (10 models)
 │   │   ├── User.php
 │   │   ├── Participant.php
 │   │   ├── Semester.php
@@ -222,7 +222,7 @@ pmb-pps-ulm/
 
 ## 💾 Database Architecture
 
-The system uses **13 main tables** in a **semester-centric architecture**:
+The system uses **17 main tables** in a **semester-centric architecture**:
 
 ```mermaid
 erDiagram
@@ -256,10 +256,28 @@ erDiagram
 
 ### Admin Access
 - **URL**: `/admin/login`
-- **Username**: `admin`
-- **Password**: `admin123`
 
-> ⚠️ **IMPORTANT**: Change the default admin password immediately after first login!
+| Username | Password | Role | Access |
+|----------|----------|------|--------|
+| `admin` | `admin123` | Superadmin | Full access |
+| `operator` | `operator123` | Admin | Standard admin |
+| `upkh` | `upkh123` | UPKH | Document verification |
+| `tu` | `tu123` | TU | Scheduling & reports |
+| `prodi_test` | `prodi123` | Admin Prodi | Program-specific |
+
+> ⚠️ **IMPORTANT**: Change default passwords immediately after first login!
+
+### Role-Based Access Control (RBAC)
+
+The system implements 5 distinct user roles:
+
+| Role | Description | Key Permissions |
+|------|-------------|----------------|
+| **Superadmin** | Full system access | User management, all settings, all features |
+| **Admin** | Standard administrator | CRUD, import/export, settings, verification |
+| **UPKH** | Document verification officer | View participants, verify documents |
+| **TU** | Academic administration | Scheduling, attendance, reports, printing |
+| **Admin Prodi** | Program administrator | View/manage own program data only |
 
 ### Participant Access
 - **URL**: `/login`
@@ -395,17 +413,17 @@ composer show dompdf/dompdf
 
 ## 📊 Development Roadmap
 
-### Current Version: v1.0 ✅
+### Current Version: v1.2.0 ✅
 - Core admission management
 - Excel import/export
 - Exam scheduling
 - Attendance tracking
 - Document management
+- Email reminder system
+- Role-Based Access Control (RBAC)
 
 ### Planned Features
-- [ ] Role-Based Access Control (RBAC)
 - [ ] Activity Audit Logs
-- [ ] Email Notifications
 - [ ] Advanced Reporting
 - [ ] RESTful API for integrations
 - [ ] Multi-language support (ID/EN)
@@ -456,6 +474,6 @@ Built with:
 
 ---
 
-**Last Updated:** 04 Januari 2026 00:06 WITA  
-**Version:** 1.0.1 (Production)  
+**Last Updated:** 06 Januari 2026 05:24 WITA  
+**Version:** 1.2.0 (Production)  
 **Status:** Active Development

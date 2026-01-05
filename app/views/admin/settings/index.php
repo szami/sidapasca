@@ -86,6 +86,25 @@
                         <small class="text-muted">Jika dinonaktifkan, tombol hapus (tong sampah) akan disembunyikan dari
                             semua halaman admin (Daftar Peserta & User).</small>
                     </div>
+
+                    <div class="form-group border-top pt-3">
+                        <h6 class="text-danger"><i class="fas fa-tools"></i> Mode Pemeliharaan (Maintenance Mode)</h6>
+                        <div class="custom-control custom-switch mb-2">
+                            <input type="checkbox" class="custom-control-input" id="switchMaintenance"
+                                name="maintenance_mode" value="1" <?php echo ($maintenance_mode ?? 'off') == 'on' ? 'checked' : ''; ?>>
+                            <label class="custom-control-label font-weight-bold" for="switchMaintenance">Aktifkan Mode
+                                Pemeliharaan</label>
+                        </div>
+                        <small class="text-muted d-block mb-3">Jika diaktifkan, semua login (Peserta & Admin
+                            nond-Superadmin) akan diblokir. Hanya akun <strong>Superadmin</strong> yang bisa
+                            login.</small>
+
+                        <label for="maintenance_message">Pesan Pemeliharaan</label>
+                        <textarea name="maintenance_message" id="maintenance_message" class="form-control"
+                            rows="2"><?php echo htmlspecialchars($maintenance_message ?? 'Sistem sedang dalam pemeliharaan. Silakan coba lagi beberapa saat lagi.'); ?></textarea>
+                        <small class="text-muted">Pesan ini akan ditampilkan kepada siapa saja yang mencoba login saat
+                            sistem dikunci.</small>
+                    </div>
                 </div>
                 <div class="card-footer text-right">
                     <button type="submit" class="btn btn-primary px-4">

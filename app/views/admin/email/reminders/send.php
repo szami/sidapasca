@@ -146,7 +146,7 @@
                     <button type="submit" class="btn btn-primary btn-lg">
                         <i class="fas fa-paper-plane mr-1"></i> Kirim Email
                     </button>
-                    <a href="/admin/email/reminders" class="btn btn-default float-right">Batal</a>
+                    <a href="${APP_URL}/admin/email/reminders" class="btn btn-default float-right">Batal</a>
                 </div>
             </form>
         </div>
@@ -187,7 +187,7 @@ $(document).ready(function() {
     $('#templateSelect').change(function() {
         var id = $(this).val();
         if (id) {
-            $.get('/admin/email/templates/get/' + id, function(data) {
+            $.get(APP_URL + '/admin/email/templates/get/' + id, function(data) {
                 $('#emailSubject').val(data.subject);
                 $('#emailBody').summernote('code', data.body);
             });

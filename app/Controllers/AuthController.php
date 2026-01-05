@@ -11,7 +11,16 @@ class AuthController
     {
         // Generate captcha
         $captcha = \App\Utils\SimpleCaptcha::generate();
-        echo \App\Utils\View::render('auth.login', ['captcha' => $captcha]);
+
+        $errors = [];
+        if (Request::get('error') === 'maintenance') {
+            $errors[] = \App\Models\Setting::get('maintenance_message', 'Sistem sedang dalam pemeliharaan. Silakan coba lagi beberapa saat lagi.');
+        }
+
+        echo \App\Utils\View::render('auth.login', [
+            'captcha' => $captcha,
+            'errors' => $errors
+        ]);
     }
 
     public function login()
@@ -19,6 +28,18 @@ class AuthController
         $email = Request::get('email');
         $password = Request::get('password'); // This acts as DOB
         $captchaInput = Request::get('captcha');
+
+        // 0. Maintenance Mode Check
+        $maintenance = \App\Models\Setting::get('maintenance_mode', 'off');
+        if ($maintenance === 'on') {
+            $msg = \App\Models\Setting::get('maintenance_message', 'Sistem sedang dalam pemeliharaan. Silakan coba lagi beberapa saat lagi.');
+            $captcha = \App\Utils\SimpleCaptcha::generate();
+            echo \App\Utils\View::render('auth.login', [
+                'errors' => [$msg],
+                'captcha' => $captcha
+            ]);
+            return;
+        }
 
         // Verify captcha first
         if (!\App\Utils\SimpleCaptcha::verify($captchaInput)) {
@@ -124,6 +145,13 @@ class AuthController
         $password = request()->get('password');
 
         $user = \App\Models\User::where('username', $username)->first();
+
+        // Check Maintenance Mode (Only allow superadmin if on)
+        $maintenance = \App\Models\Setting::get('maintenance_mode', 'off');
+        if ($maintenance === 'on' && (!$user || ($user['role'] ?? 'admin') !== 'superadmin')) {
+            response()->redirect('/admin?error=maintenance');
+            exit;
+        }
 
         if ($user && password_verify($password, $user['password'])) {
             // Set session variables with role information

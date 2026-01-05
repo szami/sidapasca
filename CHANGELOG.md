@@ -7,11 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] - 2026-01-03
+## [1.2.0] - 2026-01-06
 
-### 🎉 Initial Production Release
+### 🎓 Added - Assessment & Graduation System
+- **TPA & Bidang Assessments**:
+  - Implemented TPA Threshold settings (S2: 450, S3: 500).
+  - Added "Keputusan Akhir" (L/TL/T) with manual override capabilities.
+  - Integration of Bidang scores with Admin Prodi specific access.
+  - Final decision logic based on Physical Verification, TPA Threshold, and Bidang Result.
 
-First stable production release of SIDA Pasca ULM (Sistem Informasi & Data Admisi Program Pascasarjana ULM).
+- **Graduation Board Refinement**:
+  - Deprecated legacy "Graduation Board" in favor of "Input Nilai & Keputusan".
+  - Implemented bulk decision processing (Lulus/Tidak Lulus).
+  - Smart logic to auto-recommend status based on system criteria.
+
+- **Admin Menu Reorganization**:
+  - Completely reorganized sidebar menu for better UX.
+  - Grouped by workflow: Admisi & Peserta, Manajemen Ujian, Penilaian & Kelulusan, Master Data, System Tools.
+  - Optimized role-based visibility (specifically for Admin Prodi, UPKH, and TU).
+  - Renamed "Input Nilai & Keputusan" to "Proses Nilai" for brevity.
+
+- **Project Cleanup**:
+  - Removed unused files and dead code (`migrate_tpa.php`, `board.php`).
+  - Streamlined controller logic.
+
+### 🔧 Fixed
+- **Graduation Quotas**: Fixed bug where quotas were not saving due to missing form ID.
+- **Menu Visibility**: Fixed "Download Berkas" visibility issues for UPKH/TU.
+
+---
+
+## [1.1.0] - 2026-01-05
+
+### 🎉 Added - Role-Based Access Control (RBAC)
+
+Implemented comprehensive RBAC system with 5 distinct user roles.
+
+**Roles Implemented:**
+| Role | Access Level | Description |
+|------|--------------|-------------|
+| **Superadmin** | Full Access | All features, user management, settings |
+| **Admin** | Standard Admin | CRUD, import/export, settings, verification |
+| **UPKH** | Document Verifier | Participant data, document verification |
+| **TU** | Scheduling & Reports | Exam scheduling, attendance, reports |
+| **Admin Prodi** | Program-Specific | Own program data only |
+
+**Features:**
+- **RoleHelper Utility** (`app/Utils/RoleHelper.php`):
+  - Role constants and detection methods
+  - Permission-based access methods (canEditParticipant, canManageSchedule, etc.)
+  - UI helper methods (getRoleDisplayName, getRoleBadgeClass)
+  - Prodi-based filtering support for Admin Prodi role
+  
+- **Dynamic Sidebar Menu**:
+  - Role-based menu item visibility
+  - User info panel with role badge
+  - Organized menu sections by role permissions
+  
+- **Controller Restrictions**:
+  - `DocumentVerificationController`: Superadmin, Admin, UPKH only
+  - `ExamSchedulerController`: Superadmin, Admin, TU only
+  - `ParticipantController`: Role-based edit permissions
+  - `ImportController`: Superadmin, Admin only
+  - `SettingsController`: Superadmin, Admin only
+  - `UserController`: Superadmin only
+  
+- **Dashboard Customization**:
+  - Role-specific data filtering
+  - Admin Prodi sees only their program data
+  - Full stats for other roles
+
+**Database Changes:**
+- Added `role` column to `users` table (superadmin, admin, upkh, tu, admin_prodi)
+- Added `prodi_id` column to `users` table for Admin Prodi role
+- Seeded test accounts for all 5 roles
+
+**Test Accounts:**
+| Username | Password | Role |
+|----------|----------|------|
+| `admin` | `admin123` | superadmin |
+| `operator` | `operator123` | admin |
+| `upkh` | `upkh123` | upkh |
+| `tu` | `tu123` | tu |
+| `prodi_test` | `prodi123` | admin_prodi |
 
 ---
 

@@ -43,7 +43,11 @@ function getDayName($dateStr)
 }
 
 $hasSchedule = !empty($participant['ruang_ujian']) && !empty($participant['tanggal_ujian']) && !empty($participant['waktu_ujian']);
-$canDownload = $participant['status_berkas'] == 'lulus' && $participant['status_pembayaran'] == 1 && !empty($participant['nomor_peserta']) && $hasSchedule;
+$canDownload = $participant['status_berkas'] == 'lulus'
+    && $participant['status_pembayaran'] == 1
+    && !empty($participant['nomor_peserta'])
+    && $hasSchedule
+    && ($participant['status_verifikasi_fisik'] == 'lengkap');
 
 // Photo URL
 $photoUrl = !empty($participant['photo_filename'])
@@ -144,7 +148,8 @@ ob_start();
                     <div>
                         <label class="block text-sm font-medium text-gray-500 mb-1">Nama Lengkap</label>
                         <p class="text-base font-semibold text-gray-900">
-                            <?php echo htmlspecialchars($participant['nama_lengkap']); ?></p>
+                            <?php echo htmlspecialchars($participant['nama_lengkap']); ?>
+                        </p>
                     </div>
 
                     <div>
@@ -162,19 +167,22 @@ ob_start();
                     <div>
                         <label class="block text-sm font-medium text-gray-500 mb-1">Program Studi</label>
                         <p class="text-base font-medium text-gray-900">
-                            <?php echo htmlspecialchars($participant['nama_prodi']); ?></p>
+                            <?php echo htmlspecialchars($participant['nama_prodi']); ?>
+                        </p>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-500 mb-1">Email</label>
                         <p class="text-base font-medium text-gray-900">
-                            <?php echo htmlspecialchars($participant['email']); ?></p>
+                            <?php echo htmlspecialchars($participant['email']); ?>
+                        </p>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-500 mb-1">No. Handphone</label>
                         <p class="text-base font-medium text-gray-900">
-                            <?php echo htmlspecialchars($participant['no_hp'] ?? '-'); ?></p>
+                            <?php echo htmlspecialchars($participant['no_hp'] ?? '-'); ?>
+                        </p>
                     </div>
 
 
@@ -273,7 +281,8 @@ ob_start();
                                 Kartu ujian dapat didownload setelah <strong>Jadwal & Ruang Ujian</strong> ditentukan oleh
                                 Admin.
                             <?php else: ?>
-                                Kartu ujian dapat didownload jika berkas sudah diverifikasi (Lulus) dan pembayaran lunas.
+                                Kartu ujian dapat didownload jika berkas sudah diverifikasi (Lulus Verifikasi Fisik) dan
+                                pembayaran lunas.
                             <?php endif; ?>
                         </p>
                     </div>

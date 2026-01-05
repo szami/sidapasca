@@ -83,4 +83,57 @@ class EmailTemplateController
         echo json_encode($template);
         exit;
     }
+    public function apiData()
+    {
+        $this->checkAuth();
+
+        $db = \App\Utils\Database::connection();
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 0;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 'id',
+            1 => 'name',
+            2 => 'subject',
+            3 => 'description',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'id';
+
+        // Base WHERE
+        $whereClause = "WHERE 1=1";
+
+        // Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (name LIKE '%$searchEscaped%' 
+                             OR subject LIKE '%$searchEscaped%'
+                             OR description LIKE '%$searchEscaped%')";
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM email_templates";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM email_templates $whereClause";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT id, name, subject, description FROM email_templates $whereClause 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
+        ]);
+    }
 }

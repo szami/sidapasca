@@ -10,45 +10,55 @@
                 </div>
             </div>
             <div class="card-body">
-                <table class="table table-bordered table-striped datatable">
+                <table class="table table-bordered table-striped" id="roomTable">
                     <thead>
                         <tr>
-                            <th>No</th>
+                            <th width="5%">ID</th>
                             <th>Fakultas</th>
                             <th>Nama Ruang</th>
-                            <th>Kapasitas</th>
-                            <th>Aksi</th>
+                            <th width="15%">Kapasitas</th>
+                            <th width="15%">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($rooms as $index => $room): ?>
-                            <tr>
-                                <td>
-                                    <?php echo $index + 1; ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($room['fakultas']); ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($room['nama_ruang']); ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($room['kapasitas']); ?>
-                                </td>
-                                <td>
-                                    <a href="/admin/master/rooms/edit/<?php echo $room['id']; ?>"
-                                        class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
-                                    <a href="/admin/master/rooms/delete/<?php echo $room['id']; ?>"
-                                        class="btn btn-danger btn-xs" onclick="return confirm('Hapus ruang ini?')"><i
-                                            class="fas fa-trash"></i></a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <!-- AJAX Populated -->
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    $(function () {
+        const table = $('#roomTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": APP_URL + "/api/master/rooms",
+            "order": [[0, "desc"]],
+            "columns": [
+                { "data": "id" },
+                { "data": "fakultas" },
+                { "data": "nama_ruang" },
+                { "data": "kapasitas", "className": "text-center" },
+                {
+                    "data": "id",
+                    "orderable": false,
+                    "className": "text-center",
+                    "render": function (data) {
+                        return `
+                        <a href="${APP_URL}/admin/master/rooms/edit/${data}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
+                        <a href="${APP_URL}/admin/master/rooms/delete/${data}" class="btn btn-danger btn-xs" onclick="return confirm('Hapus ruang ini?')"><i class="fas fa-trash"></i></a>
+                    `;
+                    }
+                }
+            ]
+        });
+    });
+</script>
+</div>
+</div>
+</div>
 </div>
 <?php
 $content = ob_get_clean();

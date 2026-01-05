@@ -97,10 +97,10 @@
                 <?php endif; ?>
 
                 <!-- Data Table -->
-                <table class="table table-bordered table-striped datatable">
+                <table class="table table-bordered table-striped" id="participantsTable">
                     <thead>
                         <tr>
-                            <th>No</th>
+                            <th>ID</th>
                             <th>Foto</th>
                             <?php if (!($hideExamNumber ?? false)): ?>
                                 <th>No Peserta</th>
@@ -119,104 +119,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $no = 1;
-                        foreach ($participants as $p): ?>
-                            <tr>
-                                <td>
-                                    <?php echo $no++; ?>
-                                </td>
-                                <td class="text-center">
-                                    <?php if (!empty($p['photo_filename'])): ?>
-                                        <img src="/storage/photos/<?php echo $p['photo_filename']; ?>" alt="Foto"
-                                            class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">
-                                    <?php else: ?>
-                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
-                                    <?php endif; ?>
-                                </td>
-                                <?php if (!($hideExamNumber ?? false)): ?>
-                                    <td>
-                                        <span class="badge badge-light p-2 border">
-                                            <?php echo $p['nomor_peserta'] ?: '-'; ?>
-                                        </span>
-                                    </td>
-                                <?php endif; ?>
-                                <td>
-                                    <strong>
-                                        <?php echo $p['nama_lengkap']; ?>
-                                    </strong><br>
-                                    <small class="text-muted">
-                                        <i class="fas fa-envelope mr-1"></i>
-                                        <?php echo $p['email']; ?>
-                                    </small>
-                                </td>
-                                <td class="text-center">
-                                    <?php
-                                    $jk = strtoupper($p['jenis_kelamin'] ?? '');
-                                    if ($jk == 'L' || $jk == 'LAKI-LAKI')
-                                        echo '<span class="badge badge-primary-soft">Laki-laki</span>';
-                                    elseif ($jk == 'P' || $jk == 'PEREMPUAN')
-                                        echo '<span class="badge badge-danger-soft">Perempuan</span>';
-                                    else
-                                        echo $jk ?: '-';
-                                    ?>
-                                </td>
-                                <td>
-                                    <?php echo $p['nama_prodi']; ?>
-                                </td>
-                                <?php if (!($hideBilling ?? false)): ?>
-                                    <td>
-                                        <code><?php echo $p['no_billing']; ?></code>
-                                    </td>
-                                <?php endif; ?>
-                                <td>
-                                    <?php if ($p['status_berkas'] == 'lulus'): ?>
-                                        <span class="badge badge-success">Lulus</span>
-                                    <?php elseif ($p['status_berkas'] == 'gagal'): ?>
-                                        <span class="badge badge-danger">Gagal</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-warning">Pending</span>
-                                    <?php endif; ?>
-                                </td>
-                                <?php if (!($hidePaymentStatus ?? false)): ?>
-                                    <td>
-                                        <?php if ($p['status_pembayaran']): ?>
-                                            <span class="badge badge-success">Lunas</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-secondary">Belum</span>
-                                        <?php endif; ?>
-                                    </td>
-                                <?php endif; ?>
-                                <td>
-                                    <div class="btn-group">
-                                        <?php if ($filter == 'exam_ready'): ?>
-                                            <?php if (!empty($p['nomor_peserta'])): ?>
-                                                <a href="/admin/participants/card/<?php echo $p['id']; ?>" target="_blank"
-                                                    class="btn btn-xs btn-info" title="Kartu Ujian"><i
-                                                        class="fas fa-id-card"></i></a>
-                                            <?php else: ?>
-                                                <button class="btn btn-xs btn-secondary" disabled title="Belum ada nomor peserta"><i
-                                                        class="fas fa-id-card"></i></button>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <a href="/admin/participants/form/<?php echo $p['id']; ?>" target="_blank"
-                                                class="btn btn-xs btn-primary" title="Formulir"><i
-                                                    class="fas fa-file-alt"></i></a>
-                                        <?php endif; ?>
-                                        <a href="/admin/participants/view/<?php echo $p['id']; ?>"
-                                            class="btn btn-xs btn-info" title="Lihat Detail"><i class="fas fa-eye"></i></a>
-                                        <?php if (($_SESSION['admin_role'] ?? 'superadmin') === 'superadmin'): ?>
-                                            <a href="/admin/participants/edit/<?php echo $p['id']; ?>"
-                                                class="btn btn-xs btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
-                                            <?php if (\App\Models\Setting::get('allow_delete', '1') == '1'): ?>
-                                                <a href="/admin/participants/delete/<?php echo $p['id']; ?>"
-                                                    class="btn btn-xs btn-danger" onclick="return confirm('Hapus data ini?')"
-                                                    title="Hapus"><i class="fas fa-trash"></i></a>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <!-- Populated by DataTables Server-Side -->
                     </tbody>
                 </table>
             </div>
@@ -227,19 +130,136 @@
 </div>
 
 <script>
-function filterByProdi() {
-    const prodi = document.getElementById('prodiFilter').value;
-    const currentParams = new URLSearchParams(window.location.search);
-    
-    if (prodi === 'all') {
-        currentParams.delete('prodi');
-    } else {
-        currentParams.set('prodi', prodi);
-    }
-    
-    window.location.href = '?' + currentParams.toString();
-}
+$(function () {
+    const table = $('#participantsTable').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": APP_URL + "/api/participants",
+            "data": function (d) {
+                d.filter = '<?php echo $filter; ?>';
+                d.prodi = '<?php echo $prodiFilter; ?>';
+                d.payment = '<?php echo $paymentFilter; ?>';
+            }
+        },
+        "order": [[0, "desc"]],
+        "columns": [
+            { "data": "id" },
+            { 
+                "data": "photo_filename",
+                "orderable": false,
+                "render": function(data, type, row) {
+                    if (data) {
+                        return `<img src="/storage/photos/${data}" alt="Foto" class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">`;
+                    }
+                    return '<i class="fas fa-user-circle fa-2x text-muted"></i>';
+                }
+            },
+            <?php if (!($hideExamNumber ?? false)): ?>
+            { 
+                "data": "nomor_peserta",
+                "render": function(data) {
+                    return `<span class="badge badge-light p-2 border">${data || '-'}</span>`;
+                }
+            },
+            <?php endif; ?>
+            { 
+                "data": "nama_lengkap",
+                "render": function(data, type, row) {
+                    return `<strong>${data}</strong><br><small class="text-muted"><i class="fas fa-envelope mr-1"></i>${row.email}</small>`;
+                }
+            },
+            { 
+                "data": "jenis_kelamin",
+                "className": "text-center",
+                "render": function(data) {
+                    const jk = (data || '').toUpperCase();
+                    if (jk === 'L' || jk === 'LAKI-LAKI') return '<span class="badge badge-primary-soft">Laki-laki</span>';
+                    if (jk === 'P' || jk === 'PEREMPUAN') return '<span class="badge badge-danger-soft">Perempuan</span>';
+                    return data || '-';
+                }
+            },
+            { "data": "nama_prodi" },
+            <?php if (!($hideBilling ?? false)): ?>
+            { 
+                "data": "no_billing",
+                "render": function(data) {
+                    return `<code>${data || '-'}</code>`;
+                }
+            },
+            <?php endif; ?>
+            { 
+                "data": "status_berkas",
+                "render": function(data) {
+                    if (data === 'lulus') return '<span class="badge badge-success">Lulus</span>';
+                    if (data === 'gagal') return '<span class="badge badge-danger">Gagal</span>';
+                    return '<span class="badge badge-warning">Pending</span>';
+                }
+            },
+            <?php if (!($hidePaymentStatus ?? false)): ?>
+            { 
+                "data": "status_pembayaran",
+                "render": function(data) {
+                    return data ? '<span class="badge badge-success">Lunas</span>' : '<span class="badge badge-secondary">Belum</span>';
+                }
+            },
+            <?php endif; ?>
+            { 
+                "data": "id",
+                "orderable": false,
+                "render": function(data, type, row) {
+                    let actions = '<div class="btn-group">';
+                    const filter = '<?php echo $filter; ?>';
+                    
+                    if (filter === 'exam_ready') {
+                        if (row.nomor_peserta) {
+                            actions += `<a href="/admin/participants/card/${data}" target="_blank" class="btn btn-xs btn-info" title="Kartu Ujian"><i class="fas fa-id-card"></i></a>`;
+                        } else {
+                            actions += `<button class="btn btn-xs btn-secondary" disabled title="Belum ada nomor peserta"><i class="fas fa-id-card"></i></button>`;
+                        }
+                    } else {
+                        actions += `<a href="/admin/participants/form/${data}" target="_blank" class="btn btn-xs btn-primary" title="Formulir"><i class="fas fa-file-alt"></i></a>`;
+                    }
+                    
+                    actions += `<a href="/admin/participants/view/${data}" class="btn btn-xs btn-info" title="Lihat Detail"><i class="fas fa-eye"></i></a>`;
+                    
+                    <?php if (($_SESSION['admin_role'] ?? 'superadmin') === 'superadmin'): ?>
+                    actions += `<a href="/admin/participants/edit/${data}" class="btn btn-xs btn-warning" title="Edit"><i class="fas fa-edit"></i></a>`;
+                    <?php if (\App\Models\Setting::get('allow_delete', '1') == '1'): ?>
+                    actions += `<a href="/admin/participants/delete/${data}" class="btn btn-xs btn-danger" onclick="return confirm('Hapus data ini?')" title="Hapus"><i class="fas fa-trash"></i></a>`;
+                    <?php endif; ?>
+                    <?php endif; ?>
+                    
+                    actions += '</div>';
+                    return actions;
+                }
+            }
+        ]
+    });
+
+    window.filterByProdi = function() {
+        const prodi = document.getElementById('prodiFilter').value;
+        const currentParams = new URLSearchParams(window.location.search);
+        
+        if (prodi === 'all') {
+            currentParams.delete('prodi');
+        } else {
+            currentParams.set('prodi', prodi);
+        }
+        
+        // We still reload page for prodi filter because the counts in dropdown/active filter alerts 
+        // are PHP-rendered. To make it pure AJAX, we'd need to update those via API too.
+        // For now, page reload is fine as the table itself will load via AJAX anyway.
+        window.location.href = '?' + currentParams.toString();
+    };
+});
 </script>
+            </div>
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+    </div>
+</div>
 
 <?php
 $content = ob_get_clean();

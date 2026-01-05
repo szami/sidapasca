@@ -43,99 +43,247 @@
         margin-bottom: 1.5rem;
     }
 
-    .card-premium .card-header {
-        background-color: transparent;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        padding: 1.25rem 1.5rem;
+    .quick-action-card {
+        border: 2px solid transparent;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
     }
 
-    .table-premium th {
-        background-color: #f8fafc;
-        border-bottom: 2px solid #e2e8f0;
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .quick-action-card.indigo {
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        border-color: #c7d2fe;
+    }
+
+    .quick-action-card.indigo:hover {
+        border-color: #6366f1;
+    }
+
+    .quick-action-card.blue {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: #bfdbfe;
+    }
+
+    .quick-action-card.blue:hover {
+        border-color: #3b82f6;
+    }
+
+    .quick-action-card.green {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-color: #bbf7d0;
+    }
+
+    .quick-action-card.green:hover {
+        border-color: #22c55e;
+    }
+
+    .quick-action-card.purple {
+        background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        border-color: #e9d5ff;
+    }
+
+    .quick-action-card.purple:hover {
+        border-color: #a855f7;
+    }
+
+    .quick-action-card.gray {
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        border-color: #e5e7eb;
+    }
+
+    .quick-action-card.gray:hover {
+        border-color: #6b7280;
+    }
+
+    .welcome-card {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .stat-mini {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .recent-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .recent-item:hover {
+        background: #f8fafc;
+        border-left-color: #6366f1;
+    }
+
+    .schedule-card {
+        background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        color: white;
+    }
+
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: #475569;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.05em;
     }
 
-    .table-premium td {
-        vertical-align: middle;
-        padding: 1rem 0.75rem;
-        font-size: 1rem;
+    .role-badge.superadmin {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     }
 
-    /* Custom Badges */
-    .badge-soft-warning {
-        background-color: #fff7ed;
-        color: #c2410c;
-        /* Orange-700 */
-        border: 1px solid #ffedd5;
-        font-size: 0.95rem;
+    .role-badge.admin {
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     }
 
-    .badge-soft-danger {
-        background-color: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fee2e2;
-        font-size: 0.95rem;
+    .role-badge.upkh {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
     }
 
-    .badge-soft-success {
-        background-color: #f0fdf4;
-        color: #15803d;
-        border: 1px solid #dcfce7;
-        font-size: 0.95rem;
+    .role-badge.tu {
+        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
     }
 
-    .badge-soft-primary {
-        background-color: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #dbeafe;
-        font-size: 0.95rem;
-    }
-
-    .badge-soft-secondary {
-        background-color: #f8fafc;
-        color: #475569;
-        border: 1px solid #e2e8f0;
-        font-size: 0.95rem;
+    .role-badge.admin_prodi {
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
     }
 </style>
 
-<!-- Custom Header Section -->
-<div class="content-header p-0">
-    <div class="dashboard-header">
-        <div class="container-fluid">
+<?php
+// Get role-specific greeting
+$greetings = [
+    'superadmin' => 'Selamat datang, Super Administrator!',
+    'admin' => 'Selamat datang, Administrator!',
+    'upkh' => 'Selamat datang, Tim UPKH!',
+    'tu' => 'Selamat datang, Tata Usaha!',
+    'admin_prodi' => 'Selamat datang, Admin Program Studi!'
+];
+$greeting = $greetings[$role ?? 'admin'] ?? 'Selamat datang!';
+
+$roleDescriptions = [
+    'superadmin' => 'Akses penuh ke seluruh sistem',
+    'admin' => 'Kelola data peserta dan import/export',
+    'upkh' => 'Verifikasi berkas dan dokumen peserta',
+    'tu' => 'Penjadwalan dan operasional ujian',
+    'admin_prodi' => 'Monitoring data program studi Anda'
+];
+$roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
+?>
+
+<section class="content px-3 py-4">
+    <div class="container-fluid">
+        <!-- Welcome Card -->
+        <div class="welcome-card mb-4">
             <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-1 fw-bold" style="font-size: 2rem;">Selamat Datang, Admin!</h1>
-                    <p class="mb-0 text-white-50">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="role-badge <?= $role ?>">
+                            <i class="fas fa-shield-alt"></i>
+                            <?= $roleDisplayName ?>
+                        </div>
+                    </div>
+                    <h1 class="mb-2" style="font-size: 1.75rem; font-weight: 700;"><?= $greeting ?></h1>
+                    <p class="text-white-50 mb-0"><?= $roleDesc ?></p>
+                    <p class="text-white-50 mb-0 mt-2">
                         <i class="fas fa-calendar-alt mr-2"></i>
                         <?php
                         $days_id = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                         $months_id = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
                         $now = new DateTime();
-                        echo $days_id[$now->format('w')] . ', ' . $now->format('d') . ' ' . $months_id[(int) $now->format('n')] . ' ' . $now->format('Y') . ' - <span id="clock">' . $now->format('H:i') . '</span> WITA';
+                        echo $days_id[$now->format('w')] . ', ' . $now->format('d') . ' ' . $months_id[(int) $now->format('n')] . ' ' . $now->format('Y');
                         ?>
                     </p>
                 </div>
-                <!-- <div class="col-md-4 text-right">
-                         <button class="btn btn-light shadow-sm text-primary font-weight-bold">
-                             <i class="fas fa-download mr-1"></i> Unduh Laporan
-                         </button>
-                    </div> -->
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stat-mini text-center">
+                                <div class="h3 mb-1 font-weight-bold"><?= number_format($stats['total'] ?? 0) ?></div>
+                                <div class="small text-white-50">Total Peserta</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-mini text-center">
+                                <div class="h3 mb-1 font-weight-bold"><?= number_format($stats['lulus'] ?? 0) ?></div>
+                                <div class="small text-white-50">Lulus Berkas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<section class="content px-3 mt-n4">
-    <div class="container-fluid">
+        <!-- Quick Actions -->
+        <?php if (!empty($quickActions)): ?>
+            <div class="mb-4">
+                <h5 class="font-weight-bold text-gray-800 mb-3">
+                    <i class="fas fa-bolt text-warning mr-2"></i> Aksi Cepat
+                </h5>
+                <div class="row g-3">
+                    <?php foreach ($quickActions as $action): ?>
+                        <div class="col-6 col-md-3">
+                            <a href="<?= $action['url'] ?>" class="quick-action-card <?= $action['color'] ?>">
+                                <div class="mb-2">
+                                    <?php
+                                    $icons = [
+                                        'users' => '<i class="fas fa-users fa-2x text-indigo-600"></i>',
+                                        'upload' => '<i class="fas fa-cloud-upload-alt fa-2x text-blue-600"></i>',
+                                        'cog' => '<i class="fas fa-cog fa-2x text-gray-600"></i>',
+                                        'chart' => '<i class="fas fa-chart-pie fa-2x text-green-600"></i>',
+                                        'check' => '<i class="fas fa-check-circle fa-2x text-green-600"></i>',
+                                        'mail' => '<i class="fas fa-envelope fa-2x text-purple-600"></i>',
+                                        'calendar' => '<i class="fas fa-calendar-alt fa-2x text-blue-600"></i>',
+                                        'clipboard' => '<i class="fas fa-clipboard-list fa-2x text-green-600"></i>',
+                                        'printer' => '<i class="fas fa-print fa-2x text-purple-600"></i>',
+                                        'document' => '<i class="fas fa-file-alt fa-2x text-blue-600"></i>',
+                                    ];
+                                    echo $icons[$action['icon']] ?? '<i class="fas fa-star fa-2x"></i>';
+                                    ?>
+                                </div>
+                                <div class="font-weight-semibold text-gray-800" style="font-size: 0.875rem;">
+                                    <?= $action['label'] ?>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- KPI Cards Row -->
-        <div class="row mb-4" style="margin-top: -3rem;">
+        <div class="row mb-4">
             <!-- Total Participants -->
-            <div class="col-lg-3 col-6">
+            <div class="col-lg-3 col-6 mb-3">
                 <div class="kpi-card p-4">
                     <div class="kpi-icon-bg text-primary">
                         <i class="fas fa-users"></i>
@@ -143,16 +291,16 @@
                     <div class="d-flex flex-column position-relative">
                         <span class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; font-weight: 600;">Total
                             Pendaftar</span>
-                        <h2 class="mb-0 font-weight-bold text-dark"><?php echo number_format($stats['total']); ?></h2>
+                        <h2 class="mb-0 font-weight-bold text-dark"><?= number_format($stats['total'] ?? 0) ?></h2>
                         <small class="text-success mt-2">
-                            <i class="fas fa-layer-group mr-1"></i> Smt: <?php echo $semesterName; ?>
+                            <i class="fas fa-layer-group mr-1"></i> <?= $semesterName ?>
                         </small>
                     </div>
                 </div>
             </div>
 
             <!-- Lulus Berkas -->
-            <div class="col-lg-3 col-6">
+            <div class="col-lg-3 col-6 mb-3">
                 <div class="kpi-card p-4">
                     <div class="kpi-icon-bg text-success">
                         <i class="fas fa-check-circle"></i>
@@ -160,17 +308,14 @@
                     <div class="d-flex flex-column position-relative">
                         <span class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; font-weight: 600;">Lulus
                             Berkas</span>
-                        <h2 class="mb-0 font-weight-bold text-success"><?php echo number_format($stats['lulus']); ?>
-                        </h2>
-                        <small class="text-secondary mt-2">
-                            Siap Ujian
-                        </small>
+                        <h2 class="mb-0 font-weight-bold text-success"><?= number_format($stats['lulus'] ?? 0) ?></h2>
+                        <small class="text-secondary mt-2">Siap Ujian</small>
                     </div>
                 </div>
             </div>
 
             <!-- Paid -->
-            <div class="col-lg-3 col-6">
+            <div class="col-lg-3 col-6 mb-3">
                 <div class="kpi-card p-4">
                     <div class="kpi-icon-bg text-info">
                         <i class="fas fa-wallet"></i>
@@ -178,353 +323,270 @@
                     <div class="d-flex flex-column position-relative">
                         <span class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; font-weight: 600;">Sudah
                             Bayar</span>
-                        <h2 class="mb-0 font-weight-bold text-info"><?php echo number_format($stats['paid']); ?></h2>
-                        <small class="text-muted mt-2">
-                            Lunas Pembayaran
-                        </small>
+                        <h2 class="mb-0 font-weight-bold text-info"><?= number_format($stats['paid'] ?? 0) ?></h2>
+                        <small class="text-muted mt-2">Lunas Pembayaran</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Unpaid -->
-            <div class="col-lg-3 col-6">
+            <!-- Unpaid/Pending -->
+            <div class="col-lg-3 col-6 mb-3">
                 <div class="kpi-card p-4">
                     <div class="kpi-icon-bg text-warning">
                         <i class="fas fa-exclamation-circle"></i>
                     </div>
                     <div class="d-flex flex-column position-relative">
-                        <span class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; font-weight: 600;">Belum
-                            Bayar</span>
-                        <h2 class="mb-0 font-weight-bold text-warning"><?php echo number_format($stats['unpaid']); ?>
+                        <span class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; font-weight: 600;">
+                            <?= ($role === 'tu') ? 'Terjadwal' : 'Belum Bayar' ?>
+                        </span>
+                        <h2 class="mb-0 font-weight-bold text-warning">
+                            <?= ($role === 'tu') ? number_format($scheduledCount ?? 0) : number_format($stats['unpaid'] ?? 0) ?>
                         </h2>
-                        <small class="text-danger mt-2">
-                            <i class="fas fa-info-circle mr-1"></i> Perlu Ditagih
+                        <small class="text-<?= ($role === 'tu') ? 'success' : 'danger' ?> mt-2">
+                            <?= ($role === 'tu') ? 'Peserta Terjadwal' : 'Perlu Ditagih' ?>
                         </small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- S2 Magister Section -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="card shadow border-0" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-header border-0 d-flex align-items-center text-white"
-                        style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 1.25rem 1.5rem;">
-                        <h3 class="card-title font-weight-bold mb-0" style="font-size: 1.1rem; letter-spacing: 0.5px;">
-                            <i class="fas fa-graduation-cap mr-2"></i> Statistik Program Magister (S2)
-                        </h3>
-                    </div>
-                    <div class="card-body" style="padding: 2rem;">
-                        <!-- Chart S2 -->
-                        <div class="chart-container mb-5" style="position: relative; width: 100%;">
-                            <canvas id="s2Chart"></canvas>
-                        </div>
-
-                        <!-- Search S2 -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="font-weight-bold text-gray-800 mb-0">Rincian Data Magister</h5>
-                            <div class="input-group" style="width: 300px;">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light border-right-0"
-                                        style="border-radius: 8px 0 0 8px;">
-                                        <i class="fas fa-search text-muted"></i>
-                                    </span>
-                                </div>
-                                <input type="text" id="s2Search" class="form-control border-left-0 bg-light"
-                                    placeholder="Cari Program Studi S2..." style="border-radius: 0 8px 8px 0;">
-                            </div>
-                        </div>
-
-                        <!-- Table S2 -->
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle custom-table" id="s2Table">
-                                <thead class="bg-light text-uppercase text-secondary text-xs font-weight-bold">
-                                    <tr>
-                                        <th class="pl-4 py-3" style="width: 40%;">Program Studi</th>
-                                        <th class="text-center py-3">Total</th>
-                                        <th class="text-center py-3">Lulus Berkas</th>
-                                        <th class="text-center py-3">Sudah Bayar</th>
-                                        <th class="text-center py-3">Belum Bayar</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($s2Stats)): ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted">Belum ada data pendaftar S2.
-                                            </td>
-                                        </tr>
-                                    <?php else: ?>
-                                        <?php foreach ($s2Stats as $stat):
-                                            $unpaidCalc = isset($stat['unpaid']) ? $stat['unpaid'] : 0;
-                                            ?>
-                                            <tr class="prodi-row-s2" style="transition: all 0.2s;">
-                                                <td class="pl-4 py-3 font-weight-bold text-dark prodi-name">
-                                                    <?php echo $stat['nama_prodi']; ?>
-                                                </td>
-                                                <td class="text-center py-3"><span
-                                                        class="badge badge-light px-3 py-2 border"><?php echo $stat['total']; ?></span>
-                                                </td>
-                                                <td class="text-center py-3"><span
-                                                        class="badge badge-success px-3 py-2 bg-success-light text-success-dark"><?php echo $stat['lulus']; ?></span>
-                                                </td>
-                                                <td class="text-center py-3"><span
-                                                        class="badge badge-info px-3 py-2 bg-info-light text-info-dark"><?php echo $stat['paid']; ?></span>
-                                                </td>
-                                                <td class="text-center py-3">
-                                                    <?php if ($unpaidCalc > 0): ?>
-                                                        <span
-                                                            class="badge badge-danger px-3 py-2 bg-danger-light text-danger-dark"><?php echo $unpaidCalc; ?></span>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small"><i class="fas fa-check"></i> Lunas</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- S3 Doktor Section -->
         <div class="row">
-            <div class="col-12">
-                <div class="card shadow border-0" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-header border-0 d-flex align-items-center text-white"
-                        style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); padding: 1.25rem 1.5rem;">
-                        <h3 class="card-title font-weight-bold mb-0" style="font-size: 1.1rem; letter-spacing: 0.5px;">
-                            <i class="fas fa-user-graduate mr-2"></i> Statistik Program Doktor (S3)
-                        </h3>
-                    </div>
-                    <div class="card-body" style="padding: 2rem;">
-                        <!-- Chart S3 -->
-                        <div class="chart-container mb-5" style="position: relative; width: 100%;">
-                            <canvas id="s3Chart"></canvas>
+            <!-- Left Column - Charts/Table -->
+            <div class="col-lg-8">
+                <?php if ($role !== 'tu' && $role !== 'upkh'): ?>
+                    <!-- S2 Magister Section -->
+                    <div class="card card-premium mb-4">
+                        <div class="card-header d-flex align-items-center text-white"
+                            style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border-radius: 1rem 1rem 0 0;">
+                            <h5 class="mb-0 font-weight-bold">
+                                <i class="fas fa-graduation-cap mr-2"></i> Program Magister (S2)
+                            </h5>
                         </div>
-
-                        <!-- Search S3 -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="font-weight-bold text-gray-800 mb-0">Rincian Data Doktor</h5>
-                            <div class="input-group" style="width: 300px;">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light border-right-0"
-                                        style="border-radius: 8px 0 0 8px;">
-                                        <i class="fas fa-search text-muted"></i>
-                                    </span>
-                                </div>
-                                <input type="text" id="s3Search" class="form-control border-left-0 bg-light"
-                                    placeholder="Cari Program Studi S3..." style="border-radius: 0 8px 8px 0;">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="border-0 pl-4">Program Studi</th>
+                                            <th class="border-0 text-center">Total</th>
+                                            <th class="border-0 text-center">Lulus</th>
+                                            <th class="border-0 text-center">Bayar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($s2Stats)): ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted">Belum ada data S2</td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <?php foreach (array_slice($s2Stats, 0, 5) as $stat): ?>
+                                                <tr>
+                                                    <td class="pl-4 font-weight-medium"><?= $stat['nama_prodi'] ?? '-' ?></td>
+                                                    <td class="text-center"><span
+                                                            class="badge badge-light"><?= $stat['total'] ?? 0 ?></span></td>
+                                                    <td class="text-center"><span
+                                                            class="badge badge-success"><?= $stat['lulus'] ?? 0 ?></span></td>
+                                                    <td class="text-center"><span
+                                                            class="badge badge-info"><?= $stat['paid'] ?? 0 ?></span></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Table S3 -->
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle custom-table" id="s3Table">
-                                <thead class="bg-light text-uppercase text-secondary text-xs font-weight-bold">
-                                    <tr>
-                                        <th class="pl-4 py-3" style="width: 40%;">Program Studi</th>
-                                        <th class="text-center py-3">Total</th>
-                                        <th class="text-center py-3">Lulus Berkas</th>
-                                        <th class="text-center py-3">Sudah Bayar</th>
-                                        <th class="text-center py-3">Belum Bayar</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($s3Stats)): ?>
+                    <!-- S3 Doktor Section -->
+                    <div class="card card-premium">
+                        <div class="card-header d-flex align-items-center text-white"
+                            style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); border-radius: 1rem 1rem 0 0;">
+                            <h5 class="mb-0 font-weight-bold">
+                                <i class="fas fa-user-graduate mr-2"></i> Program Doktor (S3)
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
                                         <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted">Belum ada data pendaftar S3.
-                                            </td>
+                                            <th class="border-0 pl-4">Program Studi</th>
+                                            <th class="border-0 text-center">Total</th>
+                                            <th class="border-0 text-center">Lulus</th>
+                                            <th class="border-0 text-center">Bayar</th>
                                         </tr>
-                                    <?php else: ?>
-                                        <?php foreach ($s3Stats as $stat):
-                                            $unpaidCalc = isset($stat['unpaid']) ? $stat['unpaid'] : 0;
-                                            ?>
-                                            <tr class="prodi-row-s3" style="transition: all 0.2s;">
-                                                <td class="pl-4 py-3 font-weight-bold text-dark prodi-name">
-                                                    <?php echo $stat['nama_prodi']; ?>
-                                                </td>
-                                                <td class="text-center py-3"><span
-                                                        class="badge badge-light px-3 py-2 border"><?php echo $stat['total']; ?></span>
-                                                </td>
-                                                <td class="text-center py-3"><span
-                                                        class="badge badge-success px-3 py-2 bg-success-light text-success-dark"><?php echo $stat['lulus']; ?></span>
-                                                </td>
-                                                <td class="text-center py-3"><span
-                                                        class="badge badge-info px-3 py-2 bg-info-light text-info-dark"><?php echo $stat['paid']; ?></span>
-                                                </td>
-                                                <td class="text-center py-3">
-                                                    <?php if ($unpaidCalc > 0): ?>
-                                                        <span
-                                                            class="badge badge-danger px-3 py-2 bg-danger-light text-danger-dark"><?php echo $unpaidCalc; ?></span>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small"><i class="fas fa-check"></i> Lunas</span>
-                                                    <?php endif; ?>
-                                                </td>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($s3Stats)): ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted">Belum ada data S3</td>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
+                                        <?php else: ?>
+                                            <?php foreach (array_slice($s3Stats, 0, 5) as $stat): ?>
+                                                <tr>
+                                                    <td class="pl-4 font-weight-medium"><?= $stat['nama_prodi'] ?? '-' ?></td>
+                                                    <td class="text-center"><span
+                                                            class="badge badge-light"><?= $stat['total'] ?? 0 ?></span></td>
+                                                    <td class="text-center"><span
+                                                            class="badge badge-success"><?= $stat['lulus'] ?? 0 ?></span></td>
+                                                    <td class="text-center"><span
+                                                            class="badge badge-info"><?= $stat['paid'] ?? 0 ?></span></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($role === 'tu' && !empty($todaySchedule)): ?>
+                    <!-- Today's Schedule (TU) -->
+                    <div class="card card-premium">
+                        <div class="card-header d-flex align-items-center text-white"
+                            style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); border-radius: 1rem 1rem 0 0;">
+                            <h5 class="mb-0 font-weight-bold">
+                                <i class="fas fa-calendar-day mr-2"></i> Jadwal Ujian Hari Ini
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <?php foreach ($todaySchedule as $schedule): ?>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="schedule-card">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="font-weight-bold"><?= $schedule['sesi_ujian'] ?? 'Sesi' ?></div>
+                                                    <div class="small opacity-75"><?= $schedule['ruang_ujian'] ?? 'Ruang' ?>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="h4 mb-0 font-weight-bold"><?= $schedule['peserta_count'] ?? 0 ?>
+                                                    </div>
+                                                    <div class="small opacity-75">peserta</div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 pt-2 border-top border-white-25">
+                                                <i class="fas fa-clock mr-1"></i> <?= $schedule['waktu_ujian'] ?? '-' ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($role === 'upkh'): ?>
+                    <!-- Verification Stats (UPKH) -->
+                    <div class="card card-premium">
+                        <div class="card-header d-flex align-items-center text-white"
+                            style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-radius: 1rem 1rem 0 0;">
+                            <h5 class="mb-0 font-weight-bold">
+                                <i class="fas fa-clipboard-check mr-2"></i> Status Verifikasi Dokumen
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 text-center">
+                                    <div class="h1 font-weight-bold text-success"><?= number_format($verifiedCount ?? 0) ?>
+                                    </div>
+                                    <p class="text-muted mb-0">Terverifikasi</p>
+                                </div>
+                                <div class="col-6 text-center">
+                                    <div class="h1 font-weight-bold text-warning">
+                                        <?= number_format(($stats['lulus'] ?? 0) - ($verifiedCount ?? 0)) ?></div>
+                                    <p class="text-muted mb-0">Belum Verifikasi</p>
+                                </div>
+                            </div>
+                            <div class="progress mt-4" style="height: 12px; border-radius: 6px;">
+                                <?php
+                                $total = max(($stats['lulus'] ?? 0), 1);
+                                $percent = round(($verifiedCount ?? 0) / $total * 100);
+                                ?>
+                                <div class="progress-bar bg-success" style="width: <?= $percent ?>%"></div>
+                            </div>
+                            <p class="text-center text-muted mt-2 mb-0"><?= $percent ?>% terverifikasi</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Right Column - Recent & Info -->
+            <div class="col-lg-4">
+                <!-- Recent Participants -->
+                <?php if (!empty($recentParticipants)): ?>
+                    <div class="card card-premium">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0 font-weight-bold text-gray-800">
+                                <i class="fas fa-clock text-primary mr-2"></i> Pendaftar Terbaru
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <?php foreach ($recentParticipants as $p): ?>
+                                <div class="recent-item px-4 py-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="font-weight-semibold text-dark"><?= $p['nama_lengkap'] ?? '-' ?></div>
+                                            <div class="small text-muted"><?= $p['nama_prodi'] ?? '-' ?></div>
+                                        </div>
+                                        <span
+                                            class="badge badge-<?= ($p['status_berkas'] === 'lulus') ? 'success' : (($p['status_berkas'] === 'gagal') ? 'danger' : 'warning') ?>">
+                                            <?= ucfirst($p['status_berkas'] ?? 'pending') ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="card-footer bg-white border-0 text-center">
+                            <a href="/admin/participants" class="text-primary font-weight-semibold">
+                                Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- System Info -->
+                <div class="card card-premium mt-4">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0 font-weight-bold text-gray-800">
+                            <i class="fas fa-info-circle text-info mr-2"></i> Informasi Sistem
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Semester Aktif</span>
+                            <span class="font-weight-semibold"><?= $semesterName ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Role Anda</span>
+                            <span class="font-weight-semibold"><?= $roleDisplayName ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Username</span>
+                            <span class="font-weight-semibold"><?= $username ?? '-' ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span class="text-muted">Versi</span>
+                            <span class="font-weight-semibold">v1.1.0</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div><!-- /.container-fluid -->
+    </div>
 </section>
 
-
 <script>
-    console.log('Dashboard script loaded');
-    document.addEventListener('DOMContentLoaded', function () {
-        console.log('DOM Content Loaded - Initializing Chart');
-
-        // Clock
-        setInterval(() => {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const clock = document.getElementById('clock');
-            if (clock) clock.textContent = `${hours}:${minutes}`;
-        }, 1000);
-
-        // Search Function Helper
-        const setupSearch = (inputId, rowClass, nameClass) => {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.addEventListener('keyup', function () {
-                    const value = this.value.toLowerCase().trim();
-                    const rows = document.querySelectorAll(rowClass);
-                    rows.forEach(row => {
-                        const text = row.querySelector(nameClass).textContent.toLowerCase();
-                        row.style.display = text.includes(value) ? '' : 'none';
-                    });
-                });
-            }
-        };
-
-        // Initialize Search for S2 and S3
-        setupSearch('s2Search', '.prodi-row-s2', '.prodi-name');
-        setupSearch('s3Search', '.prodi-row-s3', '.prodi-name');
-
-        // Chart Configuration Function
-        const initProdiChart = (elementId, dataStats, title) => {
-            const ctxElement = document.getElementById(elementId);
-            if (!ctxElement) return;
-
-            if (dataStats && dataStats.length > 0) {
-                // Sort by total for better visualization, showing ALL data
-                const sortedData = [...dataStats].sort((a, b) => parseInt(b.total) - parseInt(a.total));
-
-                const labels = sortedData.map(item => item.nama_prodi || 'Unassigned');
-                const dataTotal = sortedData.map(item => parseInt(item.total));
-                const chartContainer = ctxElement.parentElement;
-
-                // Premium Color Palette
-                const colors = [
-                    '#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444',
-                    '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6', '#f97316',
-                    '#a855f7', '#06b6d4', '#22c55e', '#eab308', '#f43f5e'
-                ];
-
-                // Adaptive Chart Logic
-                const dataCount = sortedData.length;
-                const isHeavy = dataCount > 12;
-
-                // Dynamic Height
-                if (isHeavy) {
-                    const newHeight = Math.max(400, dataCount * 30);
-                    chartContainer.style.height = `${newHeight}px`;
-                } else {
-                    chartContainer.style.height = '400px';
-                }
-
-                const chartType = isHeavy ? 'bar' : 'doughnut';
-                const legendPos = isHeavy ? 'top' : 'right';
-                const backgroundColors = isHeavy ? '#4f46e5' : colors.slice(0, dataCount);
-
-                new Chart(ctxElement.getContext('2d'), {
-                    type: chartType,
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Total Pendaftar',
-                            data: dataTotal,
-                            backgroundColor: backgroundColors,
-                            borderRadius: isHeavy ? 4 : 0,
-                            hoverOffset: isHeavy ? 0 : 15,
-                            barPercentage: 0.7,
-                            categoryPercentage: 0.8,
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        indexAxis: isHeavy ? 'y' : 'x',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: isHeavy ? 0 : '60%',
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: legendPos,
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20,
-                                    font: { family: "'Inter', sans-serif", size: 11 },
-                                    generateLabels: isHeavy ? Chart.defaults.plugins.legend.labels.generateLabels : (chart) => {
-                                        const datasets = chart.data.datasets;
-                                        return chart.data.labels.map((label, i) => ({
-                                            text: `${label} (${datasets[0].data[i]})`,
-                                            fillStyle: datasets[0].backgroundColor[i],
-                                            strokeStyle: datasets[0].backgroundColor[i],
-                                            pointStyle: 'circle',
-                                            hidden: !chart.getDataVisibility(i),
-                                            index: i
-                                        }));
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                                padding: 14,
-                                cornerRadius: 8,
-                                titleFont: { size: 13, family: "'Inter', sans-serif" },
-                                bodyFont: { size: 13, family: "'Inter', sans-serif" },
-                                callbacks: {
-                                    label: function (context) {
-                                        const value = context.raw;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1) + '%';
-                                        return `${context.label}: ${value} (${percentage})`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: isHeavy ? {
-                            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                            y: { grid: { display: false }, ticks: { autoSkip: false } }
-                        } : { x: { display: false }, y: { display: false } }, // Hide scales for Doughnut
-                        layout: { padding: { top: 20, bottom: 20 } },
-                        interaction: { mode: 'index', intersect: false },
-                    }
-                });
-            } else {
-                ctxElement.parentElement.innerHTML =
-                    '<div class="d-flex justify-content-center align-items-center h-100 text-muted">Belum ada data ' + title + ' untuk ditampilkan.</div>';
-            }
-        };
-
-        // Initialize Charts
-        const s2Data = <?php echo json_encode($s2Stats ?? []); ?>;
-        const s3Data = <?php echo json_encode($s3Stats ?? []); ?>;
-
-        initProdiChart('s2Chart', s2Data, 'Magister (S2)');
-        initProdiChart('s3Chart', s3Data, 'Doktor (S3)');
-    });
+    // Simple clock update
+    setInterval(() => {
+        const now = new Date();
+        const clock = document.getElementById('clock');
+        if (clock) {
+            clock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+    }, 1000);
 </script>
 
 <?php

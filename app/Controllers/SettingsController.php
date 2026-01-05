@@ -10,8 +10,8 @@ class SettingsController
 {
     public function index()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
 
@@ -21,6 +21,8 @@ class SettingsController
         // Get current settings
         $allow_download = Setting::get('allow_exam_card_download', '0');
         $allow_delete = Setting::get('allow_delete', '1');
+        $maintenance_mode = Setting::get('maintenance_mode', 'off');
+        $maintenance_message = Setting::get('maintenance_message', 'Sistem sedang dalam pemeliharaan. Silakan coba lagi beberapa saat lagi.');
 
         // Get all semesters for clean database feature
         $semesters = \App\Models\Semester::all();
@@ -28,24 +30,34 @@ class SettingsController
         echo View::render('admin.settings.index', [
             'allow_download' => $allow_download,
             'allow_delete' => $allow_delete,
+            'maintenance_mode' => $maintenance_mode,
+            'maintenance_message' => $maintenance_message,
             'semesters' => $semesters
         ]);
     }
 
     public function save()
     {
-        if (!isset($_SESSION['admin']))
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
+        }
 
         $data = Request::body();
 
         // Handle Checkbox
         $allow_download = isset($data['allow_exam_card_download']) ? '1' : '0';
         $allow_delete = isset($data['allow_delete']) ? '1' : '0';
+        $maintenance_mode = isset($data['maintenance_mode']) ? 'on' : 'off';
 
         Setting::ensureTableExists();
         Setting::set('allow_exam_card_download', $allow_download);
         Setting::set('allow_delete', $allow_delete);
+        Setting::set('maintenance_mode', $maintenance_mode);
+
+        if (isset($data['maintenance_message'])) {
+            Setting::set('maintenance_message', $data['maintenance_message']);
+        }
 
         // Save App Name & Timezone
         if (isset($data['app_name'])) {
@@ -82,8 +94,8 @@ class SettingsController
 
     public function cleanSemester()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
 
@@ -105,8 +117,8 @@ class SettingsController
 
     public function backupDatabase()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
 
@@ -136,8 +148,8 @@ class SettingsController
 
     public function restoreDatabase()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
 
@@ -179,8 +191,8 @@ class SettingsController
 
     public function optimizeDB()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
 

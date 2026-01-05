@@ -1,4 +1,19 @@
-<?php ob_start(); ?>
+<?php
+ob_start();
+$canAction = \App\Utils\RoleHelper::isAdmin();
+
+// Check if current user is Admin Prodi S2 (Magister)
+// If so, they don't need to see S2 documents (as they recruit S1 graduates)
+$hideS2Columns = false;
+if ($isAdminProdi && !empty($prodiList)) {
+    foreach ($prodiList as $p) {
+        if (stripos($p['nama_prodi'], 'S2') !== false || stripos($p['nama_prodi'], 'Magister') !== false) {
+            $hideS2Columns = true;
+            break;
+        }
+    }
+}
+?>
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -58,7 +73,7 @@
                         <label class="font-weight-bold">
                             <i class="fas fa-calendar-alt mr-1"></i> Semester & Periode
                         </label>
-                        <select id="semesterFilter" class="form-control">
+                        <select id="semesterFilter" class="form-control" <?php echo $canAction ? '' : 'disabled'; ?>>
                             <?php foreach ($semesters as $sem): ?>
                                 <option value="<?php echo $sem['id']; ?>" <?php echo ($sem['id'] == $activeSemester['id']) ? 'selected' : ''; ?>>
                                     <?php
@@ -176,6 +191,8 @@
 </div>
 
 <script>
+    const canAction = <?= json_encode($canAction) ?>;
+    const hideS2Columns = <?= json_encode($hideS2Columns) ?>;
     let previewData = null;
 
     function previewDownload() {
@@ -235,9 +252,8 @@
             <th class="text-center">Ijz S1</th>
             <th class="text-center">Trn S1</th>
             <th class="text-center">Kartu</th>
-            <th class="text-center bg-light">Ijz S2</th>
-            <th class="text-center bg-light">Trn S2</th>
-            <th class="text-center">Aksi</th>
+            ${!hideS2Columns ? '<th class="text-center bg-light">Ijz S2</th><th class="text-center bg-light">Trn S2</th>' : ''}
+            ${canAction ? '<th class="text-center">Aksi</th>' : ''}
         `;
 
         const tbody = document.getElementById('previewTableBody');
@@ -265,10 +281,13 @@
                 <td class="text-center">${p.docs.kartu ? '✅' : '❌'}</td>
                 
                 <!-- S3 Columns -->
+                ${!hideS2Columns ? `
                 <td class="text-center bg-light">${isS3 ? (p.docs.ijazah_s2 ? '✅' : '❌') : '-'}</td>
                 <td class="text-center bg-light">${isS3 ? (p.docs.transkrip_s2 ? '✅' : '❌') : '-'}</td>
+                ` : ''}
                 
                 <!-- Action Column -->
+                ${canAction ? `
                 <td class="text-center">
                     <a href="/admin/participants/edit/${p.id}" target="_blank" class="btn btn-xs btn-warning mr-1" title="Edit Data Peserta">
                         <i class="fas fa-edit"></i> Edit
@@ -277,6 +296,7 @@
                         <i class="fas fa-search"></i> View
                     </a>
                 </td>
+                ` : ''}
             </tr>
         `;
             tbody.innerHTML += row;

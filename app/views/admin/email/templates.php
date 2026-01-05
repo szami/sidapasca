@@ -18,10 +18,10 @@
                     </div>
                 <?php endif; ?>
 
-                <table class="table table-bordered datatable">
+                <table class="table table-bordered" id="templateTable">
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
+                            <th width="5%">ID</th>
                             <th>Nama Template</th>
                             <th>Subject</th>
                             <th>Deskripsi</th>
@@ -29,34 +29,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($templates as $index => $template): ?>
-                            <tr>
-                                <td>
-                                    <?php echo $index + 1; ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($template['name']); ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($template['subject']); ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($template['description'] ?? '-'); ?>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info edit-btn" data-id="<?php echo $template['id']; ?>">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <form action="/admin/email/templates/delete/<?php echo $template['id']; ?>"
-                                        method="POST" class="d-inline"
-                                        onsubmit="return confirm('Yakin hapus template ini?')">
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i> Hapus
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <!-- AJAX Populated -->
                     </tbody>
                 </table>
             </div>
@@ -115,6 +88,36 @@
 
 <script>
     $(document).ready(function () {
+        // Initialize DataTable
+        const table = $('#templateTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": APP_URL + "/api/email/templates",
+            "order": [[0, "desc"]],
+            "columns": [
+                { "data": "id" },
+                { "data": "name" },
+                { "data": "subject" },
+                { "data": "description" },
+                {
+                    "data": "id",
+                    "orderable": false,
+                    "render": function (data) {
+                        return `
+                            <button class="btn btn-sm btn-info edit-btn" data-id="${data}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <form action="${APP_URL}/admin/email/templates/delete/${data}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus template ini?')">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Hapus
+                                </button>
+                            </form>
+                        `;
+                    }
+                }
+            ]
+        });
+
         // Initialize Summernote
         $('.summernote').summernote({
             height: 200,
@@ -133,20 +136,20 @@
             $('#templateForm')[0].reset();
             $('#templateId').val('');
             $('#templateBody').summernote('code', '');
-            $('#templateForm').attr('action', '/admin/email/templates/create');
+            $('#templateForm').attr('action', APP_URL + '/admin/email/templates/create');
         });
 
-        // Edit button
-        $('.edit-btn').click(function () {
+        // Edit button (Event Delegation)
+        $('#templateTable').on('click', '.edit-btn', function () {
             var id = $(this).data('id');
 
-            $.get('/admin/email/templates/get/' + id, function (data) {
+            $.get(APP_URL + '/admin/email/templates/get/' + id, function (data) {
                 $('#templateId').val(data.id);
                 $('#templateName').val(data.name);
                 $('#templateSubject').val(data.subject);
                 $('#templateBody').summernote('code', data.body);
                 $('#templateDescription').val(data.description);
-                $('#templateForm').attr('action', '/admin/email/templates/update/' + id);
+                $('#templateForm').attr('action', APP_URL + '/admin/email/templates/update/' + id);
                 $('#templateModal').modal('show');
             });
         });

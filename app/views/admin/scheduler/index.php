@@ -7,15 +7,15 @@
             <div class="card-body p-2">
                 <span class="mr-2 font-weight-bold">Filter Status:</span>
                 <div class="btn-group btn-group-toggle">
-                    <a href="/admin/scheduler?status=unscheduled"
+                    <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler?status=unscheduled"
                         class="btn btn-sm btn-outline-primary <?php echo $filterStatus == 'unscheduled' ? 'active' : ''; ?>">
                         Belum Terjadwal
                     </a>
-                    <a href="/admin/scheduler?status=scheduled"
+                    <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler?status=scheduled"
                         class="btn btn-sm btn-outline-success <?php echo $filterStatus == 'scheduled' ? 'active' : ''; ?>">
                         Sudah Terjadwal
                     </a>
-                    <a href="/admin/scheduler?status=all"
+                    <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler?status=all"
                         class="btn btn-sm btn-outline-secondary <?php echo $filterStatus == 'all' ? 'active' : ''; ?>">
                         Semua
                     </a>
@@ -47,7 +47,8 @@
                     <div class="card-header py-2">
                         <h3 class="card-title mt-1"><i class="fas fa-calendar-check mr-1"></i> Penjadwalan Massal</h3>
                         <div class="card-tools">
-                            <a href="/admin/scheduler/rooms" class="btn btn-sm btn-info">
+                            <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler/rooms"
+                                class="btn btn-sm btn-info">
                                 <i class="fas fa-desktop"></i> Monitor Ruangan
                             </a>
                         </div>
@@ -72,7 +73,8 @@
                                     <i class="fas fa-save mr-1"></i> Simpan Jadwal
                                 </button>
                                 <button type="submit" class="btn btn-danger btn-sm font-weight-bold ml-1" name="action"
-                                    value="unassign" formaction="/admin/scheduler/unassign"
+                                    value="unassign"
+                                    formaction="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler/unassign"
                                     onclick="return confirm('Hapus jadwal peserta terpilih?')">
                                     <i class="fas fa-times mr-1"></i> Hapus Jadwal
                                 </button>

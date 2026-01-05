@@ -21,8 +21,8 @@ class DocumentVerificationController
             exit;
         }
 
-        // Restrict Admin Prodi
-        if (\App\Utils\RoleHelper::isAdminProdi()) {
+        // Only Superadmin, Admin, and UPKH can access document verification
+        if (!\App\Utils\RoleHelper::canValidatePhysical()) {
             header('Location: /admin?error=unauthorized');
             exit;
         }
@@ -122,6 +122,46 @@ class DocumentVerificationController
         $data['bypass_verification'] = $bypassValue;
         $data['verified_by'] = $_SESSION['admin'];
 
+        // LOGIC: Strict Validation Calculation
+        $participant = Participant::find($id);
+        if ($participant) {
+            $isS3 = (stripos($participant['nama_prodi'] ?? '', 'S3') !== false || stripos($participant['nama_prodi'] ?? '', 'DOKTOR') !== false);
+
+            $required = [
+                'formulir_pendaftaran',
+                'ijazah_s1_legalisir',
+                'transkrip_s1_legalisir',
+                'bukti_pembayaran',
+                'surat_rekomendasi'
+            ];
+
+            if ($isS3) {
+                $required[] = 'ijazah_s2_legalisir';
+                $required[] = 'transkrip_s2_legalisir';
+            }
+
+            $allValid = true;
+            foreach ($required as $field) {
+                // Check if checkbox is checked (value 1)
+                if (empty($data[$field]) || $data[$field] != 1) {
+                    $allValid = false;
+                    break;
+                }
+            }
+
+            $statusFisik = $allValid ? 'lengkap' : 'tidak_lengkap';
+
+            // Bypass overrides logic
+            if ($data['bypass_verification'] == 1) {
+                $statusFisik = 'lengkap';
+            }
+
+            // Update Participant Table
+            \App\Utils\Database::connection()->update('participants')
+                ->params(['status_verifikasi_fisik' => $statusFisik])
+                ->where('id', $id)
+                ->execute();
+        }
 
         DocumentVerification::updateVerification($id, $data);
 
@@ -312,5 +352,94 @@ class DocumentVerificationController
             header("Location: /admin/verification/physical?error=" . urlencode('Error processing file: ' . $e->getMessage()));
             exit;
         }
+    }
+    public function apiData()
+    {
+        $this->checkAuth();
+
+        $db = \App\Utils\Database::connection();
+        $semesterId = Request::get('semester_id') ?? Semester::getActive()['id'] ?? null;
+        $statusFilter = Request::get('status') ?? 'all';
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 2;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 'p.id',
+            1 => 'p.nomor_peserta',
+            2 => 'p.nama_lengkap',
+            3 => 'p.nama_prodi',
+            4 => 'p.status_berkas',
+            5 => 'dv.status_verifikasi_fisik',
+            6 => 'dv.updated_at',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'p.nama_lengkap';
+
+        // Base WHERE clause
+        $whereClauseBase = "WHERE p.status_berkas = 'lulus'";
+        if ($semesterId) {
+            $whereClauseBase .= " AND p.semester_id = '$semesterId'";
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM participants p $whereClauseBase";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        // Apply Status Filter
+        $whereClauseFiltered = $whereClauseBase;
+        if ($statusFilter && $statusFilter !== 'all') {
+            if ($statusFilter == 'pending') {
+                $whereClauseFiltered .= " AND (dv.status_verifikasi_fisik IS NULL OR dv.status_verifikasi_fisik = 'pending')";
+            } else {
+                $whereClauseFiltered .= " AND dv.status_verifikasi_fisik = '$statusFilter'";
+            }
+        }
+
+        // Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClauseFiltered .= " AND (p.nama_lengkap LIKE '%$searchEscaped%' 
+                                     OR p.email LIKE '%$searchEscaped%' 
+                                     OR p.nomor_peserta LIKE '%$searchEscaped%'
+                                     OR p.nama_prodi LIKE '%$searchEscaped%')";
+        }
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total 
+                               FROM participants p 
+                               LEFT JOIN document_verifications dv ON p.id = dv.participant_id
+                               $whereClauseFiltered";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT 
+                    dv.id as verification_id,
+                    dv.status_verifikasi_fisik,
+                    dv.updated_at,
+                    dv.bypass_verification,
+                    p.id as participant_id,
+                    p.nomor_peserta, 
+                    p.nama_lengkap, 
+                    p.email, 
+                    p.nama_prodi, 
+                    p.status_berkas, 
+                    p.semester_id
+                FROM participants p
+                LEFT JOIN document_verifications dv ON p.id = dv.participant_id
+                $whereClauseFiltered
+                ORDER BY $orderBy $orderDir
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
+        ]);
     }
 }

@@ -10,55 +10,79 @@
                 </div>
             </div>
             <div class="card-body">
-                <table class="table table-bordered table-striped datatable">
+                <table class="table table-bordered table-striped" id="sessionTable">
                     <thead>
                         <tr>
-                            <th>No</th>
+                            <th width="5%">ID</th>
                             <th>Nama Sesi</th>
                             <th>Tanggal</th>
                             <th>Waktu</th>
                             <th>Ruangan (Lab)</th>
-                            <th>Aksi</th>
+                            <th width="10%">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($sessions as $index => $s): ?>
-                            <tr>
-                                <td>
-                                    <?php echo $index + 1; ?>
-                                </td>
-                                <td>
-                                    <b>
-                                        <?php echo htmlspecialchars($s['nama_sesi']); ?>
-                                    </b><br>
-                                    <span class="badge badge-<?php echo $s['is_active'] ? 'success' : 'secondary'; ?>">
-                                        <?php echo $s['is_active'] ? 'Aktif' : 'Non-Aktif'; ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php echo date('d-m-Y', strtotime($s['tanggal'])); ?>
-                                </td>
-                                <td>
-                                    <?php echo $s['waktu_mulai'] . ' - ' . $s['waktu_selesai']; ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars($s['nama_ruang']); ?>
-                                    <br><small class="text-muted"><?php echo htmlspecialchars($s['fakultas']); ?></small>
-                                </td>
-                                <td>
-                                    <a href="/admin/master/sessions/edit/<?php echo $s['id']; ?>"
-                                        class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
-                                    <a href="/admin/master/sessions/delete/<?php echo $s['id']; ?>"
-                                        class="btn btn-danger btn-xs" onclick="return confirm('Hapus sesi ini?')"><i
-                                            class="fas fa-trash"></i></a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <!-- AJAX Populated -->
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    $(function () {
+        const table = $('#sessionTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": APP_URL + "/api/master/sessions",
+            "order": [[0, "desc"]],
+            "columns": [
+                { "data": "id" },
+                {
+                    "data": "nama_sesi",
+                    "render": function (data, type, row) {
+                        const badge = row.is_active == 1 ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-secondary">Non-Aktif</span>';
+                        return `<b>${data}</b><br>${badge}`;
+                    }
+                },
+                {
+                    "data": "tanggal",
+                    "render": function (data) {
+                        const date = new Date(data);
+                        return date.toLocaleDateString('id-ID');
+                    }
+                },
+                {
+                    "data": "waktu_mulai",
+                    "render": function (data, type, row) {
+                        return `${data.substring(0, 5)} - ${row.waktu_selesai.substring(0, 5)}`;
+                    }
+                },
+                {
+                    "data": "nama_ruang",
+                    "render": function (data, type, row) {
+                        return `${data}<br><small class="text-muted">${row.fakultas}</small>`;
+                    }
+                },
+                {
+                    "data": "id",
+                    "orderable": false,
+                    "className": "text-center",
+                    "render": function (data) {
+                        return `
+                        <a href="${APP_URL}/admin/master/sessions/edit/${data}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
+                        <a href="${APP_URL}/admin/master/sessions/delete/${data}" class="btn btn-danger btn-xs" onclick="return confirm('Hapus sesi ini?')"><i class="fas fa-trash"></i></a>
+                    `;
+                    }
+                }
+            ]
+        });
+    });
+</script>
+</div>
+</div>
+</div>
 </div>
 <?php
 $content = ob_get_clean();

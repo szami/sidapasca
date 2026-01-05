@@ -79,7 +79,7 @@
                                     </td>
                                     <td class="text-center">
                                         <?php if ($s['assigned_count'] > 0): ?>
-                                            <a href="/admin/attendance/entry?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
+                                            <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/attendance/entry?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
                                                 class="btn btn-sm btn-primary px-3">
                                                 <i class="fas fa-edit mr-1"></i> Isi Presensi
                                             </a>

@@ -39,7 +39,7 @@
                 <h3 class="card-title">Daftar Semester</h3>
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm">
+                <table class="table table-sm" id="semestersTable">
                     <thead>
                         <tr>
                             <th>Kode</th>
@@ -50,51 +50,65 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($semesters as $sem): ?>
-                            <tr>
-                                <td>
-                                    <strong><?php echo $sem['kode']; ?></strong>
-                                </td>
-                                <td><?php echo $sem['nama']; ?></td>
-                                <td>
-                                    <?php if ($sem['periode'] > 0): ?>
-                                        <span class="badge badge-info">Periode <?php echo $sem['periode']; ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted">Tanpa Periode</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($sem['is_active']): ?>
-                                        <span class="badge badge-success">Aktif</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-secondary">Non-Aktif</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <?php if (!$sem['is_active']): ?>
-                                            <a href="/admin/semesters/set-active/<?php echo $sem['id']; ?>"
-                                                class="btn btn-default btn-xs">Set Aktif</a>
-                                        <?php endif; ?>
-                                        <?php if (!$sem['is_active'] && $sem['participants_count'] == 0): ?>
-                                            <a href="/admin/semesters/delete/<?php echo $sem['id']; ?>"
-                                                class="btn btn-danger btn-xs"
-                                                onclick="return confirm('Hapus semester?')">Del</a>
-                                        <?php elseif ($sem['participants_count'] > 0): ?>
-                                            <span class="badge badge-light border border-secondary text-xs ml-1"
-                                                title="Ada data peserta">
-                                                <i class="fas fa-database mr-1"></i><?php echo $sem['participants_count']; ?>
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <!-- AJAX Populated -->
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#semestersTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": APP_URL + "/api/master/semesters",
+            "columns": [
+                {
+                    "data": "kode",
+                    "render": function (data) { return `<strong>${data}</strong>`; }
+                },
+                { "data": "nama" },
+                {
+                    "data": "periode",
+                    "render": function (data) {
+                        return data > 0 ? `<span class="badge badge-info">Periode ${data}</span>` : `<span class="text-muted">Tanpa Periode</span>`;
+                    }
+                },
+                {
+                    "data": "is_active",
+                    "render": function (data) {
+                        return data == 1 ? `<span class="badge badge-success">Aktif</span>` : `<span class="badge badge-secondary">Non-Aktif</span>`;
+                    }
+                },
+                {
+                    "data": "id",
+                    "orderable": false,
+                    "render": function (data, type, row) {
+                        let btnGroup = '<div class="btn-group">';
+                        if (row.is_active == 0) {
+                            btnGroup += `<a href="${APP_URL}/admin/semesters/set-active/${data}" class="btn btn-default btn-xs">Set Aktif</a>`;
+                        }
+                        if (row.is_active == 0 && row.participants_count == 0) {
+                            btnGroup += `<a href="${APP_URL}/admin/semesters/delete/${data}" class="btn btn-danger btn-xs" onclick="return confirm('Hapus semester?')">Del</a>`;
+                        } else if (row.participants_count > 0) {
+                            btnGroup += `<span class="badge badge-light border border-secondary text-xs ml-1" title="Ada data peserta">
+                                            <i class="fas fa-database mr-1"></i>${row.participants_count}
+                                         </span>`;
+                        }
+                        btnGroup += '</div>';
+                        return btnGroup;
+                    }
+                }
+            ],
+            "order": [[0, "desc"]]
+        });
+    });
+</script>
+</div>
+</div>
+</div>
 </div>
 <?php
 $content = ob_get_clean();

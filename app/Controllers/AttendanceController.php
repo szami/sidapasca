@@ -9,6 +9,14 @@ use App\Models\Semester;
 
 class AttendanceController
 {
+    private function checkAuth()
+    {
+        if (!isset($_SESSION['admin'])) {
+            response()->redirect('/admin/login');
+            exit;
+        }
+    }
+
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
@@ -154,5 +162,89 @@ class AttendanceController
         }
 
         response()->redirect('/admin/attendance?msg=success');
+    }
+    public function apiData()
+    {
+        $this->checkAuth();
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+        $semesterId = $activeSemester['id'] ?? null;
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 0;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 's.tanggal',
+            1 => 's.waktu_mulai',
+            2 => 's.nama_sesi',
+            3 => 'r.nama_ruang',
+            4 => 'r.kapasitas',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 's.tanggal';
+
+        // Base WHERE
+        $whereClause = "WHERE s.is_active = 1 AND s.semester_id = '$semesterId'";
+
+        // Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (s.nama_sesi LIKE '%$searchEscaped%' 
+                             OR r.nama_ruang LIKE '%$searchEscaped%'
+                             OR r.fakultas LIKE '%$searchEscaped%')";
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM exam_sessions s WHERE s.is_active = 1 AND s.semester_id = '$semesterId'";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM exam_sessions s JOIN exam_rooms r ON s.exam_room_id = r.id $whereClause";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT s.*, r.nama_ruang, r.fakultas, r.kapasitas 
+                FROM exam_sessions s 
+                JOIN exam_rooms r ON s.exam_room_id = r.id 
+                $whereClause 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $sessions = $db->query($sql)->fetchAll();
+
+        // Calculate counts for returned sessions
+        foreach ($sessions as &$session) {
+            $sqlAssigned = "SELECT COUNT(*) as total FROM participants 
+                            WHERE sesi_ujian = ? AND ruang_ujian = ? AND tanggal_ujian = ? AND semester_id = ?";
+            $assignedRes = $db->query($sqlAssigned)->bind(
+                $session['nama_sesi'],
+                $session['nama_ruang'],
+                $session['tanggal'],
+                $semesterId
+            )->fetchAssoc();
+            $session['assigned_count'] = $assignedRes['total'] ?? 0;
+
+            $sqlAttended = "SELECT COUNT(*) as total FROM exam_attendances a
+                            JOIN participants p ON a.participant_id = p.id
+                            WHERE p.sesi_ujian = ? AND p.ruang_ujian = ? AND p.tanggal_ujian = ? 
+                            AND a.semester_id = ? AND a.is_present = 1";
+            $attendedRes = $db->query($sqlAttended)->bind(
+                $session['nama_sesi'],
+                $session['nama_ruang'],
+                $session['tanggal'],
+                $semesterId
+            )->fetchAssoc();
+            $session['attended_count'] = $attendedRes['total'] ?? 0;
+        }
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $sessions
+        ]);
     }
 }

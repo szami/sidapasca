@@ -10,23 +10,71 @@ class UserController
 {
     public function index()
     {
-        // Only superadmin can access
-        if (!RoleHelper::isSuperadmin()) {
+        // Only superadmin can access user management
+        if (!RoleHelper::canManageUsers()) {
             response()->redirect('/admin');
             return;
         }
 
-        $db = Database::connection();
-        $users = $db->select('users')->orderBy('id', 'DESC')->fetchAll();
+        echo View::render('admin.users.index');
+    }
 
-        echo View::render('admin.users.index', [
-            'users' => $users
+    public function apiData()
+    {
+        if (!RoleHelper::canManageUsers()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $db = Database::connection();
+
+        // DataTables parameters
+        $draw = intval(request()->get('draw') ?? 1);
+        $start = intval(request()->get('start') ?? 0);
+        $length = intval(request()->get('length') ?? 10);
+        $search = request()->get('search')['value'] ?? '';
+        $orderColumnIndex = request()->get('order')[0]['column'] ?? 0;
+        $orderDir = request()->get('order')[0]['dir'] ?? 'desc';
+
+        $columns = [
+            0 => 'id',
+            1 => 'username',
+            2 => 'role',
+            3 => 'prodi_id'
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'id';
+
+        // Base query
+        $whereClause = "WHERE 1=1";
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (username LIKE '%$searchEscaped%' OR role LIKE '%$searchEscaped%' OR prodi_id LIKE '%$searchEscaped%')";
+        }
+
+        $totalRes = $db->query("SELECT COUNT(*) as total FROM users")->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+        $filteredRes = $db->query("SELECT COUNT(*) as total FROM users $whereClause")->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT * FROM users $whereClause ORDER BY $orderBy $orderDir LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        // Add UI helpers
+        foreach ($data as &$user) {
+            $user['role_display'] = RoleHelper::getRoleDisplayName($user['role']);
+            $user['role_badge'] = RoleHelper::getRoleBadgeClass($user['role']);
+        }
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
         ]);
     }
 
     public function create()
     {
-        if (!RoleHelper::isSuperadmin()) {
+        if (!RoleHelper::canManageUsers()) {
             response()->redirect('/admin');
             return;
         }
@@ -49,7 +97,7 @@ class UserController
 
     public function store()
     {
-        if (!RoleHelper::isSuperadmin()) {
+        if (!RoleHelper::canManageUsers()) {
             response()->redirect('/admin');
             return;
         }
@@ -77,7 +125,7 @@ class UserController
 
         // Check if username exists
         $db = Database::connection();
-        $existing = $db->select('users')->where('username', $username)->first();
+        $existing = $db->select('users')->where('username', $username)->fetchAssoc();
 
         if ($existing) {
             response()->redirect('/admin/users/create?error=username_exists');
@@ -100,13 +148,13 @@ class UserController
 
     public function edit($id)
     {
-        if (!RoleHelper::isSuperadmin()) {
+        if (!RoleHelper::canManageUsers()) {
             response()->redirect('/admin');
             return;
         }
 
         $db = Database::connection();
-        $user = $db->select('users')->where('id', $id)->first();
+        $user = $db->select('users')->where('id', $id)->fetchAssoc();
 
         if (!$user) {
             response()->redirect('/admin/users?error=not_found');
@@ -130,13 +178,13 @@ class UserController
 
     public function update($id)
     {
-        if (!RoleHelper::isSuperadmin()) {
+        if (!RoleHelper::canManageUsers()) {
             response()->redirect('/admin');
             return;
         }
 
         $db = Database::connection();
-        $user = $db->select('users')->where('id', $id)->first();
+        $user = $db->select('users')->where('id', $id)->fetchAssoc();
 
         if (!$user) {
             response()->redirect('/admin/users?error=not_found');
@@ -167,7 +215,7 @@ class UserController
         $existing = $db->select('users')
             ->where('username', $username)
             ->where('id', '!=', $id)
-            ->first();
+            ->fetchAssoc();
 
         if ($existing) {
             response()->redirect("/admin/users/edit/{$id}?error=username_exists");
@@ -197,7 +245,7 @@ class UserController
 
     public function destroy($id)
     {
-        if (!RoleHelper::isSuperadmin()) {
+        if (!RoleHelper::canManageUsers()) {
             response()->redirect('/admin');
             return;
         }
@@ -211,7 +259,7 @@ class UserController
         }
 
         // Prevent deleting the only superadmin
-        $user = $db->select('users')->where('id', $id)->first();
+        $user = $db->select('users')->where('id', $id)->fetchAssoc();
         if ($user && $user['role'] === 'superadmin') {
             $superadminCount = $db->select('users')->where('role', 'superadmin')->fetchAll();
             if (count($superadminCount) <= 1) {
@@ -270,7 +318,7 @@ class UserController
 
         // Get current user
         $db = Database::connection();
-        $user = $db->select('users')->where('id', $_SESSION['admin'])->first();
+        $user = $db->select('users')->where('id', $_SESSION['admin'])->fetchAssoc();
 
         if (!$user) {
             response()->redirect('/admin/login');

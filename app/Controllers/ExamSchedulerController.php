@@ -17,6 +17,12 @@ class ExamSchedulerController
             return;
         }
 
+        // Only Superadmin, Admin, TU can manage schedules
+        if (!\App\Utils\RoleHelper::canManageSchedule()) {
+            response()->redirect('/admin?error=unauthorized');
+            return;
+        }
+
         $db = Database::connection();
 
         // Active Semester Only
@@ -47,40 +53,12 @@ class ExamSchedulerController
             ->fetchAll();
         $filterProdi = $_GET['prodi'] ?? '';
 
-        // 3. Get Participants where semester_id is active semester
-        $queryBuilder = $db->select('participants')->where('semester_id', $activeSemester['id']);
-
-        // Filter by Status (handled in PHP below)
-        // Filter by Prodi
-        if (!empty($filterProdi)) {
-            $queryBuilder->where('nama_prodi', $filterProdi);
-        }
-
-        // ONLY participants with nomor_peserta can be scheduled
-        $queryBuilder->where('nomor_peserta', '!=', '');
-
-        // Order by Prodi then Nomor Peserta
-        $allParticipants = $queryBuilder->orderBy('nama_prodi', 'asc')
-            ->orderBy('nomor_peserta', 'asc')
-            ->fetchAll();
-
-        // 4. Manual Filter for Status to ensure logic correctness (avoiding OR precedence issues in QB)
-        $participants = [];
-        foreach ($allParticipants as $p) {
-            $isScheduled = !empty($p['ruang_ujian']);
-
-            if ($filterStatus === 'unscheduled' && !$isScheduled) {
-                $participants[] = $p;
-            } elseif ($filterStatus === 'scheduled' && $isScheduled) {
-                $participants[] = $p;
-            } elseif ($filterStatus === 'all') {
-                $participants[] = $p;
-            }
-        }
+        // The previous logic for fetching participants is now handled by the apiData method
+        // and DataTables on the client-side.
+        // The view will now only receive sessions, filter status, filter prodi, and prodis.
 
         echo View::render('admin.scheduler.index', [
             'sessions' => $sessions,
-            'participants' => $participants,
             'filterStatus' => $filterStatus,
             'filterProdi' => $filterProdi,
             'prodis' => $prodis
@@ -89,8 +67,10 @@ class ExamSchedulerController
 
     public function assign()
     {
-        if (!isset($_SESSION['admin']))
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
+        }
 
         $data = Request::body();
         $participantIds = $data['participant_ids'] ?? [];
@@ -108,7 +88,7 @@ class ExamSchedulerController
                        FROM exam_sessions s
                        JOIN exam_rooms r ON s.exam_room_id = r.id
                        WHERE s.id = ?";
-        $session = $db->query($sqlSession)->bind($sessionId)->first();
+        $session = $db->query($sqlSession)->bind($sessionId)->fetchAssoc();
 
         if (!$session) {
             response()->redirect('/admin/scheduler');
@@ -131,7 +111,7 @@ class ExamSchedulerController
         // Safer Count Query
         $sqlCount = "SELECT COUNT(*) as total FROM participants 
                      WHERE sesi_ujian = ? AND ruang_ujian = ? AND tanggal_ujian = ?";
-        $currentCountRes = $db->query($sqlCount)->bind($session['nama_sesi'], $session['nama_ruang'], $session['tanggal'])->first();
+        $currentCountRes = $db->query($sqlCount)->bind($session['nama_sesi'], $session['nama_ruang'], $session['tanggal'])->fetchAssoc();
         $currentCount = $currentCountRes['total'] ?? 0;
 
         $capacity = (int) $session['kapasitas'];
@@ -194,8 +174,10 @@ class ExamSchedulerController
 
     public function unassign()
     {
-        if (!isset($_SESSION['admin']))
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
+        }
 
         $data = Request::body();
         $participantIds = $data['participant_ids'] ?? [];
@@ -222,8 +204,8 @@ class ExamSchedulerController
 
     public function roomView()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
         }
 
@@ -258,6 +240,83 @@ class ExamSchedulerController
 
         echo View::render('admin.scheduler.rooms', [
             'sessions' => $sessions
+        ]);
+    }
+    public function apiData()
+    {
+        if (!isset($_SESSION['admin'])) {
+            response()->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+        $semesterId = $activeSemester['id'] ?? null;
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 2;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 'p.id',
+            1 => 'p.nomor_peserta',
+            2 => 'p.nama_lengkap',
+            3 => 'p.nama_prodi',
+            4 => 'p.ruang_ujian',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'p.nama_prodi';
+
+        // Filter Param
+        $filterStatus = $_GET['status'] ?? 'unscheduled';
+        $filterProdi = $_GET['prodi'] ?? '';
+
+        // Base WHERE
+        $whereClause = "WHERE p.semester_id = '$semesterId' AND p.nomor_peserta IS NOT NULL AND p.nomor_peserta != ''";
+
+        // Status Filter
+        if ($filterStatus === 'unscheduled') {
+            $whereClause .= " AND (p.ruang_ujian IS NULL OR p.ruang_ujian = '')";
+        } elseif ($filterStatus === 'scheduled') {
+            $whereClause .= " AND p.ruang_ujian IS NOT NULL AND p.ruang_ujian != ''";
+        }
+
+        // Prodi Filter
+        if (!empty($filterProdi)) {
+            $prodiEscaped = str_replace("'", "''", $filterProdi);
+            $whereClause .= " AND p.nama_prodi = '$prodiEscaped'";
+        }
+
+        // Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (p.nama_lengkap LIKE '%$searchEscaped%' 
+                             OR p.nomor_peserta LIKE '%$searchEscaped%'
+                             OR p.nama_prodi LIKE '%$searchEscaped%')";
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM participants p WHERE p.semester_id = '$semesterId' AND p.nomor_peserta IS NOT NULL AND p.nomor_peserta != ''";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM participants p $whereClause";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT p.* FROM participants p 
+                $whereClause 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
         ]);
     }
 }

@@ -11,7 +11,7 @@ class EmailConfigController
 {
     private function checkAuth()
     {
-        if (!isset($_SESSION['admin'])) {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::isSuperadmin()) {
             header('Location: /admin');
             exit;
         }

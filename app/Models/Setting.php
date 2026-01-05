@@ -10,9 +10,13 @@ class Setting
     {
         $db = Database::connection();
 
+        if (!$db) {
+            return $default;
+        }
+
         $result = $db->query("SELECT value FROM settings WHERE key_name = ?")
             ->bind($key)
-            ->first();
+            ->fetchAssoc();
 
         if ($result) {
             return $result['value'];
@@ -25,9 +29,13 @@ class Setting
     {
         $db = Database::connection();
 
+        if (!$db) {
+            return;
+        }
+
         $exists = $db->query("SELECT 1 FROM settings WHERE key_name = ?")
             ->bind($key)
-            ->first();
+            ->fetchAssoc();
 
         if ($exists) {
             $db->query("UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key_name = ?")
@@ -44,6 +52,9 @@ class Setting
     public static function ensureTableExists()
     {
         $db = Database::connection();
+        if (!$db) {
+            return;
+        }
         // If table exists, this does nothing. If it doesn't, we create it to match what we found.
         $db->query("CREATE TABLE IF NOT EXISTS settings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

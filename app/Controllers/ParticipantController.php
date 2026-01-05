@@ -142,6 +142,123 @@ class ParticipantController
         ]);
     }
 
+    public function apiData()
+    {
+        if (!isset($_SESSION['admin'])) {
+            response()->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+
+        $db = \App\Utils\Database::connection();
+        $activeSemester = Semester::getActive();
+        $semesterId = $activeSemester['id'] ?? null;
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 0;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'desc';
+
+        // Map column index to DB column
+        $columns = [
+            0 => 'p.id',
+            1 => 'p.photo_filename',
+            2 => 'p.nomor_peserta',
+            3 => 'p.nama_lengkap',
+            4 => 'p.jenis_kelamin',
+            5 => 'p.nama_prodi',
+            6 => 'p.no_billing',
+            7 => 'p.status_berkas',
+            8 => 'p.status_pembayaran',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'p.id';
+
+        // Custom filters from URL
+        $filter = Request::get('filter') ?? 'all';
+        $prodiFilter = Request::get('prodi') ?? 'all';
+        $paymentFilter = Request::get('payment') ?? 'all';
+
+        // 1. recordsTotal: Absolute count for this context (semester + prodi-restricted if needed)
+        $whereClauseBase = "WHERE 1=1";
+        if ($semesterId) {
+            $whereClauseBase .= " AND p.semester_id = '$semesterId'";
+        }
+
+        // Role-based restrict for admin_prodi (always apply this)
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $adminProdiId = \App\Utils\RoleHelper::getProdiId();
+            if ($adminProdiId) {
+                $whereClauseBase .= " AND p.kode_prodi = '$adminProdiId'";
+            }
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM participants p $whereClauseBase";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        // 2. recordsFiltered: Count with filters and search applied
+        $whereClauseFiltered = $whereClauseBase;
+
+        // Apply Status Filter
+        switch ($filter) {
+            case 'exam_ready':
+                $whereClauseFiltered .= " AND (p.nomor_peserta IS NOT NULL AND p.nomor_peserta != '')";
+                break;
+            case 'pending':
+                $whereClauseFiltered .= " AND p.status_berkas = 'pending'";
+                break;
+            case 'lulus':
+                $whereClauseFiltered .= " AND p.status_berkas = 'lulus'";
+                break;
+            case 'gagal':
+                $whereClauseFiltered .= " AND p.status_berkas = 'gagal'";
+                break;
+        }
+
+        // Apply Payment Filter
+        if ($paymentFilter === 'paid') {
+            $whereClauseFiltered .= " AND p.status_pembayaran = 1";
+        } elseif ($paymentFilter === 'unpaid') {
+            $whereClauseFiltered .= " AND (p.status_pembayaran = 0 OR p.status_pembayaran IS NULL)";
+        }
+
+        // Apply Prodi Filter
+        if ($prodiFilter !== 'all') {
+            $prodiFilterEscaped = str_replace("'", "''", $prodiFilter);
+            $whereClauseFiltered .= " AND p.nama_prodi = '$prodiFilterEscaped'";
+        }
+
+        // Global Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClauseFiltered .= " AND (p.nama_lengkap LIKE '%$searchEscaped%' 
+                             OR p.email LIKE '%$searchEscaped%' 
+                             OR p.nomor_peserta LIKE '%$searchEscaped%' 
+                             OR p.no_billing LIKE '%$searchEscaped%' 
+                             OR p.nama_prodi LIKE '%$searchEscaped%')";
+        }
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM participants p $whereClauseFiltered";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        // 3. fetching Data
+        $sql = "SELECT p.* FROM participants p 
+                $whereClauseFiltered 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
+        ]);
+    }
+
     public function edit($id)
     {
         if (!isset($_SESSION['admin']))
@@ -170,10 +287,31 @@ class ParticipantController
         echo \App\Utils\View::render('admin.participants.view', ['p' => $participant]);
     }
 
+    /**
+     * Document management page (for admin/operator who can upload but not edit biodata)
+     */
+    public function documents($id)
+    {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canUploadDocuments()) {
+            response()->redirect('/admin?error=unauthorized');
+            return;
+        }
+
+        $participant = Participant::find($id);
+        if (!$participant) {
+            response()->redirect('/admin/participants');
+            return;
+        }
+
+        echo \App\Utils\View::render('admin.participants.documents', ['p' => $participant]);
+    }
+
     public function update($id)
     {
-        if (!isset($_SESSION['admin']))
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canEditParticipant()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
+        }
 
         $data = Request::body();
         // Filter allowed fields
@@ -243,8 +381,10 @@ class ParticipantController
 
     public function destroy($id)
     {
-        if (!isset($_SESSION['admin']))
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canDeleteParticipant()) {
+            response()->redirect('/admin?error=unauthorized');
             return;
+        }
 
         \App\Utils\Database::connection()->delete('participants')->where('id', $id)->execute();
         response()->redirect('/admin/participants');
@@ -252,7 +392,7 @@ class ParticipantController
 
     public function uploadPhoto($id)
     {
-        if (!isset($_SESSION['admin'])) {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canUploadDocuments()) {
             response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             return;
         }
@@ -610,7 +750,7 @@ class ParticipantController
      */
     public function uploadDocument($id, $type)
     {
-        if (!isset($_SESSION['admin'])) {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canUploadDocuments()) {
             response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             return;
         }
@@ -757,7 +897,7 @@ class ParticipantController
      */
     public function deleteDocument($id, $type)
     {
-        if (!isset($_SESSION['admin'])) {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canUploadDocuments()) {
             response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             return;
         }

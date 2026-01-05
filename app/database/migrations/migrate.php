@@ -295,21 +295,139 @@ try {
     $pdo->exec($update_logs);
     echo "Update Logs table migrated.\n";
 
-    // Seed Admin
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :u");
-    $stmt->execute([':u' => 'admin']);
-    $user = $stmt->fetch();
+    // Seed Users with different roles
+    $defaultUsers = [
+        ['username' => 'admin', 'password' => 'admin123', 'role' => 'superadmin', 'prodi_id' => null],
+        ['username' => 'operator', 'password' => 'operator123', 'role' => 'admin', 'prodi_id' => null],
+        ['username' => 'upkh', 'password' => 'upkh123', 'role' => 'upkh', 'prodi_id' => null],
+        ['username' => 'tu', 'password' => 'tu123', 'role' => 'tu', 'prodi_id' => null],
+        ['username' => 'prodi_test', 'password' => 'prodi123', 'role' => 'admin_prodi', 'prodi_id' => '86103'],
+    ];
 
-    if (!$user) {
-        $pass = password_hash('admin123', PASSWORD_BCRYPT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (:u, :p)");
-        $stmt->execute([':u' => 'admin', ':p' => $pass]);
-        echo "Admin seeded.\n";
-    } else {
-        echo "Admin already exists.\n";
+    foreach ($defaultUsers as $userData) {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :u");
+        $stmt->execute([':u' => $userData['username']]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            $pass = password_hash($userData['password'], PASSWORD_BCRYPT);
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, prodi_id) VALUES (:u, :p, :r, :pi)");
+            $stmt->execute([
+                ':u' => $userData['username'],
+                ':p' => $pass,
+                ':r' => $userData['role'],
+                ':pi' => $userData['prodi_id']
+            ]);
+            echo "User '{$userData['username']}' (role: {$userData['role']}) seeded.\n";
+        } else {
+            // Update existing user role if needed
+            if (!isset($user['role']) || $user['role'] !== $userData['role']) {
+                $stmt = $pdo->prepare("UPDATE users SET role = :r, prodi_id = :pi WHERE username = :u");
+                $stmt->execute([
+                    ':r' => $userData['role'],
+                    ':pi' => $userData['prodi_id'],
+                    ':u' => $userData['username']
+                ]);
+                echo "User '{$userData['username']}' role updated to {$userData['role']}.\n";
+            } else {
+                echo "User '{$userData['username']}' already exists.\n";
+            }
+        }
     }
+
+
+    // 14. Workflow Upgrade Tables (Assessment & Graduation)
+    echo "Checking Workflow Upgrade Tables...\n";
+
+    // 14a. Add columns to participants
+    echo "Checking participants workflow columns...\n";
+    $cols = $pdo->query("PRAGMA table_info(participants)")->fetchAll(PDO::FETCH_ASSOC);
+    $existingCols = array_column($cols, 'name');
+
+    if (!in_array('status_verifikasi_fisik', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN status_verifikasi_fisik VARCHAR(20) DEFAULT 'pending'"); // pending, lengkap, tidak_lengkap
+        echo "Added status_verifikasi_fisik to participants.\n";
+    }
+    if (!in_array('status_kelulusan_akhir', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN status_kelulusan_akhir VARCHAR(20) DEFAULT 'pending'"); // pending, lulus, tidak_lulus
+        echo "Added status_kelulusan_akhir to participants.\n";
+    }
+    if (!in_array('sk_kelulusan', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN sk_kelulusan VARCHAR(100) NULL");
+        echo "Added sk_kelulusan to participants.\n";
+    }
+    if (!in_array('nilai_tpa_total', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN nilai_tpa_total DECIMAL(5,2) NULL");
+        echo "Added nilai_tpa_total to participants.\n";
+    }
+    if (!in_array('nilai_bidang_total', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN nilai_bidang_total DECIMAL(5,2) NULL");
+        echo "Added nilai_bidang_total to participants.\n";
+    }
+
+    // 14b. Assessment Components (TPA/Bidang)
+    $assessment_components = "CREATE TABLE IF NOT EXISTS assessment_components (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prodi_id VARCHAR(10) NULL,
+        type VARCHAR(20) NOT NULL, -- 'TPA' or 'BIDANG'
+        nama_komponen VARCHAR(100) NOT NULL,
+        bobot_persen INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($assessment_components);
+    echo "Assessment Components table migrated.\n";
+
+    // 14c. Assessment Scores
+    $assessment_scores = "CREATE TABLE IF NOT EXISTS assessment_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        participant_id INTEGER NOT NULL,
+        component_id INTEGER NOT NULL,
+        score DECIMAL(5,2) DEFAULT 0,
+        created_by VARCHAR(50),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(participant_id) REFERENCES participants(id),
+        FOREIGN KEY(component_id) REFERENCES assessment_components(id)
+    )";
+    $pdo->exec($assessment_scores);
+    echo "Assessment Scores table migrated.\n";
+
+    // 14d. Prodi Configs (Thresholds)
+    $prodi_configs = "CREATE TABLE IF NOT EXISTS prodi_configs (
+        kode_prodi VARCHAR(10) PRIMARY KEY,
+        jenjang VARCHAR(5) NOT NULL, -- 'S2' or 'S3'
+        min_tpa DECIMAL(5,2) DEFAULT 450,
+        min_bidang DECIMAL(5,2) DEFAULT 0
+    )";
+    $pdo->exec($prodi_configs);
+    echo "Prodi Configs table migrated.\n";
+
+    // 14b. Assessment Refinement (Direct Recommendation)
+    echo "Checking Refinement Columns...\n";
+    $cols = $pdo->query("PRAGMA table_info(participants)")->fetchAll(PDO::FETCH_ASSOC);
+    $existingCols = array_column($cols, 'name'); // Re-fetch cols
+
+    if (!in_array('status_tes_bidang', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN status_tes_bidang VARCHAR(20) DEFAULT NULL");
+        echo "Added status_tes_bidang to participants.\n";
+    }
+    $pdo->exec($prodi_configs);
+    echo "Prodi Configs table migrated.\n";
+
+    // 14e. Prodi Quotas (Daya Tampung)
+    $prodi_quotas = "CREATE TABLE IF NOT EXISTS prodi_quotas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        semester_id INTEGER NOT NULL,
+        kode_prodi VARCHAR(10) NOT NULL,
+        daya_tampung INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(semester_id) REFERENCES semesters(id),
+        UNIQUE(semester_id, kode_prodi)
+    )";
+    $pdo->exec($prodi_quotas);
+    echo "Prodi Quotas table migrated.\n";
 
 } catch (PDOException $e) {
     echo "Migration Error: " . $e->getMessage() . "\n";
     exit(1);
 }
+

@@ -19,6 +19,62 @@ class ExamRoomController
         echo View::render('admin.master.rooms.index', ['rooms' => $rooms]);
     }
 
+    public function apiData()
+    {
+        if (!isset($_SESSION['admin'])) {
+            response()->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+
+        $db = Database::connection();
+
+        // DataTables parameters
+        $draw = intval(Request::get('draw') ?? 1);
+        $start = intval(Request::get('start') ?? 0);
+        $length = intval(Request::get('length') ?? 10);
+        $search = Request::get('search')['value'] ?? '';
+        $orderColumnIndex = Request::get('order')[0]['column'] ?? 0;
+        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $columns = [
+            0 => 'id',
+            1 => 'fakultas',
+            2 => 'nama_ruang',
+            3 => 'kapasitas',
+        ];
+        $orderBy = $columns[$orderColumnIndex] ?? 'id';
+
+        // Base WHERE
+        $whereClause = "WHERE 1=1";
+
+        // Search
+        if (!empty($search)) {
+            $searchEscaped = str_replace("'", "''", $search);
+            $whereClause .= " AND (nama_ruang LIKE '%$searchEscaped%' 
+                             OR fakultas LIKE '%$searchEscaped%')";
+        }
+
+        $totalRecordsSql = "SELECT COUNT(*) as total FROM exam_rooms";
+        $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
+        $totalRecords = $totalRes['total'] ?? 0;
+
+        $filteredRecordsSql = "SELECT COUNT(*) as total FROM exam_rooms $whereClause";
+        $filteredRes = $db->query($filteredRecordsSql)->fetchAssoc();
+        $recordsFiltered = $filteredRes['total'] ?? 0;
+
+        $sql = "SELECT * FROM exam_rooms $whereClause 
+                ORDER BY $orderBy $orderDir 
+                LIMIT $length OFFSET $start";
+        $data = $db->query($sql)->fetchAll();
+
+        response()->json([
+            "draw" => $draw,
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $data
+        ]);
+    }
+
     public function create()
     {
         if (!isset($_SESSION['admin']))

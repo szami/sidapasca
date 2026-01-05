@@ -38,7 +38,7 @@
         </div>
     </div>
     <div class="card-body">
-        <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover" id="usersTable">
             <thead>
                 <tr>
                     <th width="10%">ID</th>
@@ -50,47 +50,62 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $user): ?>
-                    <tr>
-                        <td>
-                            <?php echo $user['id']; ?>
-                        </td>
-                        <td><strong>
-                                <?php echo htmlspecialchars($user['username']); ?>
-                            </strong></td>
-                        <td>
-                            <span class="badge <?php echo \App\Utils\RoleHelper::getRoleBadgeClass($user['role']); ?>">
-                                <?php echo \App\Utils\RoleHelper::getRoleDisplayName($user['role']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <?php if ($user['prodi_id']): ?>
-                                <code><?php echo $user['prodi_id']; ?></code>
-                            <?php else: ?>
-                                <span class="text-muted">-</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php echo date('d M Y H:i', strtotime($user['created_at'])); ?>
-                        </td>
-                        <td>
-                            <a href="/admin/users/edit/<?php echo $user['id']; ?>" class="btn btn-sm btn-warning">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <?php if ($user['id'] != $_SESSION['admin']): ?>
-                                <?php if (\App\Models\Setting::get('allow_delete', '1') == '1'): ?>
-                                    <a href="/admin/users/delete/<?php echo $user['id']; ?>" class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Yakin ingin menghapus user <?php echo htmlspecialchars($user['username']); ?>?')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+                <!-- AJAX Populated -->
             </tbody>
         </table>
     </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        const currentUserId = <?php echo $_SESSION['admin'] ?? 0; ?>;
+        const allowDelete = "<?php echo \App\Models\Setting::get('allow_delete', '1'); ?>" === "1";
+
+        $('#usersTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": APP_URL + "/api/master/users",
+            "columns": [
+                { "data": "id" },
+                {
+                    "data": "username",
+                    "render": function (data) { return `<strong>${data}</strong>`; }
+                },
+                {
+                    "data": "role_display",
+                    "render": function (data, type, row) {
+                        return `<span class="badge ${row.role_badge}">${data}</span>`;
+                    }
+                },
+                {
+                    "data": "prodi_id",
+                    "render": function (data) {
+                        return data ? `<code>${data}</code>` : '<span class="text-muted">-</span>';
+                    }
+                },
+                {
+                    "data": "created_at",
+                    "render": function (data) {
+                        return data ? new Date(data).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+                    }
+                },
+                {
+                    "data": "id",
+                    "orderable": false,
+                    "render": function (data, type, row) {
+                        let btns = `<a href="${APP_URL}/admin/users/edit/${data}" class="btn btn-sm btn-warning mr-1"><i class="fas fa-edit"></i></a>`;
+                        if (data != currentUserId && allowDelete) {
+                            btns += `<a href="${APP_URL}/admin/users/delete/${data}" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus user ${row.username}?')"><i class="fas fa-trash"></i></a>`;
+                        }
+                        return btns;
+                    }
+                }
+            ],
+            "order": [[0, "desc"]]
+        });
+    });
+</script>
+</div>
 </div>
 
 <?php
