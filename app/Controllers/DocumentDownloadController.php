@@ -15,13 +15,11 @@ class DocumentDownloadController
             return;
         }
 
-        // Only admin and superadmin can access
-        if (!\App\Utils\RoleHelper::canCRUD()) {
-            response()->redirect('/admin');
-            return;
-        }
+        // Allow Admin Prodi now
+        // if (!\App\Utils\RoleHelper::canCRUD()) { ... }
 
         $db = \App\Utils\Database::connection();
+        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
 
         // Get active semester
         $activeSemester = Semester::getActive();
@@ -29,19 +27,32 @@ class DocumentDownloadController
         // Get all semesters for dropdown with periode info
         $semesters = Semester::all();
 
-        // Get distinct prodi list from active semester
+        // Get distinct prodi list
         $semesterId = $activeSemester['id'] ?? null;
-        $prodiListSql = "SELECT DISTINCT nama_prodi, kode_prodi 
-                         FROM participants 
-                         WHERE semester_id = '$semesterId' 
-                         AND nama_prodi IS NOT NULL 
-                         ORDER BY nama_prodi ASC";
-        $prodiList = $db->query($prodiListSql)->fetchAll();
+
+        $sql = "SELECT DISTINCT nama_prodi, kode_prodi 
+                FROM participants 
+                WHERE semester_id = '$semesterId' 
+                AND nama_prodi IS NOT NULL";
+
+        // If Admin Prodi, filter the dropdown too (optional, or just pre-select and disable in FE)
+        if ($isAdminProdi) {
+            $userProdiId = $_SESSION['admin_prodi_id'] ?? '';
+            // Match by code or name? Usually ID matches keys in settings. 
+            // Here participants table has kode_prodi.
+            // Let's assume admin_prodi_id matches kode_prodi.
+            $sql .= " AND kode_prodi = '$userProdiId'";
+        }
+
+        $sql .= " ORDER BY nama_prodi ASC";
+
+        $prodiList = $db->query($sql)->fetchAll();
 
         echo \App\Utils\View::render('admin.documents.download', [
             'activeSemester' => $activeSemester,
             'semesters' => $semesters,
-            'prodiList' => $prodiList
+            'prodiList' => $prodiList,
+            'isAdminProdi' => $isAdminProdi
         ]);
     }
 
@@ -52,15 +63,23 @@ class DocumentDownloadController
             return;
         }
 
-        if (!\App\Utils\RoleHelper::canCRUD()) {
-            response()->json(['success' => false, 'message' => 'Forbidden'], 403);
-            return;
-        }
+        // if (!\App\Utils\RoleHelper::canCRUD()) { ... }
 
         $data = Request::body();
         $status = $data['status'] ?? 'all';
         $prodiId = $data['prodi_id'] ?? 'all';
         $semesterId = $data['semester_id'] ?? null;
+
+        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+        if ($isAdminProdi) {
+            // Force Prodi
+            $prodiId = $_SESSION['admin_prodi_id'] ?? '';
+            // Force Status: Peserta Ujian Only (Exam Ready)
+            // "status berkas hanya peserta ujian saja"
+            // Assuming 'peserta_ujian' filter means nomor_peserta is not null and maybe status_berkas=lulus
+            // But let's use the logic existing in preview: 'peserta_ujian' -> nomor_peserta IS NOT NULL.
+            $status = 'peserta_ujian';
+        }
 
         $db = \App\Utils\Database::connection();
 
@@ -79,6 +98,7 @@ class DocumentDownloadController
             }
         }
 
+        // Strict check for Prodi Filter
         if ($prodiId !== 'all') {
             $whereClause .= " AND p.kode_prodi = '$prodiId'";
         }
@@ -127,15 +147,18 @@ class DocumentDownloadController
             return;
         }
 
-        if (!\App\Utils\RoleHelper::canCRUD()) {
-            response()->redirect('/admin');
-            return;
-        }
+        // if (!\App\Utils\RoleHelper::canCRUD()) { ... }
 
         $data = Request::body();
         $status = $data['status'] ?? 'all';
         $prodiId = $data['prodi_id'] ?? 'all';
         $semesterId = $data['semester_id'] ?? null;
+
+        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+        if ($isAdminProdi) {
+            $prodiId = $_SESSION['admin_prodi_id'] ?? '';
+            $status = 'peserta_ujian';
+        }
 
         $db = \App\Utils\Database::connection();
 

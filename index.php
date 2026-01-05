@@ -5,17 +5,39 @@ session_start();
 require __DIR__ . '/vendor/autoload.php';
 
 // Load Env
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->safeLoad();
+try {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->safeLoad();
+} catch (\Throwable $e) {
+    // Graceful fallback or setup mode
+    // For now, let's just allow it to continue if possible, or die with a pretty message
+    // But user asked for "setup otomatis" or at least not fatal error.
+    // If env is bad, we might fallback to defaults or show a setup page.
+    die("<h1>System Error</h1><p>Failed to load configuration file (.env). Please ensure it is valid.</p><p>Error: " . $e->getMessage() . "</p>");
+}
 
 // Set Timezone to WITA (Waktu Indonesia Tengah / UTC+8)
 date_default_timezone_set('Asia/Makassar');
 
-// Config
-require __DIR__ . '/config/db.php';
+// Config - Try Connect DB
+try {
+    require __DIR__ . '/config/db.php';
+} catch (\Throwable $e) {
+    // If we are NOT already on the setup page, redirect/show setup link
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+    // Basic check to allow /setup to work even if DB is broken
+    if (strpos($uri, '/setup') === false) {
+        header('Location: /setup');
+        exit;
+    }
+}
 
 // Init Leaf
 $app = new Leaf\App();
+
+// Setup Routes (Available even if DB fails, assuming we handle it manually in Controller)
+$app->get('/setup', 'App\Controllers\SetupController@index');
+$app->post('/setup/migrate', 'App\Controllers\SetupController@migrate');
 
 // Routes
 $app->get('/', 'App\Controllers\HomeController@index');

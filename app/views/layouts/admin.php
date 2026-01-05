@@ -101,6 +101,12 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
+                        <?php
+                        $role = \App\Utils\RoleHelper::getRole();
+                        $isSuperadmin = \App\Utils\RoleHelper::isSuperadmin();
+                        $isAdmin = \App\Utils\RoleHelper::isAdmin();
+                        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+                        ?>
                         <li class="nav-item">
                             <a href="/admin" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -129,12 +135,14 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a href="/admin/verification/physical" class="nav-link">
-                                <i class="nav-icon fas fa-tasks"></i>
-                                <p>Verifikasi Berkas</p>
-                            </a>
-                        </li>
+                        <?php if (!$isAdminProdi): ?>
+                            <li class="nav-item">
+                                <a href="/admin/verification/physical" class="nav-link">
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>Verifikasi Berkas</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
 
                         <li class="nav-header">PESERTA UJIAN</li>
                         <li class="nav-item">
@@ -151,12 +159,7 @@
                         </li>
 
 
-                        <?php
-                        $role = \App\Utils\RoleHelper::getRole();
-                        $isSuperadmin = \App\Utils\RoleHelper::isSuperadmin();
-                        $isAdmin = \App\Utils\RoleHelper::isAdmin();
-                        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
-                        ?>
+
 
 
                         <!-- TOOLS - Admin & Superadmin only -->
@@ -182,6 +185,17 @@
                                     <p>Export Data</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="/admin/documents/download" class="nav-link">
+                                    <i class="nav-icon fas fa-file-archive"></i>
+                                    <p>Download Berkas</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- Tools for Admin Prodi -->
+                        <?php if ($isAdminProdi): ?>
+                            <li class="nav-header">TOOLS</li>
                             <li class="nav-item">
                                 <a href="/admin/documents/download" class="nav-link">
                                     <i class="nav-icon fas fa-file-archive"></i>
@@ -237,6 +251,18 @@
                                 <a href="/admin/attendance" class="nav-link">
                                     <i class="nav-icon fas fa-clipboard-check"></i>
                                     <p>Kehadiran Ujian</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/cat-schedule" class="nav-link">
+                                    <i class="nav-icon fas fa-print"></i>
+                                    <p>Cetak Jadwal</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/admin/attendance-list" class="nav-link">
+                                    <i class="nav-icon fas fa-list-alt"></i>
+                                    <p>Cetak Daftar Hadir</p>
                                 </a>
                             </li>
                         <?php endif; ?>

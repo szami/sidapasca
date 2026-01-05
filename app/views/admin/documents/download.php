@@ -15,26 +15,44 @@
                         <label class="font-weight-bold">
                             <i class="fas fa-filter mr-1"></i> Status Berkas
                         </label>
-                        <select id="statusFilter" class="form-control">
-                            <option value="all">📋 Semua Status</option>
-                            <option value="lulus">✅ Lulus Berkas</option>
-                            <option value="gagal">❌ Gagal Berkas</option>
-                            <option value="pending">📝 Pending</option>
-                            <option value="peserta_ujian">🎓 Peserta Ujian (Punya Nomor Peserta)</option>
-                        </select>
+                        <?php if ($isAdminProdi): ?>
+                            <select id="statusFilter" class="form-control" disabled>
+                                <option value="peserta_ujian" selected>🎓 Peserta Ujian (Punya Nomor Peserta)</option>
+                            </select>
+                            <small class="text-danger">*Admin Prodi hanya dapat mengakses data Peserta Ujian</small>
+                        <?php else: ?>
+                            <select id="statusFilter" class="form-control">
+                                <option value="all">📋 Semua Status</option>
+                                <option value="lulus">✅ Lulus Berkas</option>
+                                <option value="gagal">❌ Gagal Berkas</option>
+                                <option value="pending">📝 Pending</option>
+                                <option value="peserta_ujian">🎓 Peserta Ujian (Punya Nomor Peserta)</option>
+                            </select>
+                        <?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="font-weight-bold">
                             <i class="fas fa-graduation-cap mr-1"></i> Program Studi
                         </label>
-                        <select id="prodiFilter" class="form-control">
-                            <option value="all">📚 Semua Prodi</option>
-                            <?php foreach ($prodiList as $prodi): ?>
-                                <option value="<?php echo $prodi['kode_prodi']; ?>">
-                                    <?php echo htmlspecialchars($prodi['nama_prodi']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <?php if ($isAdminProdi): ?>
+                            <!-- Controller filters prodiList to only 1 item for Admin Prodi -->
+                            <select id="prodiFilter" class="form-control" disabled>
+                                <?php foreach ($prodiList as $prodi): ?>
+                                    <option value="<?php echo $prodi['kode_prodi']; ?>" selected>
+                                        <?php echo htmlspecialchars($prodi['nama_prodi']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php else: ?>
+                            <select id="prodiFilter" class="form-control">
+                                <option value="all">📚 Semua Prodi</option>
+                                <?php foreach ($prodiList as $prodi): ?>
+                                    <option value="<?php echo $prodi['kode_prodi']; ?>">
+                                        <?php echo htmlspecialchars($prodi['nama_prodi']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="font-weight-bold">

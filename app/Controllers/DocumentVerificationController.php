@@ -20,6 +20,12 @@ class DocumentVerificationController
             header('Location: /admin/login');
             exit;
         }
+
+        // Restrict Admin Prodi
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            header('Location: /admin?error=unauthorized');
+            exit;
+        }
     }
 
     public function index()
