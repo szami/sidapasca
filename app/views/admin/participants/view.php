@@ -11,6 +11,10 @@ if ($isS3) {
     $docs[] = ['type' => 'ijazah_s2', 'label' => 'Ijazah S2', 'field' => 'ijazah_s2_filename', 'legacy_path' => '/storage/documents/ijazah_s2/', 'accept' => 'image/jpeg,image/png', 'icon' => 'graduation-cap', 'isImage' => true];
     $docs[] = ['type' => 'transkrip_s2', 'label' => 'Transkrip S2', 'field' => 'transkrip_s2_filename', 'legacy_path' => '/storage/documents/transkrip_s2/', 'accept' => 'application/pdf', 'icon' => 'file-pdf', 'isImage' => false];
 }
+// Add rekomendasi only if file exists
+if (!empty($p['rekomendasi_filename'])) {
+    $docs[] = ['type' => 'rekomendasi', 'label' => 'Rekomendasi', 'field' => 'rekomendasi_filename', 'legacy_path' => '/storage/documents/rekomendasi/', 'accept' => 'application/pdf', 'icon' => 'file-signature', 'isImage' => false];
+}
 // Resolve Photo URL
 $photoVal = $p['photo_filename'] ?? '';
 if (!empty($photoVal)) {
@@ -191,6 +195,71 @@ if (!empty($photoVal)) {
         border-radius: 8px;
         font-weight: 600;
         padding: 10px 20px;
+    }
+
+    /* PDF.js Viewer Styles */
+    .pdf-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #525252;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .pdf-toolbar {
+        background: #323232;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .pdf-toolbar button {
+        background: #4a4a4a;
+        border: none;
+        color: white;
+        padding: 4px 12px;
+        cursor: pointer;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+
+    .pdf-toolbar button:hover:not(:disabled) {
+        background: #5a5a5a;
+    }
+
+    .pdf-toolbar button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pdf-page-info {
+        color: white;
+        font-size: 12px;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .pdf-canvas-wrapper {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 10px;
+        background: #525252;
+    }
+
+    .pdf-canvas {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        background: white;
+        display: block;
+        user-select: none;
     }
 </style>
 
@@ -502,7 +571,25 @@ if (!empty($photoVal)) {
                                                                     id="img-<?= $doc['type'] ?>"
                                                                     style="transition: transform 0.3s ease;">
                                                             <?php else: ?>
-                                                                <iframe src="<?= $docUrl ?>"></iframe>
+                                                                <!-- PDF.js Viewer -->
+                                                                <div class="pdf-container" data-pdf-url="<?= $docUrl ?>"
+                                                                    style="width: 100%; height: 520px;">
+                                                                    <div class="pdf-toolbar">
+                                                                        <button class="pdf-prev btn btn-sm btn-secondary">◄</button>
+                                                                        <span class="pdf-page-info mx-2">
+                                                                            <span class="pdf-page-num">1</span> / <span
+                                                                                class="pdf-page-count">-</span>
+                                                                        </span>
+                                                                        <button class="pdf-next btn btn-sm btn-secondary">►</button>
+                                                                        <button
+                                                                            class="pdf-zoom-out btn btn-sm btn-info ml-2">-</button>
+                                                                        <button class="pdf-zoom-in btn btn-sm btn-info">+</button>
+                                                                    </div>
+                                                                    <div class="pdf-canvas-wrapper"
+                                                                        style="flex: 1; overflow: auto;">
+                                                                        <canvas class="pdf-canvas"></canvas>
+                                                                    </div>
+                                                                </div>
                                                             <?php endif; ?>
                                                         <?php else: ?>
                                                             <div class="doc-empty">
@@ -556,6 +643,70 @@ if (!empty($photoVal)) {
         el.style.transform = `rotate(${r}deg) scale(${s})`;
     }
 
+</script>
+
+<!-- PDF.js Library -->
+<script src="/public/js/pdf.min.js"></script>
+<script src="/public/js/pdf-viewer.js"></script>
+
+<script>
+    // Initialize PDF viewers when tab is shown
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('[PDF Viewer] Initialization started');
+
+        // Initialize visible PDF viewers
+        const visiblePdfContainers = document.querySelectorAll('.tab-pane.active .pdf-container[data-pdf-url]');
+        console.log('[PDF Viewer] Found', visiblePdfContainers.length, 'visible PDF containers');
+        visiblePdfContainers.forEach((container, index) => {
+            const url = container.dataset.pdfUrl;
+            console.log(`[PDF Viewer] Container ${index + 1}: URL =`, url);
+            if (!container.dataset.initialized) {
+                try {
+                    new PDFViewer(container);
+                    container.dataset.initialized = 'true';
+                    console.log(`[PDF Viewer] ✓ Initialized container ${index + 1}`);
+                } catch (error) {
+                    console.error(`[PDF Viewer] ✗ Failed to initialize container ${index + 1}:`, error);
+                }
+            }
+        });
+
+        // Initialize PDF viewers when tab is clicked
+        const docNavLinks = document.querySelectorAll('#v-pills-tab a[data-toggle="pill"]');
+        console.log('[PDF Viewer] Found', docNavLinks.length, 'document nav links');
+        docNavLinks.forEach(link => {
+            link.addEventListener('shown.bs.tab', function (e) {
+                const targetId = e.target.getAttribute('href');
+                console.log('[PDF Viewer] Tab switched to:', targetId);
+                const targetPane = document.querySelector(targetId);
+                if (targetPane) {
+                    const pdfContainer = targetPane.querySelector('.pdf-container[data-pdf-url]');
+                    if (pdfContainer) {
+                        const url = pdfContainer.dataset.pdfUrl;
+                        console.log('[PDF Viewer] Found PDF container with URL:', url);
+                        if (!pdfContainer.dataset.initialized) {
+                            try {
+                                console.log('[PDF Viewer] Initializing PDF viewer for:', url);
+                                new PDFViewer(pdfContainer);
+                                pdfContainer.dataset.initialized = 'true';
+                                console.log('[PDF Viewer] ✓ Successfully initialized');
+                            } catch (error) {
+                                console.error('[PDF Viewer] ✗ Failed to initialize:', error);
+                            }
+                        } else {
+                            console.log('[PDF Viewer] Already initialized');
+                        }
+                    } else {
+                        console.log('[PDF Viewer] No PDF container found in tab');
+                    }
+                } else {
+                    console.error('[PDF Viewer] Target pane not found:', targetId);
+                }
+            });
+        });
+
+        console.log('[PDF Viewer] Initialization complete');
+    });
 </script>
 
 <?php

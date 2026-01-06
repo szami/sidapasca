@@ -137,6 +137,71 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
     .custom-switch-premium .custom-control-input:checked~.custom-control-label::after {
         transform: translateX(1.25rem);
     }
+
+    /* PDF.js Viewer Styles */
+    .pdf-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #525252;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .pdf-toolbar {
+        background: #323232;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .pdf-toolbar button {
+        background: #4a4a4a;
+        border: none;
+        color: white;
+        padding: 4px 12px;
+        cursor: pointer;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+
+    .pdf-toolbar button:hover:not(:disabled) {
+        background: #5a5a5a;
+    }
+
+    .pdf-toolbar button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pdf-page-info {
+        color: white;
+        font-size: 12px;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .pdf-canvas-wrapper {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 10px;
+        background: #525252;
+    }
+
+    .pdf-canvas {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        background: white;
+        display: block;
+        user-select: none;
+    }
 </style>
 
 <div class="row justify-content-center">
@@ -688,6 +753,15 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                 </a>
                             </li>
                         <?php endif; ?>
+                        <!-- Rekomendasi Tab (conditional) -->
+                        <?php if (!empty($p['rekomendasi_filename'])): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#tab-rekomendasi">
+                                    <i class="fas fa-file-signature mr-1"></i> Rekomendasi
+                                    <i class="fas fa-check-circle text-success ml-1"></i>
+                                </a>
+                            </li>
+                        <?php endif; ?>
                     </ul>
                     <!-- Tab Content -->
                     <div class="tab-content mt-4">
@@ -745,12 +819,17 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                         </div>
                                         <div class="card-body p-3 text-center">
                                             <p class="small text-muted mb-3">Tools</p>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block" onclick="rotateDoc('ktp')">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block"
+                                                onclick="rotateDoc('ktp')">
                                                 <i class="fas fa-sync-alt mr-1"></i> Putar
                                             </button>
                                             <div class="mt-2 btn-group w-100">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ktp', 0.2)"><i class="fas fa-search-plus"></i></button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ktp', -0.2)"><i class="fas fa-search-minus"></i></button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    onclick="zoomDoc('ktp', 0.2)"><i
+                                                        class="fas fa-search-plus"></i></button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    onclick="zoomDoc('ktp', -0.2)"><i
+                                                        class="fas fa-search-minus"></i></button>
                                             </div>
                                         </div>
                                     </div>
@@ -764,8 +843,8 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                     class="<?php echo !empty($p['ijazah_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                     <?php if (!empty($p['ijazah_filename'])): ?>
                                         <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                            <img src="<?php echo $ijazahUrl; ?>" alt="Ijazah" class="img-thumbnail" id="img-ijazah"
-                                                style="max-width:100%;max-height:1000px">
+                                            <img src="<?php echo $ijazahUrl; ?>" alt="Ijazah" class="img-thumbnail"
+                                                id="img-ijazah" style="max-width:100%;max-height:1000px">
                                         </div>
                                         <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
                                                     class="fas fa-check-circle mr-1"></i>
@@ -790,8 +869,12 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                                 <i class="fas fa-sync-alt mr-1"></i> Putar
                                             </button>
                                             <div class="mt-2 btn-group w-100">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ijazah', 0.2)"><i class="fas fa-search-plus"></i></button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ijazah', -0.2)"><i class="fas fa-search-minus"></i></button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    onclick="zoomDoc('ijazah', 0.2)"><i
+                                                        class="fas fa-search-plus"></i></button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    onclick="zoomDoc('ijazah', -0.2)"><i
+                                                        class="fas fa-search-minus"></i></button>
                                             </div>
                                         </div>
                                     </div>
@@ -806,8 +889,23 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                     <?php if (!empty($p['transkrip_filename'])): ?>
                                         <div class="document-viewer-container border rounded bg-light p-2 mb-3"
                                             style="height: 800px;">
-                                            <iframe src="<?php echo $transkripUrl; ?>" width="100%" height="100%"
-                                                style="border: none;"></iframe>
+                                            <!-- PDF.js Viewer -->
+                                            <div class="pdf-container" data-pdf-url="<?php echo $transkripUrl; ?>"
+                                                style="width: 100%; height: 100%;">
+                                                <div class="pdf-toolbar">
+                                                    <button class="pdf-prev btn btn-sm btn-secondary">◄</button>
+                                                    <span class="pdf-page-info mx-2">
+                                                        <span class="pdf-page-num">1</span> / <span
+                                                            class="pdf-page-count">-</span>
+                                                    </span>
+                                                    <button class="pdf-next btn btn-sm btn-secondary">►</button>
+                                                    <button class="pdf-zoom-out btn btn-sm btn-info ml-2">-</button>
+                                                    <button class="pdf-zoom-in btn btn-sm btn-info">+</button>
+                                                </div>
+                                                <div class="pdf-canvas-wrapper" style="flex: 1; overflow: auto;">
+                                                    <canvas class="pdf-canvas"></canvas>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="mt-2 text-left ml-2">
                                             <small class="text-success font-weight-bold"><i
@@ -888,8 +986,23 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                         <?php if (!empty($p['transkrip_s2_filename'])): ?>
                                             <div class="document-viewer-container border rounded bg-light p-2 mb-3"
                                                 style="height: 800px;">
-                                                <iframe src="<?php echo $transkripS2Url; ?>" width="100%" height="100%"
-                                                    style="border: none;"></iframe>
+                                                <!-- PDF.js Viewer -->
+                                                <div class="pdf-container" data-pdf-url="<?php echo $transkripS2Url; ?>"
+                                                    style="width: 100%; height: 100%;">
+                                                    <div class="pdf-toolbar">
+                                                        <button class="pdf-prev btn btn-sm btn-secondary">◄</button>
+                                                        <span class="pdf-page-info mx-2">
+                                                            <span class="pdf-page-num">1</span> / <span
+                                                                class="pdf-page-count">-</span>
+                                                        </span>
+                                                        <button class="pdf-next btn btn-sm btn-secondary">►</button>
+                                                        <button class="pdf-zoom-out btn btn-sm btn-info ml-2">-</button>
+                                                        <button class="pdf-zoom-in btn btn-sm btn-info">+</button>
+                                                    </div>
+                                                    <div class="pdf-canvas-wrapper" style="flex: 1; overflow: auto;">
+                                                        <canvas class="pdf-canvas"></canvas>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="mt-2 text-left ml-2">
                                                 <small class="text-success font-weight-bold"><i
@@ -912,6 +1025,67 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                             <div class="card-header bg-light">
                                                 <h3 class="card-title text-sm font-weight-bold"><i
                                                         class="fas fa-cog mr-1"></i> Kelola Transkrip S2</h3>
+                                            </div>
+                                            <div class="card-body p-3 text-center">
+                                                <p class="small text-muted mb-3">Gunakan Document Helper untuk mengelola
+                                                    file ini.</p>
+                                                <a href="/admin/document-helper" class="btn btn-primary btn-sm btn-block">
+                                                    <i class="fas fa-external-link-alt mr-1"></i> Buka Helper
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Rekomendasi Tab Content -->
+                        <?php if (!empty($p['rekomendasi_filename'])):
+                            // Resolve rekomendasi URL
+                            $rekomendasiFilename = $p['rekomendasi_filename'];
+                            if (strpos($rekomendasiFilename, 'documents/') !== false) {
+                                $rekomendasiUrl = '/storage/' . $rekomendasiFilename;
+                            } else {
+                                $rekomendasiUrl = '/storage/documents/rekomendasi/' . $rekomendasiFilename;
+                            }
+                            ?>
+                            <div class="tab-pane fade" id="tab-rekomendasi">
+                                <div class="row">
+                                    <div class="col-md-9 text-center">
+                                        <div class="document-viewer-container border rounded bg-light p-2 mb-3"
+                                            style="height: 800px;">
+                                            <!-- PDF.js Viewer -->
+                                            <div class="pdf-container" data-pdf-url="<?php echo $rekomendasiUrl; ?>"
+                                                style="width: 100%; height: 100%;">
+                                                <div class="pdf-toolbar">
+                                                    <button class="pdf-prev btn btn-sm btn-secondary">◄</button>
+                                                    <span class="pdf-page-info mx-2">
+                                                        <span class="pdf-page-num">1</span> / <span
+                                                            class="pdf-page-count">-</span>
+                                                    </span>
+                                                    <button class="pdf-next btn btn-sm btn-secondary">►</button>
+                                                    <button class="pdf-zoom-out btn btn-sm btn-info ml-2">-</button>
+                                                    <button class="pdf-zoom-in btn btn-sm btn-info">+</button>
+                                                </div>
+                                                <div class="pdf-canvas-wrapper" style="flex: 1; overflow: auto;">
+                                                    <canvas class="pdf-canvas"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 text-left ml-2">
+                                            <small class="text-success font-weight-bold"><i
+                                                    class="fas fa-check-circle mr-1"></i> Tersedia</small>
+                                            <a href="<?php echo $rekomendasiUrl; ?>" target="_blank"
+                                                class="btn btn-xs btn-outline-primary ml-2">
+                                                <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card shadow-none border">
+                                            <div class="card-header bg-light">
+                                                <h3 class="card-title text-sm font-weight-bold"><i
+                                                        class="fas fa-cog mr-1"></i> Kelola Rekomendasi</h3>
                                             </div>
                                             <div class="card-body p-3 text-center">
                                                 <p class="small text-muted mb-3">Gunakan Document Helper untuk mengelola
@@ -993,11 +1167,11 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
 
 <script>
     function rotateDoc(type) {
-        if(!confirm('Putar gambar 90 derajat searah jarum jam? (Aksi ini permanen, halaman akan direload)')) return;
-        
+        if (!confirm('Putar gambar 90 derajat searah jarum jam? (Aksi ini permanen, halaman akan direload)')) return;
+
         // Disable button/Show spinner...
         const btn = event.target.closest('button');
-        if(btn) {
+        if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
         }
@@ -1005,39 +1179,74 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
         fetch(`/admin/participants/<?= $p['id'] ?>/rotate-doc/${type}`, {
             method: 'POST'
         })
-        .then(r => r.json())
-        .then(data => {
-            if(data.success) {
-                location.reload(); 
-            } else {
-                alert('Gagal memutar gambar: ' + (data.message || 'Unknown error'));
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Putar';
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Gagal memutar gambar: ' + (data.message || 'Unknown error'));
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Putar';
+                    }
                 }
-            }
-        })
-        .catch(e => {
-            alert('Error: ' + e);
-            if(btn) btn.disabled = false;
-        });
+            })
+            .catch(e => {
+                alert('Error: ' + e);
+                if (btn) btn.disabled = false;
+            });
     }
 
     // Simple Zoom Logic for Edit Page
     let editScales = {};
     function zoomDoc(type, delta) {
         const img = document.getElementById('img-' + type);
-        if(!img) return;
-        
-        if(!editScales[type]) editScales[type] = 1;
+        if (!img) return;
+
+        if (!editScales[type]) editScales[type] = 1;
         editScales[type] += delta;
-        if(editScales[type] < 0.2) editScales[type] = 0.2;
-        
+        if (editScales[type] < 0.2) editScales[type] = 0.2;
+
         img.style.transform = `scale(${editScales[type]})`;
         img.style.transition = 'transform 0.2s';
         img.style.transformOrigin = 'top center'; // Better for long documents
     }
 </script>
+
+<!-- PDF.js Library -->
+<script src="/public/js/pdf.min.js"></script>
+<script src="/public/js/pdf-viewer.js"></script>
+
+<script>
+    // Initialize PDF viewers when tab is shown
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize visible PDF viewers
+        const visiblePdfContainers = document.querySelectorAll('.tab-pane.active .pdf-container[data-pdf-url]');
+        visiblePdfContainers.forEach(container => {
+            if (!container.dataset.initialized) {
+                new PDFViewer(container);
+                container.dataset.initialized = 'true';
+            }
+        });
+
+        // Initialize PDF viewers when tab is clicked
+        const docTabs = document.querySelectorAll('#docTabs a[data-toggle="tab"]');
+        docTabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (e) {
+                const targetId = e.target.getAttribute('href');
+                const targetPane = document.querySelector(targetId);
+                if (targetPane) {
+                    const pdfContainer = targetPane.querySelector('.pdf-container[data-pdf-url]');
+                    if (pdfContainer && !pdfContainer.dataset.initialized) {
+                        new PDFViewer(pdfContainer);
+                        pdfContainer.dataset.initialized = 'true';
+                    }
+                }
+            });
+        });
+    });
+</script>
+
 <?php
 $content = ob_get_clean();
 include __DIR__ . '/../../layouts/admin.php';

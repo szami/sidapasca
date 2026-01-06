@@ -94,6 +94,72 @@
     .nav-tabs-premium .nav-link:hover {
         color: #0056b3;
     }
+
+    /* PDF.js Viewer Styles */
+    .pdf-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #525252;
+    }
+
+    .pdf-toolbar {
+        background: #323232;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .pdf-toolbar button {
+        background: #4a4a4a;
+        border: none;
+        color: white;
+        padding: 5px 15px;
+        cursor: pointer;
+        border-radius: 3px;
+        font-size: 14px;
+    }
+
+    .pdf-toolbar button:hover:not(:disabled) {
+        background: #5a5a5a;
+    }
+
+    .pdf-toolbar button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pdf-page-info {
+        color: white;
+        font-size: 14px;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    .pdf-canvas-wrapper {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+        background: #525252;
+    }
+
+    .pdf-canvas {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        background: white;
+        display: block;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
 </style>
 
 <div class="content-header">
@@ -471,52 +537,79 @@
             method: 'POST',
             body: formData
         })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Dokumen berhasil diperbarui',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Dokumen berhasil diperbarui',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
 
-                // Update Preview Content Immdiately
-                refreshSingleDocPreview(type, data.url);
-                
-                // Update Tab Status Color
-                $(`#tab-${type} i`).removeClass('text-danger').addClass('text-success');
+                    // Update Preview Content Immdiately
+                    refreshSingleDocPreview(type, data.url);
 
-                // Reload Table
-                $('#helperTable').DataTable().ajax.reload(null, false);
-            } else {
-                Swal.fire('Gagal', data.message, 'error');
-            }
-            // Reset input
-            $('#singleDocUpload').val('');
-        })
-        .catch(e => {
-            Swal.fire('Error', 'Server Error', 'error');
-            $('#singleDocUpload').val('');
-        });
+                    // Update Tab Status Color
+                    $(`#tab-${type} i`).removeClass('text-danger').addClass('text-success');
+
+                    // Reload Table
+                    $('#helperTable').DataTable().ajax.reload(null, false);
+                } else {
+                    Swal.fire('Gagal', data.message, 'error');
+                }
+                // Reset input
+                $('#singleDocUpload').val('');
+            })
+            .catch(e => {
+                Swal.fire('Error', 'Server Error', 'error');
+                $('#singleDocUpload').val('');
+            });
     }
 
     function refreshSingleDocPreview(type, url) {
         const container = $(`#content-${type}`);
         container.empty();
-        
+
         // Determine extension for display
         const ext = url.split('.').pop().toLowerCase().split('?')[0]; // remove query string
         let htmlContent = '';
-        
+
         if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
             htmlContent = `<img src="${url}" class="preview-img" alt="${type}">`;
+        } else if (ext === 'pdf') {
+            // Use PDF.js for PDF files
+            htmlContent = `
+            <div class="pdf-container" data-pdf-url="${url}">
+                <div class="pdf-toolbar">
+                    <button class="pdf-prev">◄ Prev</button>
+                    <span class="pdf-page-info">
+                        <span class="pdf-page-num">1</span> / <span class="pdf-page-count">-</span>
+                    </span>
+                    <button class="pdf-next">Next ►</button>
+                    <button class="pdf-zoom-out">-</button>
+                    <button class="pdf-zoom-in">+</button>
+                </div>
+                <div class="pdf-canvas-wrapper">
+                    <canvas class="pdf-canvas"></canvas>
+                </div>
+            </div>`;
         } else {
             htmlContent = `<iframe src="${url}" class="preview-iframe"></iframe>`;
         }
-        
+
         container.html(htmlContent);
+
+        // Initialize PDF viewer if it's a PDF
+        if (ext === 'pdf') {
+            setTimeout(() => {
+                const pdfContainer = container.find('.pdf-container[data-pdf-url]')[0];
+                if (pdfContainer) {
+                    new PDFViewer(pdfContainer);
+                }
+            }, 100);
+        }
     }
 </script>
 
@@ -830,14 +923,17 @@
             { key: 'photo', label: 'Foto', icon: 'camera' },
             { key: 'ktp', label: 'KTP', icon: 'id-card' },
             { key: 'ijazah', label: 'Ijazah S1', icon: 'graduation-cap' },
-            { key: 'transkrip', label: 'Transkrip S1', icon: 'file-alt' },
-            { key: 'rekomendasi', label: 'Rekomendasi', icon: 'file-signature' }
+            { key: 'transkrip', label: 'Transkrip S1', icon: 'file-alt' }
         ];
 
         if (p.is_s3) {
             definitions.push({ key: 'ijazah_s2', label: 'Ijazah S2', icon: 'graduation-cap' });
             definitions.push({ key: 'transkrip_s2', label: 'Transkrip S2', icon: 'file-alt' });
         }
+
+        // Rekomendasi always at the end
+        definitions.push({ key: 'rekomendasi', label: 'Rekomendasi', icon: 'file-signature' });
+
 
         let firstActive = true;
 
@@ -867,10 +963,28 @@
                 </div>`;
             } else {
                 // Check Extension for Image vs PDF
-                const ext = url.split('.').pop().toLowerCase();
+                const ext = url.split('.').pop().toLowerCase().split('?')[0]; // Remove query string
                 if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
                     htmlContent = `<img src="${url}" class="preview-img" id="img-${def.key}" alt="${def.label}">`;
+                } else if (ext === 'pdf') {
+                    // Use PDF.js for PDF files
+                    htmlContent = `
+                    <div class="pdf-container" data-pdf-url="${url}">
+                        <div class="pdf-toolbar">
+                            <button class="pdf-prev">◄ Prev</button>
+                            <span class="pdf-page-info">
+                                <span class="pdf-page-num">1</span> / <span class="pdf-page-count">-</span>
+                            </span>
+                            <button class="pdf-next">Next ►</button>
+                            <button class="pdf-zoom-out">-</button>
+                            <button class="pdf-zoom-in">+</button>
+                        </div>
+                        <div class="pdf-canvas-wrapper">
+                            <canvas class="pdf-canvas"></canvas>
+                        </div>
+                    </div>`;
                 } else {
+                    // Fallback for other file types
                     htmlContent = `<iframe src="${url}" class="preview-iframe"></iframe>`;
                 }
             }
@@ -881,6 +995,14 @@
             </div>
         `);
         });
+
+        // Initialize PDF viewers after DOM is ready
+        setTimeout(() => {
+            const pdfContainers = contentContainer.find('.pdf-container[data-pdf-url]');
+            pdfContainers.each(function () {
+                new PDFViewer(this);
+            });
+        }, 100);
     }
 
     function resetRotation() {
@@ -1022,7 +1144,7 @@
 
         try {
             // Use length=-1 to get ALL participants (no pagination)
-          const response = await fetch(`/api/document-helper/participants?semester_id=${semesterId}&prodi=${encodeURIComponent(prodi)}&length=-1`);
+            const response = await fetch(`/api/document-helper/participants?semester_id=${semesterId}&prodi=${encodeURIComponent(prodi)}&length=-1`);
             const result = await response.json();
             Swal.close();
 
@@ -1111,6 +1233,11 @@
         $('#helperTable').DataTable().ajax.reload();
     }
 </script>
+
+<!-- PDF.js Library -->
+<script src="/public/js/pdf.min.js"></script>
+<script src="/public/js/pdf-viewer.js"></script>
+
 
 <?php
 $content = ob_get_clean();
