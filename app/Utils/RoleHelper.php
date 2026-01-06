@@ -339,7 +339,6 @@ class RoleHelper
             ],
             self::ROLE_UPKH => [
                 'dashboard',
-                'admisi_view',
                 'peserta_view',
                 'verification',
                 'download',

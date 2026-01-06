@@ -152,7 +152,7 @@
 
                         <!-- ADMISI & PESERTA -->
                         <li class="nav-header">ADMISI & PESERTA</li>
-                        <?php if (!$isTU): ?>
+                        <?php if (!$isTU && !$isUPKH): ?>
                             <li class="nav-item">
                                 <a href="/admin/participants?filter=pending" class="nav-link">
                                     <i class="nav-icon fas fa-file-signature"></i>
