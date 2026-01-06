@@ -1,4 +1,13 @@
-<?php ob_start(); ?>
+<?php ob_start();
+// Path Helper
+$getPhotoUrl = function ($filename) {
+    if (empty($filename))
+        return '';
+    if (strpos($filename, 'photos/') !== false)
+        return '/storage/' . $filename;
+    return '/storage/photos/' . $filename;
+};
+?>
 <div class="row">
     <div class="col-8">
         <div class="card">
@@ -236,13 +245,7 @@
                         Verifikasi</button>
 
                     <div class="float-right">
-                        <form action="/admin/verification/physical/<?php echo $participant['id']; ?>/reset"
-                            method="POST"
-                            onsubmit="return confirm('Apakah Anda yakin ingin mereset verifikasi? Data verifikasi akan dihapus dan kembali ke status awal.');"
-                            class="d-inline mr-2">
-                            <button type="submit" class="btn btn-danger"><i class="fas fa-trash-restore mr-1"></i>
-                                Reset</button>
-                        </form>
+
                         <a href="/admin/verification/physical" class="btn btn-default">Kembali</a>
                     </div>
                 </div>
@@ -257,7 +260,7 @@
                 <div class="text-center">
                     <?php if (!empty($participant['photo_filename'])): ?>
                         <img class="profile-user-img img-fluid img-circle"
-                            src="/storage/photos/<?php echo $participant['photo_filename']; ?>" alt="User profile picture"
+                            src="<?php echo $getPhotoUrl($participant['photo_filename']); ?>" alt="User profile picture"
                             style="width: 100px; height: 100px; object-fit: cover;">
                     <?php else: ?>
                         <img class="profile-user-img img-fluid img-circle"

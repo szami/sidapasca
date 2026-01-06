@@ -114,6 +114,102 @@
 
 <div class="content">
     <div class="container-fluid">
+
+        <!-- STATISTICS CARDS -->
+        <?php if (isset($stats)): ?>
+
+            <!-- Summary Row -->
+            <div class="row mb-3">
+                <div class="col-lg-4 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info shadow-sm">
+                        <div class="inner">
+                            <h3><?= $stats['total'] ?></h3>
+                            <p>Total Peserta</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-success shadow-sm">
+                        <div class="inner">
+                            <h3><?= $stats['complete'] ?></h3>
+                            <p>Berkas Lengkap (4 Utama)</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-warning shadow-sm">
+                        <div class="inner">
+                            <h3><?= $stats['incomplete'] ?></h3>
+                            <p>Belum Lengkap</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed File Breakdown -->
+            <div class="card card-outline card-secondary mb-4 shadow-sm">
+                <div class="card-header border-0">
+                    <h3 class="card-title text-muted"><i class="fas fa-file-alt mr-2"></i>Rincian Ketersediaan File</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row">
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-3">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block text-secondary font-weight-bold">FOTO</span>
+                                <h4 class="m-0 text-primary"><?= $stats['photo'] ?></h4>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-3">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block text-secondary font-weight-bold">KTP</span>
+                                <h4 class="m-0 text-primary"><?= $stats['ktp'] ?></h4>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-3">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block text-secondary font-weight-bold">IJAZAH</span>
+                                <h4 class="m-0 text-primary"><?= $stats['ijazah'] ?></h4>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-3">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block text-secondary font-weight-bold">TRANSKRIP</span>
+                                <h4 class="m-0 text-primary"><?= $stats['transkrip'] ?></h4>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-3">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block text-secondary font-weight-bold">IJAZAH S2</span>
+                                <h4 class="m-0 text-dark"><?= $stats['ijazah_s2'] ?></h4>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-3">
+                            <div class="p-2 border rounded bg-light">
+                                <span class="d-block text-secondary font-weight-bold">TRANSKRIP S2</span>
+                                <h4 class="m-0 text-dark"><?= $stats['transkrip_s2'] ?></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="card card-outline card-primary">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-file-archive mr-2"></i> Helper Verifikasi & Download</h3>
@@ -130,12 +226,14 @@
                             <label>Semester</label>
                             <select class="form-control" id="filterSemester">
                                 <option value="all">Semua Semester</option>
-                                <?php foreach ($semesters as $sem): ?>
-                                    <option value="<?= $sem['id'] ?>" <?= (isset($activeSemester['id']) && $activeSemester['id'] == $sem['id']) ? 'selected' : '' ?>>
-                                        [<?= htmlspecialchars($sem['kode'] ?? '') ?>] <?= htmlspecialchars($sem['nama']) ?>
-                                        <?= $sem['is_active'] ? '(Aktif)' : '' ?>
-                                    </option>
-                                <?php endforeach; ?>
+                                <?php if (is_array($semesters)): ?>
+                                    <?php foreach ($semesters as $sem): ?>
+                                        <option value="<?= $sem['id'] ?>" <?= (isset($activeSemester['id']) && $activeSemester['id'] == $sem['id']) ? 'selected' : '' ?>>
+                                            [<?= htmlspecialchars($sem['kode'] ?? '') ?>] <?= htmlspecialchars($sem['nama']) ?>
+                                            <?= $sem['is_active'] ? '(Aktif)' : '' ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </select>
                         </div>
                     </div>
@@ -312,6 +410,11 @@
                         <input type="file" id="importFileInline" accept=".zip" style="display:none;"
                             onchange="importFromPreview()">
                     </label>
+                    <label class="btn btn-sm btn-danger mr-1 mb-1 mb-0" title="Ganti dokumen yang sedang dibuka">
+                        <i class="fas fa-upload"></i> Ganti File
+                        <input type="file" id="singleDocUpload" accept=".jpg,.jpeg,.png,.pdf" style="display:none;"
+                            onchange="performSingleUpload()">
+                    </label>
                     <button type="button" class="btn btn-sm btn-success mr-1 mb-1" title="Sync dari server lama"
                         onclick="syncFromPreview()">
                         <i class="fas fa-cloud-download-alt"></i> Sync
@@ -322,6 +425,100 @@
         </div>
     </div>
 </div>
+
+<script>
+    let currentUploadType = null;
+
+    function triggerSingleUpload() {
+        // This is handled by the label click, which triggers the input inside it.
+        // But we need to set the type FIRST.
+        // Wait, input inside label triggers click automatically.
+        // But we need to know WHICH tab is active when file is selected.
+        // We can determine type ON CHANGE, based on active tab.
+    }
+
+    function performSingleUpload() {
+        const fileInput = $('#singleDocUpload')[0];
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // Determine Type from Active Tab
+        const activeLink = $('#docTabs .nav-link.active');
+        if (activeLink.length === 0) {
+            Swal.fire('Error', 'Tidak ada tab dokumen yang aktif', 'error');
+            return;
+        }
+
+        // ID format: tab-{key} e.g tab-photo
+        const tabId = activeLink.attr('id');
+        const type = tabId.replace('tab-', '');
+
+        if (!currentPreviewId) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', type);
+
+        // Show loading
+        Swal.fire({
+            title: 'Mengupload...',
+            text: 'Mohon tunggu',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        fetch(`/admin/document-helper/upload-single/${currentPreviewId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Dokumen berhasil diperbarui',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // Update Preview Content Immdiately
+                refreshSingleDocPreview(type, data.url);
+                
+                // Update Tab Status Color
+                $(`#tab-${type} i`).removeClass('text-danger').addClass('text-success');
+
+                // Reload Table
+                $('#helperTable').DataTable().ajax.reload(null, false);
+            } else {
+                Swal.fire('Gagal', data.message, 'error');
+            }
+            // Reset input
+            $('#singleDocUpload').val('');
+        })
+        .catch(e => {
+            Swal.fire('Error', 'Server Error', 'error');
+            $('#singleDocUpload').val('');
+        });
+    }
+
+    function refreshSingleDocPreview(type, url) {
+        const container = $(`#content-${type}`);
+        container.empty();
+        
+        // Determine extension for display
+        const ext = url.split('.').pop().toLowerCase().split('?')[0]; // remove query string
+        let htmlContent = '';
+        
+        if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+            htmlContent = `<img src="${url}" class="preview-img" alt="${type}">`;
+        } else {
+            htmlContent = `<iframe src="${url}" class="preview-iframe"></iframe>`;
+        }
+        
+        container.html(htmlContent);
+    }
+</script>
 
 <!-- Scripts -->
 <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
@@ -426,6 +623,10 @@
                                 badge(data.transkrip_s2, 'Transkrip S2', 'file-alt') +
                                 `</span>`;
                         }
+
+                        // Recommendation (Optional)
+                        html += `<span class="border-left ml-2 pl-2">` + badge(data.rekomendasi, 'Rekomendasi', 'file-signature') + `</span>`;
+
                         return `<div class="text-nowrap">${html}</div>`;
                     }
                 },
@@ -629,7 +830,8 @@
             { key: 'photo', label: 'Foto', icon: 'camera' },
             { key: 'ktp', label: 'KTP', icon: 'id-card' },
             { key: 'ijazah', label: 'Ijazah S1', icon: 'graduation-cap' },
-            { key: 'transkrip', label: 'Transkrip S1', icon: 'file-alt' }
+            { key: 'transkrip', label: 'Transkrip S1', icon: 'file-alt' },
+            { key: 'rekomendasi', label: 'Rekomendasi', icon: 'file-signature' }
         ];
 
         if (p.is_s3) {
@@ -820,7 +1022,7 @@
 
         try {
             // Use length=-1 to get ALL participants (no pagination)
-            const response = await fetch(`/api/document-helper/participants?semester_id=${semesterId}&prodi=${encodeURIComponent(prodi)}&length=-1`);
+          const response = await fetch(`/api/document-helper/participants?semester_id=${semesterId}&prodi=${encodeURIComponent(prodi)}&length=-1`);
             const result = await response.json();
             Swal.close();
 

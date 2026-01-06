@@ -68,10 +68,10 @@
                             <i class="fas fa-file-import mr-2"></i>1. Formulir Masuk (Dikirim)
                         </button>
                         <button class="btn btn-outline-success mb-2" onclick="autoImport('lulus')" <?php echo $cookieStatus !== 'configured' ? 'disabled' : ''; ?>>
-                            <i class="fas fa-check-circle mr-2"></i>2. Lulus Administrasi
+                            <i class="fas fa-check-circle mr-2"></i>2. Verifikasi Online
                         </button>
                         <button class="btn btn-outline-danger mb-2" onclick="autoImport('gagal')" <?php echo $cookieStatus !== 'configured' ? 'disabled' : ''; ?>>
-                            <i class="fas fa-times-circle mr-2"></i>3. Gagal Administrasi
+                            <i class="fas fa-times-circle mr-2"></i>3. Berkas Tidak Valid
                         </button>
                         <button class="btn btn-outline-info" onclick="autoImport('kartu')" <?php echo $cookieStatus !== 'configured' ? 'disabled' : ''; ?>>
                             <i class="fas fa-id-card mr-2"></i>4. Nomor Peserta (Kartu)
@@ -121,25 +121,26 @@
                             </label>
                         </div>
 
-                        <!-- 2. Lulus Berkas -->
+                        <!-- 2. Verifikasi Online -->
                         <div class="custom-control custom-radio mb-2">
                             <input class="custom-control-input" type="radio" id="typeLulus" name="import_type"
                                 value="lulus_berkas">
                             <label for="typeLulus" class="custom-control-label">
-                                <strong>2. Data Lulus Administrasi Berkas</strong><br>
+                                <strong>2. Verifikasi Administrasi Berkas (Online)</strong><br>
                                 <span class="text-muted text-sm font-weight-normal">Update status menjadi
-                                    <strong>Lulus</strong>. Mengambil data pembayaran (Bank/Kanal) dari file ini.</span>
+                                    <strong>Lulus Verifikasi</strong>. Mengambil data pembayaran (Bank/Kanal) dari file
+                                    ini.</span>
                             </label>
                         </div>
 
-                        <!-- 3. Gagal Berkas -->
+                        <!-- 3. Berkas Tidak Valid -->
                         <div class="custom-control custom-radio mb-2">
                             <input class="custom-control-input" type="radio" id="typeGagal" name="import_type"
                                 value="gagal_berkas">
                             <label for="typeGagal" class="custom-control-label">
-                                <strong>3. Data Gagal Administrasi Berkas</strong><br>
+                                <strong>3. Berkas Tidak Valid Administrasi</strong><br>
                                 <span class="text-muted text-sm font-weight-normal">Update status menjadi
-                                    <strong>Gagal</strong>.</span>
+                                    <strong>Tidak Valid</strong>.</span>
                             </label>
                         </div>
 
@@ -226,8 +227,8 @@
 
         const typeLabels = {
             'dikirim': 'Formulir Masuk',
-            'lulus': 'Lulus Administrasi',
-            'gagal': 'Gagal Administrasi',
+            'lulus': 'Verifikasi Online',
+            'gagal': 'Berkas Tidak Valid',
             'kartu': 'Nomor Peserta'
         };
 

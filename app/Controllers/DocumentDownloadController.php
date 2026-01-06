@@ -234,35 +234,30 @@ class DocumentDownloadController
             }
 
             // 2. KTP
-            if (!empty($p['ktp_filename'])) {
-                $ktpPath = $baseStoragePath . '/documents/ktp/' . $p['ktp_filename'];
-                if (file_exists($ktpPath)) {
-                    $zip->addFile($ktpPath, $folderName . '/2_KTP.jpg');
-                }
+            $ktpPath = $this->getStoragePath('ktp', $p['ktp_filename'] ?? '');
+            if ($ktpPath) {
+                $zip->addFile($ktpPath, $folderName . '/2_KTP.jpg');
             }
 
             // 3. Foto
-            if (!empty($p['photo_filename'])) {
-                $fotoPath = $baseStoragePath . '/photos/' . $p['photo_filename'];
-                if (file_exists($fotoPath)) {
-                    $zip->addFile($fotoPath, $folderName . '/3_Foto.jpg');
-                }
+            $fotoPath = $this->getStoragePath('foto', $p['photo_filename'] ?? '');
+            if ($fotoPath) {
+                // Determine extension from file
+                $ext = pathinfo($fotoPath, PATHINFO_EXTENSION);
+                $zip->addFile($fotoPath, $folderName . '/3_Foto.' . $ext);
             }
 
             // 4. Ijazah S1
-            if (!empty($p['ijazah_filename'])) {
-                $ijazahPath = $baseStoragePath . '/documents/ijazah/' . $p['ijazah_filename'];
-                if (file_exists($ijazahPath)) {
-                    $zip->addFile($ijazahPath, $folderName . '/4_Ijazah_S1.jpg');
-                }
+            $ijazahPath = $this->getStoragePath('ijazah', $p['ijazah_filename'] ?? '');
+            if ($ijazahPath) {
+                $ext = pathinfo($ijazahPath, PATHINFO_EXTENSION);
+                $zip->addFile($ijazahPath, $folderName . '/4_Ijazah_S1.' . $ext);
             }
 
             // 5. Transkrip S1
-            if (!empty($p['transkrip_filename'])) {
-                $transkripPath = $baseStoragePath . '/documents/transkrip/' . $p['transkrip_filename'];
-                if (file_exists($transkripPath)) {
-                    $zip->addFile($transkripPath, $folderName . '/5_Transkrip_S1.pdf');
-                }
+            $transkripPath = $this->getStoragePath('transkrip', $p['transkrip_filename'] ?? '');
+            if ($transkripPath) {
+                $zip->addFile($transkripPath, $folderName . '/5_Transkrip_S1.pdf');
             }
 
             // 6. Kartu Peserta (only if lulus & has exam number)
@@ -278,18 +273,15 @@ class DocumentDownloadController
                 stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false;
 
             if ($isS3) {
-                if (!empty($p['ijazah_s2_filename'])) {
-                    $ijazahS2Path = $baseStoragePath . '/documents/ijazah_s2/' . $p['ijazah_s2_filename'];
-                    if (file_exists($ijazahS2Path)) {
-                        $zip->addFile($ijazahS2Path, $folderName . '/7_Ijazah_S2.jpg');
-                    }
+                $ijazahS2Path = $this->getStoragePath('ijazah_s2', $p['ijazah_s2_filename'] ?? '');
+                if ($ijazahS2Path) {
+                    $ext = pathinfo($ijazahS2Path, PATHINFO_EXTENSION);
+                    $zip->addFile($ijazahS2Path, $folderName . '/7_Ijazah_S2.' . $ext);
                 }
 
-                if (!empty($p['transkrip_s2_filename'])) {
-                    $transkripS2Path = $baseStoragePath . '/documents/transkrip_s2/' . $p['transkrip_s2_filename'];
-                    if (file_exists($transkripS2Path)) {
-                        $zip->addFile($transkripS2Path, $folderName . '/8_Transkrip_S2.pdf');
-                    }
+                $transkripS2Path = $this->getStoragePath('transkrip_s2', $p['transkrip_s2_filename'] ?? '');
+                if ($transkripS2Path) {
+                    $zip->addFile($transkripS2Path, $folderName . '/8_Transkrip_S2.pdf');
                 }
             }
         }
@@ -320,19 +312,13 @@ class DocumentDownloadController
 
         $docs = [
             'formulir' => true, // Always generated
-            'ktp' => !empty($participant['ktp_filename']) &&
-                file_exists($baseStoragePath . '/documents/ktp/' . $participant['ktp_filename']),
-            'foto' => !empty($participant['photo_filename']) &&
-                file_exists($baseStoragePath . '/photos/' . $participant['photo_filename']),
-            'ijazah_s1' => !empty($participant['ijazah_filename']) &&
-                file_exists($baseStoragePath . '/documents/ijazah/' . $participant['ijazah_filename']),
-            'transkrip_s1' => !empty($participant['transkrip_filename']) &&
-                file_exists($baseStoragePath . '/documents/transkrip/' . $participant['transkrip_filename']),
+            'ktp' => !empty($this->getStoragePath('ktp', $participant['ktp_filename'])),
+            'foto' => !empty($this->getStoragePath('foto', $participant['photo_filename'])),
+            'ijazah_s1' => !empty($this->getStoragePath('ijazah', $participant['ijazah_filename'])),
+            'transkrip_s1' => !empty($this->getStoragePath('transkrip', $participant['transkrip_filename'])),
             'kartu' => $participant['status_berkas'] === 'lulus' && !empty($participant['nomor_peserta']),
-            'ijazah_s2' => $isS3 ? (!empty($participant['ijazah_s2_filename']) &&
-                file_exists($baseStoragePath . '/documents/ijazah_s2/' . $participant['ijazah_s2_filename'])) : null,
-            'transkrip_s2' => $isS3 ? (!empty($participant['transkrip_s2_filename']) &&
-                file_exists($baseStoragePath . '/documents/transkrip_s2/' . $participant['transkrip_s2_filename'])) : null
+            'ijazah_s2' => $isS3 ? !empty($this->getStoragePath('ijazah_s2', $participant['ijazah_s2_filename'])) : null,
+            'transkrip_s2' => $isS3 ? !empty($this->getStoragePath('transkrip_s2', $participant['transkrip_s2_filename'])) : null
         ];
 
         $required = ['formulir', 'ktp', 'foto', 'ijazah_s1', 'transkrip_s1'];
@@ -547,5 +533,30 @@ class DocumentDownloadController
         } else {
             return $bytes . ' bytes';
         }
+    }
+
+    private function getStoragePath($type, $filename)
+    {
+        if (empty($filename))
+            return null;
+
+        $baseStorage = dirname(__DIR__, 2) . '/storage';
+
+        // 1. Try Absolute/Direct Path (New Structure: semester/type/file)
+        // Also catches any perfectly valid relative path
+        $candidate1 = $baseStorage . '/' . $filename;
+        if (file_exists($candidate1))
+            return $candidate1;
+
+        // 2. Try Legacy Path (storage/photos/semester/file or storage/documents/type/semester/file)
+        if ($type === 'foto') {
+            $candidate2 = $baseStorage . '/photos/' . $filename;
+        } else {
+            $candidate2 = $baseStorage . '/documents/' . $type . '/' . $filename;
+        }
+        if (file_exists($candidate2))
+            return $candidate2;
+
+        return null;
     }
 }

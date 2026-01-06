@@ -110,19 +110,41 @@ $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_pro
     <div class="row">
         <?php
         $docTypes = [
-            ['type' => 'foto', 'label' => 'Foto Peserta', 'field' => 'photo_filename', 'path' => '/storage/photos/', 'accept' => 'image/jpeg,image/png', 'icon' => 'camera', 'info' => 'JPG/PNG, maks 2MB', 'isImage' => true],
-            ['type' => 'ktp', 'label' => 'KTP', 'field' => 'ktp_filename', 'path' => '/storage/documents/ktp/', 'accept' => 'image/jpeg,image/png', 'icon' => 'id-card', 'info' => 'JPG/PNG, maks 5MB', 'isImage' => true],
-            ['type' => 'ijazah', 'label' => 'Ijazah S1', 'field' => 'ijazah_filename', 'path' => '/storage/documents/ijazah/', 'accept' => 'image/jpeg,image/png', 'icon' => 'graduation-cap', 'info' => 'JPG/PNG, maks 5MB', 'isImage' => true],
-            ['type' => 'transkrip', 'label' => 'Transkrip S1', 'field' => 'transkrip_filename', 'path' => '/storage/documents/transkrip/', 'accept' => 'application/pdf', 'icon' => 'file-pdf', 'info' => 'PDF, maks 10MB', 'isImage' => false],
+            ['type' => 'foto', 'label' => 'Foto Peserta', 'field' => 'photo_filename', 'accept' => 'image/jpeg,image/png', 'icon' => 'camera', 'info' => 'JPG/PNG, maks 2MB', 'isImage' => true],
+            ['type' => 'ktp', 'label' => 'KTP', 'field' => 'ktp_filename', 'accept' => 'image/jpeg,image/png', 'icon' => 'id-card', 'info' => 'JPG/PNG, maks 5MB', 'isImage' => true],
+            ['type' => 'ijazah', 'label' => 'Ijazah S1', 'field' => 'ijazah_filename', 'accept' => 'image/jpeg,image/png', 'icon' => 'graduation-cap', 'info' => 'JPG/PNG, maks 5MB', 'isImage' => true],
+            ['type' => 'transkrip', 'label' => 'Transkrip S1', 'field' => 'transkrip_filename', 'accept' => 'application/pdf', 'icon' => 'file-pdf', 'info' => 'PDF, maks 10MB', 'isImage' => false],
         ];
         if ($isS3) {
-            $docTypes[] = ['type' => 'ijazah_s2', 'label' => 'Ijazah S2', 'field' => 'ijazah_s2_filename', 'path' => '/storage/documents/ijazah_s2/', 'accept' => 'image/jpeg,image/png', 'icon' => 'graduation-cap', 'info' => 'JPG/PNG, maks 5MB', 'isImage' => true];
-            $docTypes[] = ['type' => 'transkrip_s2', 'label' => 'Transkrip S2', 'field' => 'transkrip_s2_filename', 'path' => '/storage/documents/transkrip_s2/', 'accept' => 'application/pdf', 'icon' => 'file-pdf', 'info' => 'PDF, maks 10MB', 'isImage' => false];
+            $docTypes[] = ['type' => 'ijazah_s2', 'label' => 'Ijazah S2', 'field' => 'ijazah_s2_filename', 'accept' => 'image/jpeg,image/png', 'icon' => 'graduation-cap', 'info' => 'JPG/PNG, maks 5MB', 'isImage' => true];
+            $docTypes[] = ['type' => 'transkrip_s2', 'label' => 'Transkrip S2', 'field' => 'transkrip_s2_filename', 'accept' => 'application/pdf', 'icon' => 'file-pdf', 'info' => 'PDF, maks 10MB', 'isImage' => false];
         }
 
         foreach ($docTypes as $doc):
-            $hasDoc = !empty($p[$doc['field']]);
-            $docUrl = $hasDoc ? $doc['path'] . $p[$doc['field']] : '';
+            $dbFile = $p[$doc['field']] ?? '';
+            $hasDoc = !empty($dbFile);
+            $docUrl = '';
+
+            if ($hasDoc) {
+                // Smart Path Detection
+                if (strpos($dbFile, 'photos/') !== false || strpos($dbFile, 'documents/') !== false) {
+                    // New Structure: 20241/photos/file.jpg
+                    $docUrl = '/storage/' . $dbFile;
+                } else {
+                    // Legacy Structure
+                    if ($doc['type'] === 'foto') {
+                        $docUrl = '/storage/photos/' . $dbFile;
+                    } else {
+                        // Legacy Doc: storage/documents/type/semester/file
+                        // But wait, $dbFile usually was just 'semester/file' in old uploads?
+                        // Or did old uploads store 'type/semester/file'?
+                        // Checked ParticipantController old logic: $targetDir = $cfg['folder'] . '/' . $subfolder; 
+                        // $dbPath = $subfolder . '/' . $newFilename;
+                        // So it was 'semester/filename' relative to specific type folder.
+                        $docUrl = '/storage/documents/' . $doc['type'] . '/' . $dbFile;
+                    }
+                }
+            }
             ?>
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card doc-manage-card shadow-sm <?= $hasDoc ? 'has-doc' : 'no-doc' ?>">
@@ -169,19 +191,10 @@ $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_pro
                         </div>
 
                         <!-- Actions -->
-                        <div class="d-flex gap-2">
-                            <input type="file" id="file-<?= $doc['type'] ?>" accept="<?= $doc['accept'] ?>" class="d-none"
-                                onchange="uploadDoc('<?= $doc['type'] ?>')">
-                            <button type="button" class="btn btn-primary btn-sm flex-grow-1"
-                                onclick="document.getElementById('file-<?= $doc['type'] ?>').click()">
-                                <i class="fas fa-upload mr-1"></i>
-                                <?= $hasDoc ? 'Ganti' : 'Upload' ?>
-                            </button>
-                            <?php if ($hasDoc): ?>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteDoc('<?= $doc['type'] ?>')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            <?php endif; ?>
+                        <div class="text-center">
+                            <a href="/admin/document-helper" class="btn btn-outline-primary btn-block btn-sm">
+                                <i class="fas fa-external-link-alt mr-1"></i> Kelola di Helper
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -193,59 +206,7 @@ $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_pro
 <script>
     const participantId = <?= $p['id'] ?>;
 
-    function uploadDoc(type) {
-        const fileInput = document.getElementById('file-' + type);
-        if (!fileInput.files[0]) return;
 
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        // Show loading
-        Swal.fire({ title: 'Mengupload...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        fetch(`/admin/participants/${participantId}/upload-doc/${type}`, {
-            method: 'POST',
-            body: formData
-        })
-            .then(r => r.json())
-            .then(data => {
-                Swal.close();
-                if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message, timer: 1500, showConfirmButton: false })
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
-                }
-            })
-            .catch(e => {
-                Swal.close();
-                Swal.fire({ icon: 'error', title: 'Error', text: e.message });
-            });
-    }
-
-    function deleteDoc(type) {
-        Swal.fire({
-            title: 'Hapus Dokumen?',
-            text: 'Dokumen akan dihapus permanen',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            confirmButtonText: 'Ya, Hapus'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/admin/participants/${participantId}/delete-doc/${type}`, { method: 'DELETE' })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({ icon: 'success', title: 'Dihapus!', timer: 1500, showConfirmButton: false })
-                                .then(() => location.reload());
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
-                        }
-                    });
-            }
-        });
-    }
 </script>
 
 <?php

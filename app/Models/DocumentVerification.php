@@ -25,7 +25,7 @@ class DocumentVerification
     /**
      * Get all verifications with participant data
      */
-    public static function getAllWithParticipants($semesterId = null, $statusFilter = null)
+    public static function getAllWithParticipants($semesterId = null, $statusFilter = null, $prodi = null)
     {
         $db = \App\Utils\Database::connection();
 
@@ -52,6 +52,11 @@ class DocumentVerification
         if ($semesterId) {
             $sql .= " AND p.semester_id = ?";
             $params[] = $semesterId;
+        }
+
+        if ($prodi && $prodi !== 'all') {
+            $sql .= " AND p.nama_prodi = ?";
+            $params[] = $prodi;
         }
 
         if ($statusFilter && $statusFilter !== 'all') {
@@ -215,42 +220,79 @@ class DocumentVerification
     /**
      * Get verification statistics
      */
+    /**
+     * Get verification statistics
+     */
+    /**
+     * Get verification statistics
+     */
     public static function getStatistics($semesterId = null)
     {
         $db = \App\Utils\Database::connection();
 
-        $sql = "SELECT 
-                    COUNT(DISTINCT dv.participant_id) as total_verified,
-                    SUM(CASE WHEN dv.status_verifikasi_fisik = 'lengkap' THEN 1 ELSE 0 END) as lengkap,
-                    SUM(CASE WHEN dv.status_verifikasi_fisik = 'tidak_lengkap' THEN 1 ELSE 0 END) as tidak_lengkap,
-                    SUM(CASE WHEN dv.status_verifikasi_fisik = 'pending' THEN 1 ELSE 0 END) as pending
-                FROM document_verifications dv
-                INNER JOIN participants p ON dv.participant_id = p.id
-                WHERE p.status_berkas = 'lulus'";
+        // 0. Total Peserta (All): Lulus status berkas (usually base requirement)
+        // User request: "total peserta (eligible+tidak eligible)"
+        $totalAllSql = "SELECT COUNT(*) as total FROM participants WHERE status_berkas = 'lulus'";
+        if ($semesterId) {
+            $totalAllSql .= " AND semester_id = '$semesterId'";
+        }
+        $totalAllRes = $db->query($totalAllSql)->fetchAssoc();
+        $totalAll = $totalAllRes['total'] ?? 0;
 
-        $params = [];
+        // 1. Total Eligible: Participants with nomor_peserta
+        $totalEligibleSql = "SELECT COUNT(*) as total FROM participants WHERE status_berkas = 'lulus' AND nomor_peserta IS NOT NULL AND nomor_peserta != ''";
+        if ($semesterId) {
+            $totalEligibleSql .= " AND semester_id = '$semesterId'";
+        }
+        $totalEligibleRes = $db->query($totalEligibleSql)->fetchAssoc();
+        $totalEligible = $totalEligibleRes['total'] ?? 0;
+
+        // 2. Lengkap: Eligible + Not Eligible users who have status 'lengkap'
+        $lengkapSql = "SELECT COUNT(DISTINCT dv.participant_id) as total 
+                       FROM document_verifications dv
+                       JOIN participants p ON dv.participant_id = p.id
+                       WHERE p.status_berkas = 'lulus' 
+                       AND dv.status_verifikasi_fisik = 'lengkap'";
 
         if ($semesterId) {
-            $sql .= " AND p.semester_id = ?";
-            $params[] = $semesterId;
+            $lengkapSql .= " AND p.semester_id = '$semesterId'";
         }
+        $lengkapRes = $db->query($lengkapSql)->fetchAssoc();
+        $lengkap = $lengkapRes['total'] ?? 0;
 
-        $stats = $db->query($sql)->bind(...$params)->all()[0] ?? [];
+        // 3. Tidak Lengkap: Eligible + Not Eligible users who have status 'tidak_lengkap'
+        $tidakLengkapSql = "SELECT COUNT(DISTINCT dv.participant_id) as total 
+                            FROM document_verifications dv
+                            JOIN participants p ON dv.participant_id = p.id
+                            WHERE p.status_berkas = 'lulus'
+                            AND dv.status_verifikasi_fisik = 'tidak_lengkap'";
 
-        // Get total eligible participants (lulus)
-        $totalSql = "SELECT COUNT(*) as total FROM participants WHERE status_berkas = 'lulus'";
         if ($semesterId) {
-            $totalSql .= " AND semester_id = ?";
+            $tidakLengkapSql .= " AND p.semester_id = '$semesterId'";
         }
-        $total = $db->query($totalSql)->bind(...($semesterId ? [$semesterId] : []))->all()[0] ?? [];
+        $tidakLengkapRes = $db->query($tidakLengkapSql)->fetchAssoc();
+        $tidakLengkap = $tidakLengkapRes['total'] ?? 0;
+
+        // 4. Belum Verifikasi: Eligible ONLY.
+        // Logic: Eligible users who have NO verification record OR have 'pending' status.
+        $belumVerifikasiSql = "SELECT COUNT(DISTINCT p.id) as total
+                               FROM participants p
+                               LEFT JOIN document_verifications dv ON p.id = dv.participant_id
+                               WHERE p.status_berkas = 'lulus' 
+                               AND p.nomor_peserta IS NOT NULL AND p.nomor_peserta != ''
+                               AND (dv.status_verifikasi_fisik IS NULL OR dv.status_verifikasi_fisik = 'pending')";
+        if ($semesterId) {
+            $belumVerifikasiSql .= " AND p.semester_id = '$semesterId'";
+        }
+        $belumVerifikasiRes = $db->query($belumVerifikasiSql)->fetchAssoc();
+        $belumVerifikasi = $belumVerifikasiRes['total'] ?? 0;
 
         return [
-            'total_eligible' => $total['total'],
-            'total_verified' => $stats['total_verified'] ?? 0,
-            'belum_verifikasi' => ($total['total'] ?? 0) - ($stats['total_verified'] ?? 0),
-            'lengkap' => $stats['lengkap'] ?? 0,
-            'tidak_lengkap' => $stats['tidak_lengkap'] ?? 0,
-            'pending' => $stats['pending'] ?? 0
+            'total_all' => $totalAll,
+            'total_eligible' => $totalEligible,
+            'lengkap' => $lengkap,
+            'tidak_lengkap' => $tidakLengkap,
+            'belum_verifikasi' => $belumVerifikasi
         ];
     }
 

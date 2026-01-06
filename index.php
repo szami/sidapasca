@@ -133,22 +133,24 @@ $app->get('/admin/exam-card/design', 'App\Controllers\ExamCardSettingController@
 $app->post('/admin/exam-card/design/save', 'App\Controllers\ExamCardSettingController@saveDesign');
 
 // Document Import Interface
-$app->get('/admin/document-import', 'App\Controllers\DocumentImportController@index');
-$app->get('/admin/document-import/bulk', 'App\Controllers\DocumentImportController@bulkDownload');
-$app->post('/admin/document-import/save-cookie', 'App\Controllers\DocumentImportController@saveSessionCookie');
+// Document Import Interface (REMOVED)
+$app->post('/admin/settings/save-cookie', 'App\Controllers\SettingsController@saveSessionCookie');
+// $app->post('/admin/document-import/save-cookie', 'App\Controllers\DocumentImportController@saveSessionCookie'); // Moved to Settings
 
 // Physical Verification Routes
-$app->get('/api/verification/physical', 'App\Controllers\DocumentVerificationController@apiData');
 $app->get('/admin/verification/physical', 'App\Controllers\DocumentVerificationController@index');
-$app->get('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@verify');
-$app->post('/admin/verification/physical/{id}/save', 'App\Controllers\DocumentVerificationController@save');
-$app->post('/admin/verification/physical/{id}/reset', 'App\Controllers\DocumentVerificationController@reset');
-$app->get('/admin/verification/physical/import/template', 'App\Controllers\DocumentVerificationController@downloadTemplate');
+$app->get('/admin/verification/physical/export', 'App\Controllers\DocumentVerificationController@exportTemplate');
 $app->post('/admin/verification/physical/import', 'App\Controllers\DocumentVerificationController@import');
+$app->post('/admin/verification/physical/reset/{id}', 'App\Controllers\DocumentVerificationController@reset');
+$app->get('/admin/verification/physical/import/template', 'App\Controllers\DocumentVerificationController@downloadTemplate');
+$app->get('/admin/verification/physical/api-data', 'App\Controllers\DocumentVerificationController@apiData'); // NEW API Route
+$app->get('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@verify');
+$app->post('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@saveVerification');
 
-// --- ZIP Import Interactive (Per-Participant) ---
-$app->get('/admin/zip-import', 'App\Controllers\ZipImportController@index');
-$app->post('/admin/zip-import/process', 'App\Controllers\ZipImportController@process');
+
+// --- ZIP Import Interactive (Per-Participant) - DEPRECATED (Replaced by Document Helper) ---
+// $app->get('/admin/zip-import', 'App\Controllers\ZipImportController@index');
+// $app->post('/admin/zip-import/process', 'App\Controllers\ZipImportController@process');
 
 // Email Reminder Routes
 $app->get('/api/email/reminders/history', 'App\Controllers\EmailReminderController@apiHistory');
@@ -227,6 +229,7 @@ $app->get('/api/document-helper/prodis', 'App\Controllers\DocumentHelperControll
 $app->post('/api/document-helper/sync/{id}', 'App\Controllers\DocumentHelperController@sync'); // Auto Sync
 $app->get('/admin/document-helper/get-docs/{id}', 'App\Controllers\DocumentHelperController@getDocs');
 $app->post('/admin/document-helper/import-zip/{id}', 'App\Controllers\DocumentHelperController@importZip');
+$app->post('/admin/document-helper/upload-single/{id}', 'App\Controllers\DocumentHelperController@uploadSingleDoc');
 
 // --- Admin - Participants ---
 // Participant CRUD Routes

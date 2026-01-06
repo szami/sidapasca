@@ -50,9 +50,14 @@ $canDownload = $participant['status_berkas'] == 'lulus'
     && ($participant['status_verifikasi_fisik'] == 'lengkap');
 
 // Photo URL
-$photoUrl = !empty($participant['photo_filename'])
-    ? '/storage/photos/' . $participant['photo_filename']
-    : 'https://ui-avatars.com/api/?name=' . urlencode($participant['nama_lengkap']) . '&background=random';
+$photoUrl = 'https://ui-avatars.com/api/?name=' . urlencode($participant['nama_lengkap']) . '&background=random';
+if (!empty($participant['photo_filename'])) {
+    if (strpos($participant['photo_filename'], 'photos/') !== false) {
+        $photoUrl = '/storage/' . $participant['photo_filename'];
+    } else {
+        $photoUrl = '/storage/photos/' . $participant['photo_filename'];
+    }
+}
 
 ob_start();
 ?>

@@ -207,6 +207,50 @@
     </div>
 </div>
 
+<div class="col-md-12">
+    <div class="card card-purple">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-key mr-1"></i> Konfigurasi Session Cookie (Admisipasca)</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-1"></i> Cookie ini digunakan untuk fitur <strong>Import Berkas
+                    System</strong>.
+                <br>
+                Anda bisa menggunakan <strong>EditThisCookie</strong> (Export as Header String) atau copy manual dari
+                Developer Tools.
+            </div>
+
+            <?php
+            $sessionCookie = \App\Models\Setting::get('admisipasca_session_cookie', '');
+            $cookieStatus = !empty($sessionCookie) ? 'configured' : 'not_configured';
+            ?>
+
+            <div class="alert alert-<?php echo $cookieStatus === 'configured' ? 'success' : 'warning'; ?>">
+                <strong>Status:</strong>
+                <?php if ($cookieStatus === 'configured'): ?>
+                    <i class="fas fa-check-circle mr-1"></i> Session cookie sudah dikonfigurasi
+                <?php else: ?>
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Session cookie belum dikonfigurasi
+                <?php endif; ?>
+            </div>
+
+            <form id="cookieForm">
+                <div class="form-group">
+                    <label>Session Cookie:</label>
+                    <textarea class="form-control" id="sessionCookie" rows="3"
+                        placeholder="ci_session=abc123; PHPSESSID=xyz789; ..."></textarea>
+                    <small class="form-text text-muted">Mendukung format <strong>Header String</strong> (standard)
+                        maupun <strong>JSON</strong> (dari EditThisCookie).</small>
+                </div>
+                <button type="submit" class="btn btn-purple">
+                    <i class="fas fa-save mr-2"></i>Simpan Session Cookie
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
 <div class="row">
     <div class="col-md-12">
         <div class="card card-danger">
@@ -223,7 +267,7 @@
                         <label>Pilih Semester</label>
                         <select name="semester_id" class="form-control" required>
                             <option value="">-- Pilih Semester --</option>
-                            <?php if (!empty($semesters)): ?>
+                            <?php if (!empty($semesters) && is_array($semesters)): ?>
                                 <?php foreach ($semesters as $sem): ?>
                                     <option value="<?php echo $sem['id']; ?>">
                                         <?php echo $sem['nama']; ?>
@@ -343,6 +387,52 @@
             }
         }
     });
+
+    // Save session cookie (Admisipasca)
+    const cookieForm = document.getElementById('cookieForm');
+    if (cookieForm) {
+        cookieForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const cookie = document.getElementById('sessionCookie').value.trim();
+
+            if (!cookie) {
+                alert('Session cookie tidak boleh kosong');
+                return;
+            }
+
+            // Show loading state
+            const btn = cookieForm.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+            btn.disabled = true;
+
+            fetch('/admin/settings/save-cookie', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'session_cookie=' + encodeURIComponent(cookie)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        let msg = data.message;
+                        if (data.format_detected) {
+                            msg += '\n\nFormat terdeteksi: ' + data.format_detected;
+                        }
+                        alert(msg);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    alert('Error: ' + err.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        });
+    }
 </script>
 
 <?php

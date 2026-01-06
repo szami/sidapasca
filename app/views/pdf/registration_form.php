@@ -8,45 +8,47 @@
         body {
             font-family: "Roboto";
             font-size: 9px;
+            margin: 0;
+            padding: 0;
+            background: #eee;
         }
 
         .rotate1 {
             height: 14px;
-            /* Reduced from 16px */
             font-size: 9px;
-            /* Reduced from 10px */
             border-bottom: 1px solid #dadada;
             vertical-align: middle;
             padding: 2px 3px;
         }
 
-        /* Reduced sizing for page container to avoid overflow/cropping in PDF */
+        /* Responsive A4 Container */
         page[size="A4"] {
             background: white;
+            width: 21cm;
+            min-height: 29.7cm;
             display: block;
-            margin: 0 auto;
-            padding: 10px 20px;
-            /* Further reduced padding */
-            border: none;
-            /* Removed border */
+            margin: 0.5cm auto;
+            padding: 25px;
+            border: 1px solid #dadada;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
         }
 
         @media print {
+
+            body,
             page[size="A4"] {
                 margin: 0;
-                padding: 10px 20px;
+                padding: 0;
                 border: none;
                 box-shadow: none;
+                background: white;
+                width: 100%;
             }
 
             .no-print {
                 display: none;
             }
-        }
-
-        body {
-            background: white;
         }
 
         .no-print {
@@ -279,7 +281,15 @@
                     <td valign="top" align="center" width="20%">
                         <?php if (!empty($p['photo_filename'])): ?>
                             <?php
-                            $photoPath = dirname(__DIR__, 3) . '/storage/photos/' . $p['photo_filename'];
+                            $baseStorage = dirname(__DIR__, 3) . '/storage';
+                            // New Structure
+                            $photoPath = $baseStorage . '/' . $p['photo_filename'];
+
+                            // Legacy Structure
+                            if (!file_exists($photoPath)) {
+                                $photoPath = $baseStorage . '/photos/' . $p['photo_filename'];
+                            }
+
                             if (file_exists($photoPath)):
                                 $imageData = base64_encode(file_get_contents($photoPath));
                                 $ext = pathinfo($p['photo_filename'], PATHINFO_EXTENSION);

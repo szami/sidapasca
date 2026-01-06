@@ -530,7 +530,14 @@ class ExamCardController
         // 2. Foto Peserta
         $photoHtml = '';
         if (!empty($p['photo_filename'])) {
-            $photoPath = dirname(__DIR__, 2) . '/storage/photos/' . $p['photo_filename'];
+            $baseStorage = dirname(__DIR__, 2) . '/storage';
+
+            // Smart Path Resolution
+            $photoPath = $baseStorage . '/' . $p['photo_filename']; // Try new structure
+            if (!file_exists($photoPath)) {
+                $photoPath = $baseStorage . '/photos/' . $p['photo_filename']; // Try legacy
+            }
+
             if (file_exists($photoPath)) {
                 // Convert to base64 for PDF embedding
                 $imageData = base64_encode(file_get_contents($photoPath));

@@ -9,10 +9,7 @@ class DocumentHelperController
 {
     public function index()
     {
-        if (!isset($_SESSION['admin'])) {
-            header('Location: /admin');
-            exit;
-        }
+        $this->checkAccess();
 
         $db = \App\Utils\Database::connection();
 
@@ -32,19 +29,69 @@ class DocumentHelperController
             $initialProdis = array_column($prodisRaw, 'nama_prodi');
         }
 
+        // --- STATISTICS Calculation ---
+        $stats = [
+            'total' => 0,
+            'complete' => 0,
+            'incomplete' => 0,
+            'photo' => 0,
+            'ktp' => 0,
+            'ijazah' => 0,
+            'transkrip' => 0,
+            'ijazah_s2' => 0,
+            'transkrip_s2' => 0
+        ];
+
+        if ($activeSemester) {
+            $semId = $activeSemester['id'];
+            $sqlStats = "SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN photo_filename IS NOT NULL AND photo_filename != '' THEN 1 ELSE 0 END) as photo,
+                SUM(CASE WHEN ktp_filename IS NOT NULL AND ktp_filename != '' THEN 1 ELSE 0 END) as ktp,
+                SUM(CASE WHEN ijazah_filename IS NOT NULL AND ijazah_filename != '' THEN 1 ELSE 0 END) as ijazah,
+                SUM(CASE WHEN transkrip_filename IS NOT NULL AND transkrip_filename != '' THEN 1 ELSE 0 END) as transkrip,
+                SUM(CASE WHEN ijazah_s2_filename IS NOT NULL AND ijazah_s2_filename != '' THEN 1 ELSE 0 END) as ijazah_s2,
+                SUM(CASE WHEN transkrip_s2_filename IS NOT NULL AND transkrip_s2_filename != '' THEN 1 ELSE 0 END) as transkrip_s2
+                FROM participants 
+                WHERE semester_id = '$semId'";
+
+            $res = $db->query($sqlStats)->fetchAll(\PDO::FETCH_ASSOC);
+            if (!empty($res)) {
+                $row = $res[0];
+                $stats['total'] = $row['total'];
+                $stats['photo'] = $row['photo'];
+                $stats['ktp'] = $row['ktp'];
+                $stats['ijazah'] = $row['ijazah'];
+                $stats['transkrip'] = $row['transkrip'];
+                $stats['ijazah_s2'] = $row['ijazah_s2'];
+                $stats['transkrip_s2'] = $row['transkrip_s2'];
+
+                // Approximate 'Complete' (Has all 4 basic docs)
+                // Doing this in SQL is safer but more complex if we consider S3 (6 docs).
+                // Let's keep it simple: 4 docs = complete for statistics overview
+                $sqlComplete = "SELECT COUNT(*) as cx FROM participants 
+                    WHERE semester_id = '$semId'
+                    AND photo_filename IS NOT NULL 
+                    AND ktp_filename IS NOT NULL 
+                    AND ijazah_filename IS NOT NULL 
+                    AND transkrip_filename IS NOT NULL";
+                $resComplete = $db->query($sqlComplete)->fetchAll(\PDO::FETCH_ASSOC);
+                $stats['complete'] = $resComplete[0]['cx'] ?? 0;
+                $stats['incomplete'] = $stats['total'] - $stats['complete'];
+            }
+        }
+
         echo \App\Utils\View::render('admin.document_helper.index', [
             'semesters' => $semesters,
             'activeSemester' => $activeSemester,
-            'prodis' => $initialProdis
+            'prodis' => $initialProdis,
+            'stats' => $stats
         ]);
     }
 
     public function apiData()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->json(['data' => []], 401);
-            return;
-        }
+        $this->checkAccess(true);
 
         $db = \App\Utils\Database::connection();
 
@@ -77,6 +124,22 @@ class DocumentHelperController
             $searchSafe = str_replace("'", "''", $search);
             $searchClause = "(p.nama_lengkap LIKE '%$searchSafe%' OR p.email LIKE '%$searchSafe%' OR p.nomor_peserta LIKE '%$searchSafe%')";
             $where[] = $searchClause;
+        }
+
+        // --- 2.5 Admin Restrict ---
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $adminProdiId = \App\Utils\RoleHelper::getProdiId();
+            if ($adminProdiId) {
+                $where[] = "p.kode_prodi = '$adminProdiId'";
+            }
+            $curUser = \App\Utils\RoleHelper::getUsername();
+            if ($curUser) {
+                if (preg_match('/s3|doktor/i', $curUser)) {
+                    $where[] = "(p.nama_prodi NOT LIKE '%S2%' AND p.nama_prodi NOT LIKE '%Magister%')";
+                } elseif (preg_match('/s2|magister/i', $curUser)) {
+                    $where[] = "(p.nama_prodi NOT LIKE '%S3%' AND p.nama_prodi NOT LIKE '%Doktor%')";
+                }
+            }
         }
 
         $whereSql = implode(' AND ', $where);
@@ -117,9 +180,19 @@ class DocumentHelperController
             $data = array_map(function ($p) {
                 $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false);
 
-                // Photo Logic
-                $photoUrl = !empty($p['photo_filename']) ? '/storage/photos/' . $p['photo_filename'] : '/public/img/default-profile.png';
-                if (empty($p['photo_filename'])) {
+                // Photo Logic (New Structure Support)
+                $photoPath = $p['photo_filename'];
+                $photoUrl = '/public/img/default-profile.png';
+
+                if (!empty($photoPath)) {
+                    // Check if new structure (contains '/photos/') or legacy
+                    if (strpos($photoPath, 'photos/') !== false) {
+                        $photoUrl = '/storage/' . $photoPath;
+                    } else {
+                        // Legacy: stored as 'semester/filename', need to prefix with type
+                        $photoUrl = '/storage/photos/' . $photoPath;
+                    }
+                } else {
                     $photoUrl = 'https://ui-avatars.com/api/?name=' . urlencode($p['nama_lengkap']) . '&background=random&size=100';
                 }
 
@@ -138,6 +211,7 @@ class DocumentHelperController
                         'transkrip' => !empty($p['transkrip_filename']),
                         'ijazah_s2' => !empty($p['ijazah_s2_filename']),
                         'transkrip_s2' => !empty($p['transkrip_s2_filename']),
+                        'rekomendasi' => !empty($p['rekomendasi_filename']),
                         'is_s3' => $isS3
                     ]
                 ];
@@ -157,10 +231,7 @@ class DocumentHelperController
 
     public function apiProdis()
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->json([], 401);
-            return;
-        }
+        $this->checkAccess(true);
 
         $semesterId = Request::get('semester_id');
         $db = \App\Utils\Database::connection();
@@ -171,6 +242,22 @@ class DocumentHelperController
         if (!empty($semesterId) && $semesterId !== 'all') {
             $sql .= " AND semester_id = ?";
             $params[] = $semesterId;
+        }
+
+        // Admin Restrict
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $adminProdiId = \App\Utils\RoleHelper::getProdiId();
+            if ($adminProdiId) {
+                $sql .= " AND kode_prodi = '$adminProdiId'";
+            }
+            $curUser = \App\Utils\RoleHelper::getUsername();
+            if ($curUser) {
+                if (preg_match('/s3|doktor/i', $curUser)) {
+                    $sql .= " AND (nama_prodi NOT LIKE '%S2%' AND nama_prodi NOT LIKE '%Magister%')";
+                } elseif (preg_match('/s2|magister/i', $curUser)) {
+                    $sql .= " AND (nama_prodi NOT LIKE '%S3%' AND nama_prodi NOT LIKE '%Doktor%')";
+                }
+            }
         }
 
         $sql .= " ORDER BY nama_prodi";
@@ -191,10 +278,7 @@ class DocumentHelperController
     // JSON API to get docs for preview modal
     public function getDocs($id)
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->json(['success' => false], 401);
-            return;
-        }
+        $this->checkAccess(true);
 
         $p = \App\Models\Participant::find($id);
         if (!$p) {
@@ -205,18 +289,38 @@ class DocumentHelperController
         // Determine if S3
         $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false);
 
-        // Map documents - files are stored at /storage/documents/{subfolder}/filename
-        // The filename in DB already contains the subfolder prefix (e.g., "2025-1/ktp_12345.jpg")
+        // Helper to generate URL
+        $getUrl = function ($filename, $type) {
+            if (empty($filename))
+                return null;
+
+            // New Structure Check (contains 'photos/' or 'documents/')
+            if (strpos($filename, 'photos/') !== false || strpos($filename, 'documents/') !== false) {
+                return '/storage/' . $filename;
+            }
+
+            // Legacy Structure
+            if ($type === 'photo') {
+                return '/storage/photos/' . $filename;
+            } else {
+                // Legacy Docs were mapped as: storage/documents/{type}/{filename}
+                // But wait, some legacy implementations might have been inconsistent.
+                // Based on documents.php, it expects: /storage/documents/{type}/{filename}
+                return '/storage/documents/' . $type . '/' . $filename;
+            }
+        };
+
         $docs = [
-            'photo' => $p['photo_filename'] ? '/storage/photos/' . $p['photo_filename'] : null,
-            'ktp' => $p['ktp_filename'] ? '/storage/documents/' . $p['ktp_filename'] : null,
-            'ijazah' => $p['ijazah_filename'] ? '/storage/documents/' . $p['ijazah_filename'] : null,
-            'transkrip' => $p['transkrip_filename'] ? '/storage/documents/' . $p['transkrip_filename'] : null,
+            'photo' => $getUrl($p['photo_filename'], 'photo'),
+            'ktp' => $getUrl($p['ktp_filename'], 'ktp'),
+            'ijazah' => $getUrl($p['ijazah_filename'], 'ijazah'),
+            'transkrip' => $getUrl($p['transkrip_filename'], 'transkrip'),
+            'rekomendasi' => $getUrl($p['rekomendasi_filename'], 'rekomendasi'),
         ];
 
         if ($isS3) {
-            $docs['ijazah_s2'] = $p['ijazah_s2_filename'] ? '/storage/documents/' . $p['ijazah_s2_filename'] : null;
-            $docs['transkrip_s2'] = $p['transkrip_s2_filename'] ? '/storage/documents/' . $p['transkrip_s2_filename'] : null;
+            $docs['ijazah_s2'] = $getUrl($p['ijazah_s2_filename'], 'ijazah_s2');
+            $docs['transkrip_s2'] = $getUrl($p['transkrip_s2_filename'], 'transkrip_s2');
         }
 
         response()->json([
@@ -236,10 +340,7 @@ class DocumentHelperController
     public function importZip($id)
     {
         try {
-            if (!isset($_SESSION['admin'])) {
-                response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-                return;
-            }
+            $this->checkAccess(true);
 
             $participant = \App\Models\Participant::find($id);
             if (!$participant) {
@@ -284,10 +385,7 @@ class DocumentHelperController
 
     public function sync($id)
     {
-        if (!isset($_SESSION['admin'])) {
-            response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-            return;
-        }
+        $this->checkAccess(true);
 
         try {
             $participant = \App\Models\Participant::find($id);
@@ -369,8 +467,8 @@ class DocumentHelperController
         $subfolder = $semester ? $semester['kode'] : 'legacy';
 
         $paths = [
-            'photo' => $baseStorage . '/photos/' . $subfolder,
-            'doc' => $baseStorage . '/documents/' . $subfolder
+            'photo' => $baseStorage . '/' . $subfolder . '/photos',     // NEW: storage/semester/photos
+            'doc' => $baseStorage . '/' . $subfolder . '/documents'     // NEW: storage/semester/documents
         ];
         foreach ($paths as $pPath) {
             if (!is_dir($pPath))
@@ -433,13 +531,13 @@ class DocumentHelperController
             if ($type === 'photo') {
                 $newFilename = ($participant['nomor_peserta'] ?? 'temp_' . $participant['id']) . '.' . $ext;
                 $destPath = $paths['photo'] . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/photos/' . $newFilename; // NEW: 20241/photos/filename.jpg
                 $dbColumn = 'photo_filename';
             } else {
                 $prefix = $type . '_';
                 $newFilename = $prefix . ($participant['nomor_peserta'] ?? $participant['id']) . '.' . $ext;
                 $destPath = $paths['doc'] . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/documents/' . $newFilename; // NEW: 20241/documents/filename.pdf
 
                 if ($type === 'ijazah_s2')
                     $dbColumn = 'ijazah_s2_filename';
@@ -469,6 +567,140 @@ class DocumentHelperController
         $zip->close();
 
         return ['success' => true, 'processed' => $processed, 'log' => $log];
+    }
+
+    public function uploadSingleDoc($id)
+    {
+        try {
+            $this->checkAccess(true);
+
+            $participant = \App\Models\Participant::find($id);
+            if (!$participant) {
+                response()->json(['success' => false, 'message' => 'Peserta tidak ditemukan'], 404);
+                return;
+            }
+
+            $type = $_POST['type'] ?? '';
+            $file = $_FILES['file'] ?? null;
+
+            $validTypes = ['photo', 'ktp', 'ijazah', 'transkrip', 'ijazah_s2', 'transkrip_s2', 'rekomendasi'];
+            if (!in_array($type, $validTypes)) {
+                response()->json(['success' => false, 'message' => 'Tipe dokumen tidak valid'], 400);
+                return;
+            }
+
+            if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+                response()->json(['success' => false, 'message' => 'Upload error or no file sent'], 400);
+                return;
+            }
+
+            // Determine paths and filename
+            $baseStorage = dirname(__DIR__, 2) . '/storage';
+            $semester = \App\Models\Semester::find($participant['semester_id']);
+            $subfolder = $semester ? $semester['kode'] : 'legacy';
+
+            $targetDir = ($type === 'photo')
+                ? $baseStorage . '/' . $subfolder . '/photos'
+                : $baseStorage . '/' . $subfolder . '/documents';
+
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+
+            // Filename convention logic
+            $prefix = ($type === 'photo') ? '' : $type . '_';
+            // For photo, use just number. For docs, use prefix_number
+            if ($type === 'photo') {
+                $newFilename = ($participant['nomor_peserta'] ?? 'temp_' . $participant['id']) . '.' . $ext;
+                $dbColumn = 'photo_filename';
+            } else {
+                $newFilename = $prefix . ($participant['nomor_peserta'] ?? $participant['id']) . '.' . $ext;
+                $dbColumn = $type . '_filename';
+
+                // Map to actual DB columns if slightly different (though logic above matches processZipFile)
+                if ($type === 'ijazah_s2')
+                    $dbColumn = 'ijazah_s2_filename';
+                elseif ($type === 'transkrip_s2')
+                    $dbColumn = 'transkrip_s2_filename';
+                elseif ($type === 'ktp')
+                    $dbColumn = 'ktp_filename';
+                elseif ($type === 'ijazah')
+                    $dbColumn = 'ijazah_filename';
+                elseif ($type === 'transkrip')
+                    $dbColumn = 'transkrip_filename';
+                elseif ($type === 'rekomendasi')
+                    $dbColumn = 'rekomendasi_filename';
+            }
+
+            $destPath = $targetDir . '/' . $newFilename;
+            // NEW: 20241/photos/filename.jpg
+            $dbPath = ($type === 'photo')
+                ? $subfolder . '/photos/' . $newFilename
+                : $subfolder . '/documents/' . $newFilename;
+
+            if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+                throw new \Exception('Gagal menyimpan file ke storage');
+            }
+
+            // Update DB
+            $db = \App\Utils\Database::connection();
+            $db->update('participants')
+                ->params([$dbColumn => $dbPath])
+                ->where('id', $participant['id'])
+                ->execute();
+
+            // Return new URL for preview
+            // Return new URL for preview
+            $publicUrl = '/storage/' . $dbPath;
+
+            // Cache bust
+            $publicUrl .= '?t=' . time();
+
+            response()->json([
+                'success' => true,
+                'message' => 'Berhasil upload',
+                'url' => $publicUrl,
+                'type' => $type
+            ]);
+
+        } catch (\Throwable $e) {
+            response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Check if user is authorized (Superadmin or Admin only)
+     */
+    private function checkAccess($isJson = false)
+    {
+        if (!isset($_SESSION['admin'])) {
+            if ($isJson) {
+                // Leaf response might return object, so we force exit to stop execution
+                response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+                exit;
+            }
+            header('Location: /admin');
+            exit;
+        }
+
+        $role = $_SESSION['admin_role'] ?? 'admin';
+        // Only allow superadmin and admin
+        if (!in_array($role, ['superadmin', 'admin'])) {
+            if ($isJson) {
+                response()->json(['success' => false, 'message' => 'Forbidden: Access restricted to Superadmin/Admin'], 403);
+                exit;
+            }
+            // Show Forbidden Page or simple error
+            // Assuming errors.403 view exists, if not, fallback to simple HTML
+            if (file_exists(dirname(__DIR__, 2) . '/app/views/errors/403.php')) {
+                echo \App\Utils\View::render('errors.403', ['message' => 'Anda tidak memiliki akses ke halaman Document Helper.']);
+            } else {
+                echo "<h1>403 Forbidden</h1><p>Anda tidak memiliki akses ke halaman ini.</p><a href='/admin'>Kembali ke Dashboard</a>";
+            }
+            exit;
+        }
     }
 
 }

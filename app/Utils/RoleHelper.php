@@ -200,7 +200,8 @@ class RoleHelper
         return in_array(self::getRole(), [
             self::ROLE_SUPERADMIN,
             self::ROLE_ADMIN,
-            self::ROLE_TU
+            self::ROLE_TU,
+            self::ROLE_UPKH
         ]);
     }
 
@@ -267,6 +268,19 @@ class RoleHelper
             self::ROLE_SUPERADMIN,
             self::ROLE_ADMIN,
             self::ROLE_TU,
+            self::ROLE_ADMIN_PRODI
+        ]);
+    }
+
+    /**
+     * Check if user can manage assessment bidang (penilaian bidang)
+     * Allowed: Superadmin, Admin, Admin Prodi
+     */
+    public static function canManageAssessmentBidang(): bool
+    {
+        return in_array(self::getRole(), [
+            self::ROLE_SUPERADMIN,
+            self::ROLE_ADMIN,
             self::ROLE_ADMIN_PRODI
         ]);
     }

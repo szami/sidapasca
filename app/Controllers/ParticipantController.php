@@ -56,17 +56,16 @@ class ParticipantController
                 $title = "Formulir Masuk (Pending)";
                 break;
             case 'lulus':
-                // Show ALL lulus berkas (regardless of payment/exam number)
                 $whereClause .= " AND p.status_berkas = 'lulus'";
                 $hideExamNumber = true; // Hide exam number since not all have it yet
-                $title = "Peserta Lulus Berkas";
+                $title = "Berkas Terverifikasi (Online)";
                 break;
             case 'gagal':
                 $whereClause .= " AND p.status_berkas = 'gagal'";
                 $hideExamNumber = true;
                 $hideBilling = true;
                 $hidePaymentStatus = true;
-                $title = "Peserta Gagal Berkas";
+                $title = "Berkas Tidak Valid";
                 break;
             case 'all':
                 $title = "Semua Data Peserta";
@@ -93,16 +92,42 @@ class ParticipantController
             if ($adminProdiId) {
                 $whereClause .= " AND p.kode_prodi = '$adminProdiId'";
             }
+
+            // FILTER: Hide S2 for S3 Admin, and S3 for S2 Admin (Detected via Username)
+            $curUser = \App\Utils\RoleHelper::getUsername();
+            if ($curUser) {
+                if (preg_match('/s3|doktor/i', $curUser)) {
+                    $whereClause .= " AND (p.nama_prodi NOT LIKE '%S2%' AND p.nama_prodi NOT LIKE '%Magister%')";
+                } elseif (preg_match('/s2|magister/i', $curUser)) {
+                    $whereClause .= " AND (p.nama_prodi NOT LIKE '%S3%' AND p.nama_prodi NOT LIKE '%Doktor%')";
+                }
+            }
         }
 
         // Get distinct prodi list for filter dropdown with counts (from active semester only)
         // Use active semester for dropdown regardless of main filter
         $prodiListSemesterId = $semesterId ?? 0; // Active semester ID
+        $prodiListWhere = "WHERE semester_id = '$prodiListSemesterId' AND nama_prodi IS NOT NULL AND nama_prodi != ''";
+
+        // Re-apply Admin Restrictions to Dropdown to match Dashboard Content
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $adminProdiId = \App\Utils\RoleHelper::getProdiId();
+            if ($adminProdiId) {
+                $prodiListWhere .= " AND kode_prodi = '$adminProdiId'";
+            }
+            $curUser = \App\Utils\RoleHelper::getUsername();
+            if ($curUser) {
+                if (preg_match('/s3|doktor/i', $curUser)) {
+                    $prodiListWhere .= " AND (nama_prodi NOT LIKE '%S2%' AND nama_prodi NOT LIKE '%Magister%')";
+                } elseif (preg_match('/s2|magister/i', $curUser)) {
+                    $prodiListWhere .= " AND (nama_prodi NOT LIKE '%S3%' AND nama_prodi NOT LIKE '%Doktor%')";
+                }
+            }
+        }
+
         $prodiListSql = "SELECT nama_prodi, COUNT(*) as total 
                          FROM participants 
-                         WHERE semester_id = '$prodiListSemesterId' 
-                         AND nama_prodi IS NOT NULL 
-                         AND nama_prodi != ''
+                         $prodiListWhere
                          GROUP BY nama_prodi 
                          ORDER BY nama_prodi ASC";
         $prodiList = $db->query($prodiListSql)->fetchAll();
@@ -192,6 +217,16 @@ class ParticipantController
             if ($adminProdiId) {
                 $whereClauseBase .= " AND p.kode_prodi = '$adminProdiId'";
             }
+
+            // FILTER: Hide S2 for S3 Admin, and S3 for S2 Admin (Detected via Username)
+            $curUser = \App\Utils\RoleHelper::getUsername();
+            if ($curUser) {
+                if (preg_match('/s3|doktor/i', $curUser)) {
+                    $whereClauseBase .= " AND (p.nama_prodi NOT LIKE '%S2%' AND p.nama_prodi NOT LIKE '%Magister%')";
+                } elseif (preg_match('/s2|magister/i', $curUser)) {
+                    $whereClauseBase .= " AND (p.nama_prodi NOT LIKE '%S3%' AND p.nama_prodi NOT LIKE '%Doktor%')";
+                }
+            }
         }
 
         $totalRecordsSql = "SELECT COUNT(*) as total FROM participants p $whereClauseBase";
@@ -245,7 +280,9 @@ class ParticipantController
         $recordsFiltered = $filteredRes['total'] ?? 0;
 
         // 3. fetching Data
-        $sql = "SELECT p.* FROM participants p 
+        $sql = "SELECT p.*, dv.status_verifikasi_fisik as dv_status_fisik 
+                FROM participants p 
+                LEFT JOIN document_verifications dv ON p.id = dv.participant_id
                 $whereClauseFiltered 
                 ORDER BY $orderBy $orderDir 
                 LIMIT $length OFFSET $start";
@@ -454,11 +491,11 @@ class ParticipantController
         $semester = Semester::find($participant['semester_id']);
         $subfolder = $semester ? $semester['kode'] : 'legacy';
 
-        // Base photos directory
-        $basePhotoDir = dirname(__DIR__, 2) . '/storage/photos';
-
         // Full target directory
-        $targetDir = $basePhotoDir . '/' . $subfolder;
+        // NEW STRUCTURE: storage/semester/photos
+        $baseStorage = dirname(__DIR__, 2) . '/storage';
+        $targetDir = $baseStorage . '/' . $subfolder . '/photos';
+
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
@@ -468,14 +505,22 @@ class ParticipantController
         $targetPath = $targetDir . '/' . $filename;
 
         // Relative path to store in DB
-        $dbPath = $subfolder . '/' . $filename;
+        // NEW: semester/photos/filename.jpg
+        $dbPath = $subfolder . '/photos/' . $filename;
 
         // Delete old photo if exists
+        // Delete old photo if exists
         if (!empty($participant['photo_filename'])) {
-            $oldPath = $basePhotoDir . '/' . $participant['photo_filename'];
-            if (file_exists($oldPath)) {
-                unlink($oldPath);
-            }
+            // Check legacy path first: storage/photos/semester/filename
+            $legacyPath = $baseStorage . '/photos/' . $participant['photo_filename'];
+
+            // Check new path: storage/semester/photos/filename
+            $newPath = $baseStorage . '/' . $participant['photo_filename'];
+
+            if (file_exists($newPath))
+                unlink($newPath);
+            elseif (file_exists($legacyPath))
+                unlink($legacyPath);
         }
 
         // Move uploaded file
@@ -506,9 +551,15 @@ class ParticipantController
             return;
         }
 
-        $photoPath = dirname(__DIR__, 2) . '/storage/photos/' . $participant['photo_filename'];
-        if (file_exists($photoPath)) {
-            unlink($photoPath);
+        $dbPath = $participant['photo_filename'];
+        $baseStorage = dirname(__DIR__, 2) . '/storage';
+        $legacyPath = $baseStorage . '/photos/' . $dbPath;
+        $newPath = $baseStorage . '/' . $dbPath;
+
+        if (file_exists($newPath)) {
+            unlink($newPath);
+        } elseif (file_exists($legacyPath)) {
+            unlink($legacyPath);
         }
 
         \App\Utils\Database::connection()->update('participants')
@@ -583,8 +634,9 @@ class ParticipantController
         $semester = Semester::find($participant['semester_id']);
         $subfolder = $semester ? $semester['kode'] : 'legacy';
 
-        $basePhotoDir = dirname(__DIR__, 2) . '/storage/photos';
-        $targetDir = $basePhotoDir . '/' . $subfolder;
+        $baseStorage = dirname(__DIR__, 2) . '/storage';
+        $targetDir = $baseStorage . '/' . $subfolder . '/photos';
+
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
@@ -599,14 +651,23 @@ class ParticipantController
 
                 $photoContent = $zip->getFromIndex($i);
                 $newFilename = ($participant['nomor_peserta'] ?? 'temp_' . $id) . '.jpg';
+
+                // NEW STRUCTURE
                 $targetPath = $targetDir . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/photos/' . $newFilename;
 
                 // Delete old photo if exists
                 if (!empty($participant['photo_filename'])) {
-                    $oldPath = $basePhotoDir . '/' . $participant['photo_filename'];
-                    if (file_exists($oldPath)) {
-                        unlink($oldPath);
+                    // Check legacy path first: storage/photos/semester/filename
+                    $legacyPath = $baseStorage . '/photos/' . $participant['photo_filename'];
+
+                    // Check new path: storage/semester/photos/filename
+                    $newPath = $baseStorage . '/' . $participant['photo_filename'];
+
+                    if (file_exists($newPath)) {
+                        unlink($newPath);
+                    } elseif (file_exists($legacyPath)) {
+                        unlink($legacyPath);
                     }
                 }
 
@@ -798,50 +859,18 @@ class ParticipantController
 
         $file = $_FILES['file'];
 
-        // Configuration per document type  
+        // Configuration per document type
+        // Use flat documents folder structure for new uploads
+        // storage/semester/documents
+        $baseStorage = dirname(__DIR__, 2) . '/storage';
+
         $config = [
-            'foto' => [
-                'extensions' => ['jpg', 'jpeg', 'png'],
-                'max_size' => 2097152,
-                'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'],
-                'folder' => dirname(__DIR__, 2) . '/storage/photos',
-                'column' => 'photo_filename'
-            ],
-            'ktp' => [
-                'extensions' => ['jpg', 'jpeg', 'png'],
-                'max_size' => 5242880,
-                'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'],
-                'folder' => dirname(__DIR__, 2) . '/storage/documents/ktp',
-                'column' => 'ktp_filename'
-            ],
-            'ijazah' => [
-                'extensions' => ['jpg', 'jpeg', 'png'],
-                'max_size' => 5242880,
-                'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'],
-                'folder' => dirname(__DIR__, 2) . '/storage/documents/ijazah',
-                'column' => 'ijazah_filename'
-            ],
-            'transkrip' => [
-                'extensions' => ['pdf'],
-                'max_size' => 10485760,
-                'mime_types' => ['application/pdf'],
-                'folder' => dirname(__DIR__, 2) . '/storage/documents/transkrip',
-                'column' => 'transkrip_filename'
-            ],
-            'ijazah_s2' => [
-                'extensions' => ['jpg', 'jpeg', 'png'],
-                'max_size' => 5242880,
-                'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'],
-                'folder' => dirname(__DIR__, 2) . '/storage/documents/ijazah_s2',
-                'column' => 'ijazah_s2_filename'
-            ],
-            'transkrip_s2' => [
-                'extensions' => ['pdf'],
-                'max_size' => 10485760,
-                'mime_types' => ['application/pdf'],
-                'folder' => dirname(__DIR__, 2) . '/storage/documents/transkrip_s2',
-                'column' => 'transkrip_s2_filename'
-            ]
+            'foto' => ['extensions' => ['jpg', 'jpeg', 'png'], 'max_size' => 2097152, 'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'], 'column' => 'photo_filename'],
+            'ktp' => ['extensions' => ['jpg', 'jpeg', 'png'], 'max_size' => 5242880, 'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'], 'column' => 'ktp_filename'],
+            'ijazah' => ['extensions' => ['jpg', 'jpeg', 'png'], 'max_size' => 5242880, 'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'], 'column' => 'ijazah_filename'],
+            'transkrip' => ['extensions' => ['pdf'], 'max_size' => 10485760, 'mime_types' => ['application/pdf'], 'column' => 'transkrip_filename'],
+            'ijazah_s2' => ['extensions' => ['jpg', 'jpeg', 'png'], 'max_size' => 5242880, 'mime_types' => ['image/jpeg', 'image/jpg', 'image/png'], 'column' => 'ijazah_s2_filename'],
+            'transkrip_s2' => ['extensions' => ['pdf'], 'max_size' => 10485760, 'mime_types' => ['application/pdf'], 'column' => 'transkrip_s2_filename']
         ];
 
         $cfg = $config[$type];
@@ -873,7 +902,11 @@ class ParticipantController
         $subfolder = $semester ? $semester['kode'] : 'legacy';
 
         // Full target directory
-        $targetDir = $cfg['folder'] . '/' . $subfolder;
+        // Full target directory
+        // NEW: storage/semester/photos OR storage/semester/documents
+        $folderType = ($type === 'foto') ? 'photos' : 'documents';
+        $targetDir = $baseStorage . '/' . $subfolder . '/' . $folderType;
+
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
@@ -883,17 +916,30 @@ class ParticipantController
         if ($type === 'foto') {
             $newFilename = $nomor . '.jpg';
         } else {
-            $newFilename = $nomor . '_' . $type . '.' . $ext;
+            $newFilename = $type . '_' . $nomor . '.' . $ext; // Fixed: prefix_nomor (ktp_123.jpg)
         }
 
         $targetPath = $targetDir . '/' . $newFilename;
-        $dbPath = $subfolder . '/' . $newFilename;
+
+        // NEW DB PATH: semester/photos/file OR semester/documents/file
+        $dbPath = $subfolder . '/' . $folderType . '/' . $newFilename;
 
         // Delete old file if exists
         if (!empty($participant[$cfg['column']])) {
-            $oldPath = $cfg['folder'] . '/' . $participant[$cfg['column']];
-            if (file_exists($oldPath)) {
-                unlink($oldPath);
+            $dbFile = $participant[$cfg['column']];
+
+            // Try new structure
+            if (file_exists($baseStorage . '/' . $dbFile)) {
+                unlink($baseStorage . '/' . $dbFile);
+            }
+            // Try legacy structure (requires guesswork/mapping or simple check)
+            // Legacy for doc: storage/documents/type/semester/file
+            elseif ($type === 'foto') {
+                if (file_exists($baseStorage . '/photos/' . $dbFile))
+                    unlink($baseStorage . '/photos/' . $dbFile);
+            } else {
+                if (file_exists($baseStorage . '/documents/' . $type . '/' . $dbFile))
+                    unlink($baseStorage . '/documents/' . $type . '/' . $dbFile);
             }
         }
 
@@ -1135,8 +1181,10 @@ class ParticipantController
             // Foto: pasfoto*umum*.jpg|jpeg|png (simplified)
             if (preg_match('/pasfoto.*umum.*\.(jpeg|jpg|png)$/i', $basename)) {
                 $content = $zip->getFromName($filename);
-                $folder = dirname(__DIR__, 2) . '/storage/photos';
-                $targetDir = $folder . '/' . $subfolder;
+                // NEW: storage/semester/photos
+                $baseStorage = dirname(__DIR__, 2) . '/storage';
+                $targetDir = $baseStorage . '/' . $subfolder . '/photos';
+
                 if (!is_dir($targetDir))
                     mkdir($targetDir, 0755, true);
 
@@ -1144,10 +1192,18 @@ class ParticipantController
                 $targetPath = $targetDir . '/' . $newFilename;
                 $dbPath = $subfolder . '/' . $newFilename;
 
+                // Delete old photo if exists
                 if (!empty($participant['photo_filename'])) {
-                    $oldPath = $folder . '/' . $participant['photo_filename'];
-                    if (file_exists($oldPath))
-                        @unlink($oldPath);
+                    $oldDbPath = $participant['photo_filename'];
+                    // Try delete new structure
+                    // New DB path is relative to storage/ e.g. "semester/photos/file.jpg"
+                    if (file_exists($baseStorage . '/' . $oldDbPath))
+                        @unlink($baseStorage . '/' . $oldDbPath);
+
+                    // Try delete legacy: storage/photos/semester/file.jpg
+                    // Legacy stored "semester/file.jpg" in DB for photos
+                    if (file_exists($baseStorage . '/photos/' . $oldDbPath))
+                        @unlink($baseStorage . '/photos/' . $oldDbPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1163,19 +1219,36 @@ class ParticipantController
             elseif (preg_match('/ktp.*umum.*\.(jpg|jpeg|png)$/i', $basename)) {
                 $content = $zip->getFromName($filename);
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                $folder = dirname(__DIR__, 2) . '/storage/documents/ktp';
-                $targetDir = $folder . '/' . $subfolder;
+
+                // NEW: storage/semester/documents/ktp (or flat documents)
+                // Let's keep it flat: storage/semester/documents
+                $baseStorage = dirname(__DIR__, 2) . '/storage';
+                $targetDir = $baseStorage . '/' . $subfolder . '/documents';
+
                 if (!is_dir($targetDir))
                     mkdir($targetDir, 0755, true);
 
-                $newFilename = $nomor . '_ktp.' . $ext;
+                $newFilename = $nomor . '_ktp.' . $ext; // Use type suffix for flat folder safety?
+                // Actually ParticipantController previously used: $newFilename = $nomor . '_ktp.' . $ext;
+                // Wait, in flat folder we MUST prefix with type otherwise conflict.
+                // Previous logic: $typeFolder . $subfolder . $newFilename.
+                // DocumentHelper logic: $prefix . filename.
+
+                // Let's strictly follow DocumentHelper naming: ktp_23201.jpg
+                // But here $newFilename was: $nomor . '_ktp.' . $ext (suffix)
+                // Let's stick to DocumentHelper pattern: prefix + _ + nomor
+                $newFilename = 'ktp_' . $nomor . '.' . $ext;
+
                 $targetPath = $targetDir . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/documents/' . $newFilename;
 
                 if (!empty($participant['ktp_filename'])) {
-                    $oldPath = $folder . '/' . $participant['ktp_filename'];
-                    if (file_exists($oldPath))
-                        @unlink($oldPath);
+                    $oldDbPath = $participant['ktp_filename'];
+                    if (file_exists($baseStorage . '/' . $oldDbPath))
+                        @unlink($baseStorage . '/' . $oldDbPath);
+                    // Legacy: storage/documents/ktp/semester/file
+                    if (file_exists($baseStorage . '/documents/ktp/' . $oldDbPath))
+                        @unlink($baseStorage . '/documents/ktp/' . $oldDbPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1187,23 +1260,27 @@ class ParticipantController
                 $matched = true;
             }
 
-            // Ijazah: S1*ijasah*.jpg|jpeg|png (simplified)
+            // Ijazah
             elseif (preg_match('/S1.*ijasah.*\.(jpeg|jpg|png)$/i', $basename)) {
                 $content = $zip->getFromName($filename);
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                $folder = dirname(__DIR__, 2) . '/storage/documents/ijazah';
-                $targetDir = $folder . '/' . $subfolder;
+                $baseStorage = dirname(__DIR__, 2) . '/storage';
+                $targetDir = $baseStorage . '/' . $subfolder . '/documents';
+
                 if (!is_dir($targetDir))
                     mkdir($targetDir, 0755, true);
 
-                $newFilename = $nomor . '_ijazah.' . $ext;
+                $newFilename = 'ijazah_' . $nomor . '.' . $ext;
                 $targetPath = $targetDir . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/documents/' . $newFilename;
 
                 if (!empty($participant['ijazah_filename'])) {
-                    $oldPath = $folder . '/' . $participant['ijazah_filename'];
-                    if (file_exists($oldPath))
-                        @unlink($oldPath);
+                    $oldDbPath = $participant['ijazah_filename'];
+                    if (file_exists($baseStorage . '/' . $oldDbPath))
+                        @unlink($baseStorage . '/' . $oldDbPath);
+                    // Legacy: storage/documents/ijazah/semester/file
+                    if (file_exists($baseStorage . '/documents/ijazah/' . $oldDbPath))
+                        @unlink($baseStorage . '/documents/ijazah/' . $oldDbPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1215,22 +1292,25 @@ class ParticipantController
                 $matched = true;
             }
 
-            // Transkrip: S1*transkrip*.pdf (simplified)
+            // Transkrip
             elseif (preg_match('/S1.*transkrip.*\.pdf$/i', $basename)) {
                 $content = $zip->getFromName($filename);
-                $folder = dirname(__DIR__, 2) . '/storage/documents/transkrip';
-                $targetDir = $folder . '/' . $subfolder;
+                $baseStorage = dirname(__DIR__, 2) . '/storage';
+                $targetDir = $baseStorage . '/' . $subfolder . '/documents';
+
                 if (!is_dir($targetDir))
                     mkdir($targetDir, 0755, true);
 
-                $newFilename = $nomor . '_transkrip.pdf';
+                $newFilename = 'transkrip_' . $nomor . '.pdf';
                 $targetPath = $targetDir . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/documents/' . $newFilename;
 
                 if (!empty($participant['transkrip_filename'])) {
-                    $oldPath = $folder . '/' . $participant['transkrip_filename'];
-                    if (file_exists($oldPath))
-                        @unlink($oldPath);
+                    $oldDbPath = $participant['transkrip_filename'];
+                    if (file_exists($baseStorage . '/' . $oldDbPath))
+                        @unlink($baseStorage . '/' . $oldDbPath);
+                    if (file_exists($baseStorage . '/documents/transkrip/' . $oldDbPath))
+                        @unlink($baseStorage . '/documents/transkrip/' . $oldDbPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1242,23 +1322,26 @@ class ParticipantController
                 $matched = true;
             }
 
-            // Ijazah S2: S2_ijasah_*.jpeg|jpg|png
+            // Ijazah S2
             elseif (preg_match('/S2_ijasah_.*\.(jpeg|jpg|png)$/i', $filename)) {
                 $content = $zip->getFromName($filename);
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                $folder = dirname(__DIR__, 2) . '/storage/documents/ijazah_s2';
-                $targetDir = $folder . '/' . $subfolder;
+                $baseStorage = dirname(__DIR__, 2) . '/storage';
+                $targetDir = $baseStorage . '/' . $subfolder . '/documents';
+
                 if (!is_dir($targetDir))
                     mkdir($targetDir, 0755, true);
 
-                $newFilename = $nomor . '_ijazah_s2.' . $ext;
+                $newFilename = 'ijazah_s2_' . $nomor . '.' . $ext;
                 $targetPath = $targetDir . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/documents/' . $newFilename;
 
                 if (!empty($participant['ijazah_s2_filename'])) {
-                    $oldPath = $folder . '/' . $participant['ijazah_s2_filename'];
-                    if (file_exists($oldPath))
-                        @unlink($oldPath);
+                    $oldDbPath = $participant['ijazah_s2_filename'];
+                    if (file_exists($baseStorage . '/' . $oldDbPath))
+                        @unlink($baseStorage . '/' . $oldDbPath);
+                    if (file_exists($baseStorage . '/documents/ijazah_s2/' . $oldDbPath))
+                        @unlink($baseStorage . '/documents/ijazah_s2/' . $oldDbPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1270,22 +1353,25 @@ class ParticipantController
                 $matched = true;
             }
 
-            // Transkrip S2: S2_transkrip_*.pdf
+            // Transkrip S2
             elseif (preg_match('/S2_transkrip_.*\.pdf$/i', $filename)) {
                 $content = $zip->getFromName($filename);
-                $folder = dirname(__DIR__, 2) . '/storage/documents/transkrip_s2';
-                $targetDir = $folder . '/' . $subfolder;
+                $baseStorage = dirname(__DIR__, 2) . '/storage';
+                $targetDir = $baseStorage . '/' . $subfolder . '/documents';
+
                 if (!is_dir($targetDir))
                     mkdir($targetDir, 0755, true);
 
-                $newFilename = $nomor . '_transkrip_s2.pdf';
+                $newFilename = 'transkrip_s2_' . $nomor . '.pdf';
                 $targetPath = $targetDir . '/' . $newFilename;
-                $dbPath = $subfolder . '/' . $newFilename;
+                $dbPath = $subfolder . '/documents/' . $newFilename;
 
                 if (!empty($participant['transkrip_s2_filename'])) {
-                    $oldPath = $folder . '/' . $participant['transkrip_s2_filename'];
-                    if (file_exists($oldPath))
-                        @unlink($oldPath);
+                    $oldDbPath = $participant['transkrip_s2_filename'];
+                    if (file_exists($baseStorage . '/' . $oldDbPath))
+                        @unlink($baseStorage . '/' . $oldDbPath);
+                    if (file_exists($baseStorage . '/documents/transkrip_s2/' . $oldDbPath))
+                        @unlink($baseStorage . '/documents/transkrip_s2/' . $oldDbPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1352,14 +1438,22 @@ class ParticipantController
             }
 
             // Get file path
-            if ($type === 'foto') {
-                $filepath = __DIR__ . '/../../storage/photos/' . $filename;
+            $baseStorage = dirname(__DIR__, 2) . '/storage';
+
+            // Check if filename contains path (new structure)
+            if (strpos($filename, 'photos/') !== false || strpos($filename, 'documents/') !== false) {
+                $filepath = $baseStorage . '/' . $filename;
             } else {
-                $filepath = __DIR__ . '/../../storage/documents/' . $type . '/' . $filename;
+                // Legacy structure
+                if ($type === 'foto') {
+                    $filepath = $baseStorage . '/photos/' . $filename;
+                } else {
+                    $filepath = $baseStorage . '/documents/' . $type . '/' . $filename;
+                }
             }
 
             if (!file_exists($filepath)) {
-                throw new \Exception('File not found');
+                throw new \Exception('File not found: ' . $filename);
             }
 
             // Detect image type

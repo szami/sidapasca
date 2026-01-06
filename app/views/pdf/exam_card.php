@@ -129,10 +129,37 @@
                 <tbody>
                     <tr>
                         <td width="180px" align="center" style="vertical-align: top;">
-                            <div
-                                style="width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center;">
-                                <span style="line-height: 4cm; text-align: center;">FOTO 3x4</span>
-                            </div>
+                            <?php if (!empty($participant['photo_filename'])): ?>
+                                <?php
+                                $baseStorage = dirname(__DIR__, 3) . '/storage';
+                                // New Structure: check if file exists directly as stored in DB
+                                $photoPath = $baseStorage . '/' . $participant['photo_filename'];
+
+                                // Legacy Structure: if not found, check in legacy folder
+                                if (!file_exists($photoPath)) {
+                                    $photoPath = $baseStorage . '/photos/' . $participant['photo_filename'];
+                                }
+
+                                if (file_exists($photoPath)):
+                                    $imageData = base64_encode(file_get_contents($photoPath));
+                                    $ext = pathinfo($participant['photo_filename'], PATHINFO_EXTENSION);
+                                    $mimeType = ($ext === 'png') ? 'image/png' : 'image/jpeg';
+                                    ?>
+                                    <img src="data:<?php echo $mimeType; ?>;base64,<?php echo $imageData; ?>"
+                                        style="width: 3cm; height: 4cm; object-fit: cover; border: 1px solid #000;">
+                                <?php else: ?>
+                                    <div
+                                        style="width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center; background: #f5f5f5;">
+                                        <span style="font-size: 10px; color: #666; text-align: center;">FOTO 3x4<br>(File Tidak
+                                            Ditemukan)</span>
+                                    </div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <div
+                                    style="width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center; background: #f5f5f5;">
+                                    <span style="font-size: 10px; color: #666;">FOTO 3x4</span>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td style="vertical-align: top;">
                             <table style="font-size:14px; width: 100%;">

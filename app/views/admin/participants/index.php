@@ -111,7 +111,7 @@
                             <?php if (!($hideBilling ?? false)): ?>
                                 <th>No Billing</th>
                             <?php endif; ?>
-                            <th>Status Berkas</th>
+                            <th>Status Berkas Fisik</th>
                             <?php if (!($hidePaymentStatus ?? false)): ?>
                                 <th>Status Bayar</th>
                             <?php endif; ?>
@@ -150,7 +150,15 @@ $(function () {
                 "orderable": false,
                 "render": function(data, type, row) {
                     if (data) {
-                        return `<img src="/storage/photos/${data}" alt="Foto" class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">`;
+                        // Check if data already contains 'photos/' (new structure)
+                        let url = '';
+                        if (data.indexOf('photos/') !== -1) {
+                             url = '/storage/' + data;
+                        } else {
+                             // Legacy
+                             url = '/storage/photos/' + data;
+                        }
+                        return `<img src="${url}" alt="Foto" class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">`;
                     }
                     return '<i class="fas fa-user-circle fa-2x text-muted"></i>';
                 }
@@ -189,11 +197,11 @@ $(function () {
             },
             <?php endif; ?>
             { 
-                "data": "status_berkas",
+                "data": "dv_status_fisik",
                 "render": function(data) {
-                    if (data === 'lulus') return '<span class="badge badge-success">Lulus</span>';
-                    if (data === 'gagal') return '<span class="badge badge-danger">Gagal</span>';
-                    return '<span class="badge badge-warning">Pending</span>';
+                    if (data === 'lengkap') return '<span class="badge badge-success">Lengkap</span>';
+                    if (data === 'tidak_lengkap') return '<span class="badge badge-danger">Tidak Lengkap</span>';
+                    return '<span class="badge badge-warning">Belum Dicek</span>';
                 }
             },
             <?php if (!($hidePaymentStatus ?? false)): ?>

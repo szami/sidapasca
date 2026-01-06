@@ -34,16 +34,34 @@ class DocumentVerificationController
 
         $semesterId = Request::get('semester_id') ?? Semester::getActive()['id'] ?? null;
         $statusFilter = Request::get('status') ?? 'all';
+        $prodiFilter = Request::get('prodi') ?? 'all';
 
-        $verifications = DocumentVerification::getAllWithParticipants($semesterId, $statusFilter);
+        $verifications = DocumentVerification::getAllWithParticipants($semesterId, $statusFilter, $prodiFilter);
         $semesters = Semester::all();
         $stats = DocumentVerification::getStatistics($semesterId);
+
+        // Fetch unique prodis for filter based on selected semester
+        $db = \App\Utils\Database::connection();
+        $prodiSql = "SELECT DISTINCT nama_prodi FROM participants WHERE nama_prodi IS NOT NULL AND nama_prodi != ''";
+        $prodiParams = [];
+
+        if ($semesterId) {
+            $prodiSql .= " AND semester_id = ?";
+            $prodiParams[] = $semesterId;
+        }
+
+        $prodiSql .= " ORDER BY nama_prodi ASC";
+
+        $prodiRows = $db->query($prodiSql)->bind(...$prodiParams)->fetchAll(\PDO::FETCH_ASSOC);
+        $prodis = array_column($prodiRows, 'nama_prodi');
 
         echo View::render('admin.verification.index', [
             'verifications' => $verifications,
             'semesters' => $semesters,
             'currentSemester' => $semesterId,
             'statusFilter' => $statusFilter,
+            'prodiFilter' => $prodiFilter,
+            'prodis' => $prodis,
             'stats' => $stats
         ]);
     }
@@ -169,13 +187,7 @@ class DocumentVerificationController
         header("Location: /admin/verification/physical/$id?success=1");
         exit;
     }
-    public function reset($id)
-    {
-        $this->checkAuth();
-        DocumentVerification::deleteByParticipant($id);
-        header("Location: /admin/verification/physical/$id?success=reset");
-        exit;
-    }
+
 
     public function downloadTemplate()
     {
@@ -365,9 +377,13 @@ class DocumentVerificationController
         $draw = intval(Request::get('draw') ?? 1);
         $start = intval(Request::get('start') ?? 0);
         $length = intval(Request::get('length') ?? 10);
-        $search = Request::get('search')['value'] ?? '';
-        $orderColumnIndex = Request::get('order')[0]['column'] ?? 2;
-        $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
+
+        $searchParams = Request::get('search');
+        $search = $searchParams['value'] ?? '';
+
+        $orderParams = Request::get('order');
+        $orderColumnIndex = $orderParams[0]['column'] ?? 2;
+        $orderDir = $orderParams[0]['dir'] ?? 'asc';
 
         $columns = [
             0 => 'p.id',
@@ -376,7 +392,8 @@ class DocumentVerificationController
             3 => 'p.nama_prodi',
             4 => 'p.status_berkas',
             5 => 'dv.status_verifikasi_fisik',
-            6 => 'dv.updated_at',
+            6 => 'dv.catatan_admin',
+            7 => 'dv.updated_at',
         ];
         $orderBy = $columns[$orderColumnIndex] ?? 'p.nama_lengkap';
 
@@ -390,8 +407,29 @@ class DocumentVerificationController
         $totalRes = $db->query($totalRecordsSql)->fetchAssoc();
         $totalRecords = $totalRes['total'] ?? 0;
 
-        // Apply Status Filter
+        // Apply Filters
         $whereClauseFiltered = $whereClauseBase;
+
+        // Eligibility Filter (Default: eligible)
+        $eligibility = Request::get('eligibility') ?? 'eligible';
+
+        // DEBUG LOGGING
+        file_put_contents(__DIR__ . '/debug_verification.log', date('Y-m-d H:i:s') . " - Params: eligibility=" . json_encode($eligibility) . "\n", FILE_APPEND);
+
+        if ($eligibility === 'eligible') {
+            $whereClauseFiltered .= " AND p.nomor_peserta IS NOT NULL AND p.nomor_peserta != ''";
+        } elseif ($eligibility === 'not_eligible') {
+            $whereClauseFiltered .= " AND (p.nomor_peserta IS NULL OR p.nomor_peserta = '')";
+        }
+        // If 'all', do nothing regarding nomor_peserta constraint
+
+        // Apply Prodi Filter
+        $prodiFilter = Request::get('prodi') ?? 'all';
+        if ($prodiFilter && $prodiFilter !== 'all') {
+            $prodiEscaped = str_replace("'", "''", $prodiFilter);
+            $whereClauseFiltered .= " AND p.nama_prodi = '$prodiEscaped'";
+        }
+
         if ($statusFilter && $statusFilter !== 'all') {
             if ($statusFilter == 'pending') {
                 $whereClauseFiltered .= " AND (dv.status_verifikasi_fisik IS NULL OR dv.status_verifikasi_fisik = 'pending')";
@@ -427,13 +465,17 @@ class DocumentVerificationController
                     p.email, 
                     p.nama_prodi, 
                     p.status_berkas, 
-                    p.semester_id
+                    p.semester_id,
+                    dv.catatan_admin
                 FROM participants p
                 LEFT JOIN document_verifications dv ON p.id = dv.participant_id
                 $whereClauseFiltered
                 ORDER BY $orderBy $orderDir
                 LIMIT $length OFFSET $start";
-        $data = $db->query($sql)->fetchAll();
+
+        file_put_contents(__DIR__ . '/debug_verification.log', date('Y-m-d H:i:s') . " - SQL: " . $sql . "\n", FILE_APPEND);
+
+        $data = $db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
 
         response()->json([
             "draw" => $draw,
@@ -441,5 +483,25 @@ class DocumentVerificationController
             "recordsFiltered" => $recordsFiltered,
             "data" => $data
         ]);
+    }
+
+    /**
+     * Reset verification data
+     */
+    public function reset($participantId)
+    {
+        $this->checkAuth();
+
+        // Find by participant ID first to ensure it exists or to log
+        $verification = DocumentVerification::findByParticipant($participantId);
+
+        if ($verification) {
+            // Delete the verification record
+            DocumentVerification::deleteByParticipant($participantId);
+            response()->json(['status' => 'success', 'message' => 'Status verifikasi berhasil direset.']);
+        } else {
+            // Even if not found, we can consider it "reset" (idempotent), but let's inform user
+            response()->json(['status' => 'success', 'message' => 'Data verifikasi tidak ditemukan atau sudah bersih.']);
+        }
     }
 }

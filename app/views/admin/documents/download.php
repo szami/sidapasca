@@ -38,8 +38,8 @@ if ($isAdminProdi && !empty($prodiList)) {
                         <?php else: ?>
                             <select id="statusFilter" class="form-control">
                                 <option value="all">📋 Semua Status</option>
-                                <option value="lulus">✅ Lulus Berkas</option>
-                                <option value="gagal">❌ Gagal Berkas</option>
+                                <option value="lulus">✅ Verifikasi Online</option>
+                                <option value="gagal">❌ Berkas Tidak Valid</option>
                                 <option value="pending">📝 Pending</option>
                                 <option value="peserta_ujian">🎓 Peserta Ujian (Punya Nomor Peserta)</option>
                             </select>
@@ -305,7 +305,7 @@ if ($isAdminProdi && !empty($prodiList)) {
 
     function getStatusBadge(status) {
         switch (status) {
-            case 'lulus': return 'success';
+            case 'lulus': return 'primary';
             case 'gagal': return 'danger';
             default: return 'warning';
         }

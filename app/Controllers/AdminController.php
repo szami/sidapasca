@@ -58,20 +58,34 @@ class AdminController
             $semesterName = $activeSemester['nama'];
 
             // Build WHERE clause based on role
-            $whereClause = "semester_id = '$semesterId'";
-            if ($isAdminProdi && $prodiId) {
-                $whereClause .= " AND kode_prodi = '$prodiId'";
+            $whereClause = "p.semester_id = '$semesterId'";
+            if ($isAdminProdi) {
+                if ($prodiId) {
+                    $whereClause .= " AND p.kode_prodi = '$prodiId'";
+                }
+                if ($username) {
+                    if (preg_match('/s3|doktor/i', $username)) {
+                        $whereClause .= " AND (p.nama_prodi NOT LIKE '%S2%' AND p.nama_prodi NOT LIKE '%Magister%')";
+                    } elseif (preg_match('/s2|magister/i', $username)) {
+                        $whereClause .= " AND (p.nama_prodi NOT LIKE '%S3%' AND p.nama_prodi NOT LIKE '%Doktor%')";
+                    }
+                }
             }
 
             // Global Stats
             $sqlGlobal = "SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN status_berkas = 'lulus' THEN 1 ELSE 0 END) as lulus,
-                SUM(CASE WHEN status_berkas = 'pending' THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN status_berkas = 'gagal' THEN 1 ELSE 0 END) as gagal,
-                SUM(CASE WHEN status_pembayaran = 1 THEN 1 ELSE 0 END) as paid,
-                SUM(CASE WHEN status_pembayaran = 0 AND status_berkas = 'lulus' THEN 1 ELSE 0 END) as unpaid
-                FROM participants WHERE $whereClause";
+                COUNT(p.id) as total,
+                SUM(CASE WHEN p.status_berkas = 'lulus' THEN 1 ELSE 0 END) as lulus,
+                SUM(CASE WHEN p.status_berkas = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN p.status_berkas = 'gagal' THEN 1 ELSE 0 END) as gagal,
+                SUM(CASE WHEN p.status_pembayaran = 1 THEN 1 ELSE 0 END) as paid,
+                SUM(CASE WHEN p.status_pembayaran = 0 AND p.status_berkas = 'lulus' THEN 1 ELSE 0 END) as unpaid,
+                SUM(CASE WHEN dv.status_verifikasi_fisik = 'lengkap' THEN 1 ELSE 0 END) as fisik_lengkap,
+                SUM(CASE WHEN dv.status_verifikasi_fisik = 'tidak_lengkap' THEN 1 ELSE 0 END) as fisik_tidak_lengkap,
+                SUM(CASE WHEN (dv.status_verifikasi_fisik IS NULL OR dv.status_verifikasi_fisik = '' OR dv.status_verifikasi_fisik = 'pending') THEN 1 ELSE 0 END) as fisik_pending
+                FROM participants p
+                LEFT JOIN document_verifications dv ON p.id = dv.participant_id
+                WHERE $whereClause";
 
             $global = $db->query($sqlGlobal)->fetchAll(\PDO::FETCH_ASSOC)[0] ?? [
                 'total' => 0,
@@ -79,22 +93,27 @@ class AdminController
                 'pending' => 0,
                 'gagal' => 0,
                 'paid' => 0,
-                'unpaid' => 0
+                'unpaid' => 0,
+                'fisik_lengkap' => 0,
+                'fisik_tidak_lengkap' => 0,
+                'fisik_pending' => 0
             ];
             $stats = $global;
 
             // Prodi Stats Aggregation
             $sqlProdi = "SELECT 
-                nama_prodi,
-                COUNT(*) as total,
-                SUM(CASE WHEN status_berkas = 'lulus' THEN 1 ELSE 0 END) as lulus,
-                SUM(CASE WHEN status_berkas = 'pending' THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN status_berkas = 'gagal' THEN 1 ELSE 0 END) as gagal,
-                SUM(CASE WHEN status_pembayaran = 1 THEN 1 ELSE 0 END) as paid,
-                SUM(CASE WHEN status_pembayaran = 0 AND status_berkas = 'lulus' THEN 1 ELSE 0 END) as unpaid
-                FROM participants 
+                p.nama_prodi,
+                COUNT(p.id) as total,
+                SUM(CASE WHEN p.status_berkas = 'lulus' THEN 1 ELSE 0 END) as lulus,
+                SUM(CASE WHEN p.status_berkas = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN p.status_berkas = 'gagal' THEN 1 ELSE 0 END) as gagal,
+                SUM(CASE WHEN p.status_pembayaran = 1 THEN 1 ELSE 0 END) as paid,
+                SUM(CASE WHEN p.status_pembayaran = 0 AND p.status_berkas = 'lulus' THEN 1 ELSE 0 END) as unpaid,
+                SUM(CASE WHEN dv.status_verifikasi_fisik = 'lengkap' THEN 1 ELSE 0 END) as fisik_lengkap
+                FROM participants p
+                LEFT JOIN document_verifications dv ON p.id = dv.participant_id
                 WHERE $whereClause
-                GROUP BY nama_prodi
+                GROUP BY p.nama_prodi
                 ORDER BY total DESC";
 
             $prodiStats = $db->query($sqlProdi)->fetchAll(\PDO::FETCH_ASSOC);
@@ -111,20 +130,25 @@ class AdminController
             });
 
             // Recent Participants (last 5)
-            $recentParticipants = $db->query("SELECT id, nama_lengkap, nama_prodi, status_berkas, created_at 
-                FROM participants WHERE $whereClause 
-                ORDER BY created_at DESC LIMIT 5")->fetchAll(\PDO::FETCH_ASSOC);
+            $recentParticipants = $db->query("SELECT p.id, p.nama_lengkap, p.nama_prodi, p.status_berkas, dv.status_verifikasi_fisik as dv_status_fisik, p.created_at 
+                FROM participants p
+                LEFT JOIN document_verifications dv ON p.id = dv.participant_id
+                WHERE $whereClause 
+                ORDER BY p.created_at DESC LIMIT 5")->fetchAll(\PDO::FETCH_ASSOC);
 
             // Scheduled participants count
-            $scheduledCount = $db->query("SELECT COUNT(*) as count FROM participants 
-                WHERE $whereClause AND ruang_ujian IS NOT NULL")->fetchAll(\PDO::FETCH_ASSOC)[0]['count'] ?? 0;
+            $scheduledCount = $db->query("SELECT COUNT(*) as count FROM participants p
+                WHERE $whereClause AND p.ruang_ujian IS NOT NULL")->fetchAll(\PDO::FETCH_ASSOC)[0]['count'] ?? 0;
 
             // Verified documents count (for UPKH)
             $verifiedCount = 0;
             if (RoleHelper::canValidatePhysical()) {
                 try {
-                    $verifiedRes = $db->query("SELECT COUNT(*) as count FROM document_verifications 
-                        WHERE can_download_card = 1")->fetchAll(\PDO::FETCH_ASSOC);
+                    $verifiedRes = $db->query("SELECT COUNT(dv.id) as count 
+                        FROM document_verifications dv
+                        JOIN participants p ON dv.participant_id = p.id
+                        WHERE $whereClause 
+                        AND (dv.status_verifikasi_fisik = 'lengkap' OR dv.bypass_verification = 1)")->fetchAll(\PDO::FETCH_ASSOC);
                     $verifiedCount = $verifiedRes[0]['count'] ?? 0;
                 } catch (\Exception $e) {
                     // Table or column doesn't exist - ignore

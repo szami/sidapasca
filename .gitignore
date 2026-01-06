@@ -21,23 +21,32 @@ composer.phar
 # ------------------------------------------------
 # Abaikan database SQLite agar tidak menimpa data server saat pull/push
 /storage/*.sqlite
+/storage/*.sqlite-journal
 /storage/*.db
+database.sqlite
 
-# Abaikan dokumen sensitif pelamar (KTP, Ijazah, dll)
-/storage/documents/*
+# Abaikan folder semester dinamis (e.g. storage/20241-0, storage/20252-0)
+/storage/20*/
+
+# Abaikan dokumen sensitif pelamar (KTP, Ijazah, dll) secara rekursif
+/storage/documents/**/*
 !/storage/documents/.gitkeep
 
-# Abaikan foto profil pelamar
-/storage/photos/*
+# Abaikan foto profil pelamar secara rekursif
+/storage/photos/**/*
 !/storage/photos/.gitkeep
 
 # Abaikan aset yang di-upload user (Logo/Favicon custom)
-/storage/assets/*
+/storage/assets/**/*
 !/storage/assets/.gitkeep
 
 # Abaikan cache atau log error jika ada
-/storage/logs/*
-/storage/cache/*
+/storage/logs/**/*
+!/storage/logs/.gitkeep
+/storage/cache/**/*
+!/storage/cache/.gitkeep
+/storage/temp/**/*
+!/storage/temp/.gitkeep
 
 # ------------------------------------------------
 # 4. SISTEM OPERASI & EDITOR

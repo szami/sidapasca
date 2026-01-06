@@ -212,4 +212,66 @@ class SettingsController
             exit;
         }
     }
+
+    public function saveSessionCookie()
+    {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
+            response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            return;
+        }
+
+        $cookie = Request::get('session_cookie') ?? '';
+
+        if (empty($cookie)) {
+            response()->json(['success' => false, 'message' => 'Session cookie tidak boleh kosong'], 400);
+            return;
+        }
+
+        // Auto-detect and convert JSON format to Header String
+        $cookie = trim($cookie);
+
+        // Check if it's JSON format (starts with [ or {)
+        if (substr($cookie, 0, 1) === '[' || substr($cookie, 0, 1) === '{') {
+            try {
+                $cookieArray = json_decode($cookie, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    response()->json(['success' => false, 'message' => 'Format JSON tidak valid'], 400);
+                    return;
+                }
+
+                // Convert JSON array to Header String format
+                $headerParts = [];
+                // Handle array of objects (EditThisCookie export) or single object
+                $items = (substr($cookie, 0, 1) === '[') ? $cookieArray : [$cookieArray];
+
+                // Recursively search for cookies if wrapped or just iterate
+                foreach ($items as $cookieObj) {
+                    if (is_array($cookieObj) && isset($cookieObj['name']) && isset($cookieObj['value'])) {
+                        $headerParts[] = $cookieObj['name'] . '=' . $cookieObj['value'];
+                    }
+                }
+
+                $cookie = implode('; ', $headerParts);
+
+            } catch (\Exception $e) {
+                response()->json(['success' => false, 'message' => 'Gagal convert JSON: ' . $e->getMessage()], 400);
+                return;
+            }
+        }
+
+        // Validate that we have at least one cookie
+        if (empty($cookie) || strpos($cookie, '=') === false) {
+            response()->json(['success' => false, 'message' => 'Format cookie tidak valid. Pastikan ada minimal satu cookie dengan format name=value'], 400);
+            return;
+        }
+
+        Setting::set('admisipasca_session_cookie', $cookie);
+
+        response()->json([
+            'success' => true,
+            'message' => 'Session cookie berhasil disimpan',
+            'format_detected' => (substr(trim(Request::get('session_cookie')), 0, 1) === '[' || substr(trim(Request::get('session_cookie')), 0, 1) === '{') ? 'JSON (auto-converted)' : 'Header String'
+        ]);
+    }
 }

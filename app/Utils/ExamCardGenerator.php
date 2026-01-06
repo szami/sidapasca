@@ -150,7 +150,27 @@ class ExamCardGenerator
             <tr>
                 <td width="180px" align="center" style="vertical-align: top;">
                     <div style="width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center;">
-                        <span style="line-height: 4cm; text-align: center;">FOTO 3x4</span>
+                        <?php 
+                        $photoUrl = "";
+                        if (!empty($p["photo_filename"])) {
+                             $base = dirname(__DIR__, 2) . "/storage";
+                             // Try new
+                             $path = $base . "/" . $p["photo_filename"];
+                             if (!file_exists($path)) $path = $base . "/photos/" . $p["photo_filename"];
+                             
+                             if (file_exists($path)) {
+                                 $imgData = base64_encode(file_get_contents($path));
+                                 $ext = pathinfo($path, PATHINFO_EXTENSION);
+                                 $mime = ($ext === "png") ? "image/png" : "image/jpeg";
+                                 $photoUrl = "data:$mime;base64,$imgData";
+                             }
+                        }
+                        ?>
+                        <?php if($photoUrl): ?>
+                            <img src="<?php echo $photoUrl; ?>" style="width: 3cm; height: 4cm; object-fit: cover;">
+                        <?php else: ?>
+                            <span style="line-height: 4cm; text-align: center;">FOTO 3x4</span>
+                        <?php endif; ?>
                     </div>
                 </td>
                 <td style="vertical-align: top;">
@@ -258,8 +278,14 @@ class ExamCardGenerator
         // Prepare photo HTML
         $photoHtml = '<div style="width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center;"><span style="line-height: 4cm;">FOTO</span></div>';
         if (!empty($p['photo_filename'])) {
-            // Fix path: __DIR__ is app/Utils. Level 2 up is project root.
-            $photoPath = dirname(__DIR__, 2) . '/storage/photos/' . $p['photo_filename'];
+            $baseStorage = dirname(__DIR__, 2) . '/storage';
+
+            // Smart Path Resolution
+            $photoPath = $baseStorage . '/' . $p['photo_filename']; // Try new structure
+            if (!file_exists($photoPath)) {
+                $photoPath = $baseStorage . '/photos/' . $p['photo_filename']; // Try legacy
+            }
+
             if (file_exists($photoPath)) {
                 $imageData = base64_encode(file_get_contents($photoPath));
                 $ext = pathinfo($p['photo_filename'], PATHINFO_EXTENSION);

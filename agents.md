@@ -28,7 +28,7 @@ Anda **HARUS** mematuhi stack teknologi dan aturan bisnis di bawah ini secara ke
 | **Host Development** | http://pmb-pps-ulm.test |
 | **Timezone** | Asia/Makassar (WITA / UTC+8) |
 | **Status** | Production Ready |
-| **Last Updated** | 2026-01-06 14:00 WITA |
+| **Last Updated** | 2026-01-07 03:50 WITA |
 
 ### Tujuan Sistem
 Menyediakan:
@@ -782,7 +782,9 @@ chmod 666 storage/database.sqlite
 
 ### Version History
 - **v1.0** (2026-01-02) - Initial production release
-- **agents.md Updated** (2026-01-03) - Comprehensive documentation
+- **v1.1** (2026-01-05) - RBAC Implementation
+- **v1.2** (2026-01-06) - Assessment & Graduation System
+- **v1.3** (2026-01-07) - Email enhancements, Dashboard redesign, and unified A4 layouts
 
 ### Contact
 Untuk pertanyaan atau issue, hubungi:

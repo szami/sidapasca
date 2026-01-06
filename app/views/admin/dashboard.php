@@ -198,6 +198,13 @@ $roleDescriptions = [
     'admin_prodi' => 'Monitoring data program studi Anda'
 ];
 $roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
+
+// Layout Configuration
+$isProdi = $isAdminProdi;
+$colLeft = $isProdi ? 'col-12' : 'col-lg-8';
+$colRight = $isProdi ? 'col-12' : 'col-lg-4';
+$recentClass = $isProdi ? 'col-lg-8' : 'col-12';
+$infoClass = $isProdi ? 'col-lg-4' : 'col-12';
 ?>
 
 <section class="content px-3 py-4">
@@ -234,8 +241,9 @@ $roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
                         </div>
                         <div class="col-6">
                             <div class="stat-mini text-center">
-                                <div class="h3 mb-1 font-weight-bold"><?= number_format($stats['lulus'] ?? 0) ?></div>
-                                <div class="small text-white-50">Lulus Berkas</div>
+                                <div class="h3 mb-1 font-weight-bold"><?= number_format($stats['fisik_lengkap'] ?? 0) ?>
+                                </div>
+                                <div class="small text-white-50">Berkas Lengkap</div>
                             </div>
                         </div>
                     </div>
@@ -306,10 +314,13 @@ $roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="d-flex flex-column position-relative">
-                        <span class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; font-weight: 600;">Lulus
-                            Berkas</span>
-                        <h2 class="mb-0 font-weight-bold text-success"><?= number_format($stats['lulus'] ?? 0) ?></h2>
-                        <small class="text-secondary mt-2">Siap Ujian</small>
+                        <span class="text-muted text-uppercase mb-1"
+                            style="font-size: 0.75rem; font-weight: 600;">Berkas
+                            Lengkap</span>
+                        <h2 class="mb-0 font-weight-bold text-success">
+                            <?= number_format($stats['fisik_lengkap'] ?? 0) ?>
+                        </h2>
+                        <small class="text-secondary mt-2">Dukumen Fisik Lengkap</small>
                     </div>
                 </div>
             </div>
@@ -352,93 +363,120 @@ $roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
 
         <div class="row">
             <!-- Left Column - Charts/Table -->
-            <div class="col-lg-8">
-                <?php if ($role !== 'tu' && $role !== 'upkh'): ?>
+            <div class="<?= $colLeft ?>">
+                <?php if ($role !== 'tu' && $role !== 'upkh'):
+                    $showS2 = true;
+                    $showS3 = true;
+                    if ($isAdminProdi) {
+                        // 1. Data Presence Check
+                        $hasS2 = !empty($s2Stats);
+                        $hasS3 = !empty($s3Stats);
+
+                        // If we have S3 data but NO S2 data, hide S2 (Assume S3 Admin)
+                        if ($hasS3 && !$hasS2)
+                            $showS2 = false;
+                        // If we have S2 data but NO S3 data, hide S3 (Assume S2 Admin)
+                        if ($hasS2 && !$hasS3)
+                            $showS3 = false;
+
+                        // 2. Explcit Username Check (Overrides/Reinforces)
+                        if (!empty($username)) {
+                            if (preg_match('/s3|doktor/i', $username))
+                                $showS2 = false;
+                            if (preg_match('/s2|magister/i', $username))
+                                $showS3 = false;
+                        }
+                    }
+                    ?>
                     <!-- S2 Magister Section -->
-                    <div class="card card-premium mb-4">
-                        <div class="card-header d-flex align-items-center text-white"
-                            style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border-radius: 1rem 1rem 0 0;">
-                            <h5 class="mb-0 font-weight-bold">
-                                <i class="fas fa-graduation-cap mr-2"></i> Program Magister (S2)
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="border-0 pl-4">Program Studi</th>
-                                            <th class="border-0 text-center">Total</th>
-                                            <th class="border-0 text-center">Lulus</th>
-                                            <th class="border-0 text-center">Bayar</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (empty($s2Stats)): ?>
+                    <?php if ($showS2): ?>
+                        <div class="card card-premium mb-4">
+                            <div class="card-header d-flex align-items-center text-white"
+                                style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border-radius: 1rem 1rem 0 0;">
+                                <h5 class="mb-0 font-weight-bold">
+                                    <i class="fas fa-graduation-cap mr-2"></i> Program Magister (S2)
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="bg-light">
                                             <tr>
-                                                <td colspan="4" class="text-center py-4 text-muted">Belum ada data S2</td>
+                                                <th class="border-0 pl-4">Program Studi</th>
+                                                <th class="border-0 text-center">Total</th>
+                                                <th class="border-0 text-center">Lulus</th>
+                                                <th class="border-0 text-center">Bayar</th>
                                             </tr>
-                                        <?php else: ?>
-                                            <?php foreach (array_slice($s2Stats, 0, 5) as $stat): ?>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (empty($s2Stats)): ?>
                                                 <tr>
-                                                    <td class="pl-4 font-weight-medium"><?= $stat['nama_prodi'] ?? '-' ?></td>
-                                                    <td class="text-center"><span
-                                                            class="badge badge-light"><?= $stat['total'] ?? 0 ?></span></td>
-                                                    <td class="text-center"><span
-                                                            class="badge badge-success"><?= $stat['lulus'] ?? 0 ?></span></td>
-                                                    <td class="text-center"><span
-                                                            class="badge badge-info"><?= $stat['paid'] ?? 0 ?></span></td>
+                                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada data S2</td>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
+                                            <?php else: ?>
+                                                <?php foreach (array_slice($s2Stats, 0, 5) as $stat): ?>
+                                                    <tr>
+                                                        <td class="pl-4 font-weight-medium"><?= $stat['nama_prodi'] ?? '-' ?></td>
+                                                        <td class="text-center"><span
+                                                                class="badge badge-light"><?= $stat['total'] ?? 0 ?></span></td>
+                                                        <td class="text-center"><span
+                                                                class="badge badge-success"><?= $stat['lulus'] ?? 0 ?></span></td>
+                                                        <td class="text-center"><span
+                                                                class="badge badge-info"><?= $stat['paid'] ?? 0 ?></span></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
 
                     <!-- S3 Doktor Section -->
-                    <div class="card card-premium">
-                        <div class="card-header d-flex align-items-center text-white"
-                            style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); border-radius: 1rem 1rem 0 0;">
-                            <h5 class="mb-0 font-weight-bold">
-                                <i class="fas fa-user-graduate mr-2"></i> Program Doktor (S3)
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="border-0 pl-4">Program Studi</th>
-                                            <th class="border-0 text-center">Total</th>
-                                            <th class="border-0 text-center">Lulus</th>
-                                            <th class="border-0 text-center">Bayar</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (empty($s3Stats)): ?>
+                    <?php if ($showS3): ?>
+                        <div class="card card-premium">
+                            <div class="card-header d-flex align-items-center text-white"
+                                style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); border-radius: 1rem 1rem 0 0;">
+                                <h5 class="mb-0 font-weight-bold">
+                                    <i class="fas fa-user-graduate mr-2"></i> Program Doktor (S3)
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="bg-light">
                                             <tr>
-                                                <td colspan="4" class="text-center py-4 text-muted">Belum ada data S3</td>
+                                                <th class="border-0 pl-4">Program Studi</th>
+                                                <th class="border-0 text-center">Total</th>
+                                                <th class="border-0 text-center">Lulus</th>
+                                                <th class="border-0 text-center">Bayar</th>
                                             </tr>
-                                        <?php else: ?>
-                                            <?php foreach (array_slice($s3Stats, 0, 5) as $stat): ?>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (empty($s3Stats)): ?>
                                                 <tr>
-                                                    <td class="pl-4 font-weight-medium"><?= $stat['nama_prodi'] ?? '-' ?></td>
-                                                    <td class="text-center"><span
-                                                            class="badge badge-light"><?= $stat['total'] ?? 0 ?></span></td>
-                                                    <td class="text-center"><span
-                                                            class="badge badge-success"><?= $stat['lulus'] ?? 0 ?></span></td>
-                                                    <td class="text-center"><span
-                                                            class="badge badge-info"><?= $stat['paid'] ?? 0 ?></span></td>
+                                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada data S3</td>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
+                                            <?php else: ?>
+                                                <?php foreach (array_slice($s3Stats, 0, 5) as $stat): ?>
+                                                    <tr>
+                                                        <td class="pl-4 font-weight-medium"><?= $stat['nama_prodi'] ?? '-' ?></td>
+                                                        <td class="text-center"><span
+                                                                class="badge badge-light"><?= $stat['total'] ?? 0 ?></span></td>
+                                                        <td class="text-center"><span
+                                                                class="badge badge-success"><?= $stat['lulus'] ?? 0 ?></span></td>
+                                                        <td class="text-center"><span
+                                                                class="badge badge-info"><?= $stat['paid'] ?? 0 ?></span></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if ($role === 'tu' && !empty($todaySchedule)): ?>
@@ -496,7 +534,8 @@ $roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
                                 </div>
                                 <div class="col-6 text-center">
                                     <div class="h1 font-weight-bold text-warning">
-                                        <?= number_format(($stats['lulus'] ?? 0) - ($verifiedCount ?? 0)) ?></div>
+                                        <?= number_format(($stats['lulus'] ?? 0) - ($verifiedCount ?? 0)) ?>
+                                    </div>
                                     <p class="text-muted mb-0">Belum Verifikasi</p>
                                 </div>
                             </div>
@@ -514,62 +553,77 @@ $roleDesc = $roleDescriptions[$role ?? 'admin'] ?? '';
             </div>
 
             <!-- Right Column - Recent & Info -->
-            <div class="col-lg-4">
-                <!-- Recent Participants -->
-                <?php if (!empty($recentParticipants)): ?>
-                    <div class="card card-premium">
-                        <div class="card-header bg-white border-0">
-                            <h5 class="mb-0 font-weight-bold text-gray-800">
-                                <i class="fas fa-clock text-primary mr-2"></i> Pendaftar Terbaru
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <?php foreach ($recentParticipants as $p): ?>
-                                <div class="recent-item px-4 py-3 border-bottom">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <div class="font-weight-semibold text-dark"><?= $p['nama_lengkap'] ?? '-' ?></div>
-                                            <div class="small text-muted"><?= $p['nama_prodi'] ?? '-' ?></div>
-                                        </div>
-                                        <span
-                                            class="badge badge-<?= ($p['status_berkas'] === 'lulus') ? 'success' : (($p['status_berkas'] === 'gagal') ? 'danger' : 'warning') ?>">
-                                            <?= ucfirst($p['status_berkas'] ?? 'pending') ?>
-                                        </span>
-                                    </div>
+            <div class="<?= $colRight ?>">
+                <div class="row">
+                    <!-- Recent Participants -->
+                    <?php if (!empty($recentParticipants)): ?>
+                        <div class="<?= $recentClass ?> mb-4">
+                            <div class="card card-premium">
+                                <div class="card-header bg-white border-0">
+                                    <h5 class="mb-0 font-weight-bold text-gray-800">
+                                        <i class="fas fa-clock text-primary mr-2"></i> Pendaftar Terbaru
+                                    </h5>
                                 </div>
-                            <?php endforeach; ?>
+                                <div class="card-body p-0">
+                                    <?php foreach ($recentParticipants as $p): ?>
+                                        <div class="recent-item px-4 py-3 border-bottom">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="font-weight-semibold text-dark"><?= $p['nama_lengkap'] ?? '-' ?>
+                                                    </div>
+                                                    <div class="small text-muted"><?= $p['nama_prodi'] ?? '-' ?></div>
+                                                </div>
+                                                <span
+                                                    class="badge badge-<?= ($p['dv_status_fisik'] === 'lengkap') ? 'success' : (($p['dv_status_fisik'] === 'tidak_lengkap') ? 'danger' : 'warning') ?>">
+                                                    <?php
+                                                    $statusFisik = $p['dv_status_fisik'] ?? '';
+                                                    if ($statusFisik === 'lengkap')
+                                                        echo 'Lengkap';
+                                                    elseif ($statusFisik === 'tidak_lengkap')
+                                                        echo 'Tdk Lengkap';
+                                                    else
+                                                        echo 'Blm Dicek';
+                                                    ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div class="card-footer bg-white border-0 text-center">
+                                    <a href="/admin/participants" class="text-primary font-weight-semibold">
+                                        Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-footer bg-white border-0 text-center">
-                            <a href="/admin/participants" class="text-primary font-weight-semibold">
-                                Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
 
-                <!-- System Info -->
-                <div class="card card-premium mt-4">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0 font-weight-bold text-gray-800">
-                            <i class="fas fa-info-circle text-info mr-2"></i> Informasi Sistem
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">Semester Aktif</span>
-                            <span class="font-weight-semibold"><?= $semesterName ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">Role Anda</span>
-                            <span class="font-weight-semibold"><?= $roleDisplayName ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">Username</span>
-                            <span class="font-weight-semibold"><?= $username ?? '-' ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between py-2">
-                            <span class="text-muted">Versi</span>
-                            <span class="font-weight-semibold">v1.1.0</span>
+                    <!-- System Info -->
+                    <div class="<?= $infoClass ?>">
+                        <div class="card card-premium">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0 font-weight-bold text-gray-800">
+                                    <i class="fas fa-info-circle text-info mr-2"></i> Informasi Sistem
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span class="text-muted">Semester Aktif</span>
+                                    <span class="font-weight-semibold"><?= $semesterName ?></span>
+                                </div>
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span class="text-muted">Role Anda</span>
+                                    <span class="font-weight-semibold"><?= $roleDisplayName ?></span>
+                                </div>
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span class="text-muted">Username</span>
+                                    <span class="font-weight-semibold"><?= $username ?? '-' ?></span>
+                                </div>
+                                <div class="d-flex justify-content-between py-2">
+                                    <span class="text-muted">Versi</span>
+                                    <span class="font-weight-semibold">v1.1.0</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

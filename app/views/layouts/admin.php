@@ -135,6 +135,7 @@
                         $canManageMasterData = \App\Utils\RoleHelper::canManageMasterData();
                         $canDownloadDocuments = \App\Utils\RoleHelper::canDownloadDocuments();
                         $canViewReports = \App\Utils\RoleHelper::canViewReports();
+                        $canManageAssessmentBidang = \App\Utils\RoleHelper::canManageAssessmentBidang();
                         $isSuperadmin = \App\Utils\RoleHelper::isSuperadmin();
                         $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
                         $isUPKH = \App\Utils\RoleHelper::isUPKH();
@@ -151,7 +152,6 @@
 
                         <!-- ADMISI & PESERTA -->
                         <li class="nav-header">ADMISI & PESERTA</li>
-
                         <?php if (!$isTU): ?>
                             <li class="nav-item">
                                 <a href="/admin/participants?filter=pending" class="nav-link">
@@ -162,13 +162,13 @@
                             <li class="nav-item">
                                 <a href="/admin/participants?filter=lulus" class="nav-link">
                                     <i class="nav-icon fas fa-user-check"></i>
-                                    <p>Lulus Berkas</p>
+                                    <p>Verifikasi Online</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="/admin/participants?filter=gagal" class="nav-link">
                                     <i class="nav-icon fas fa-user-times"></i>
-                                    <p>Gagal Berkas</p>
+                                    <p>Berkas Tidak Valid</p>
                                 </a>
                             </li>
                         <?php endif; ?>
@@ -243,16 +243,19 @@
                         <?php endif; ?>
 
                         <!-- ASSESSMENT & KELULUSAN -->
-                        <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin() || $isAdminProdi): ?>
+                        <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin() || $canManageAssessmentBidang): ?>
                             <li class="nav-header">PENILAIAN & KELULUSAN</li>
 
-                            <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin()): ?>
+                            <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin() || $canManageAssessmentBidang): ?>
                                 <li class="nav-item">
                                     <a href="/admin/assessment/components" class="nav-link">
                                         <i class="nav-icon fas fa-list-ul"></i>
                                         <p>Komponen Nilai</p>
                                     </a>
                                 </li>
+                            <?php endif; ?>
+
+                            <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin()): ?>
                                 <li class="nav-item">
                                     <a href="/admin/assessment/scores" class="nav-link">
                                         <i class="nav-icon fas fa-pen-fancy"></i>
@@ -267,7 +270,7 @@
                                 </li>
                             <?php endif; ?>
 
-                            <?php if ($isAdminProdi): ?>
+                            <?php if ($canManageAssessmentBidang): ?>
                                 <li class="nav-item">
                                     <a href="/admin/assessment/bidang" class="nav-link">
                                         <i class="nav-icon fas fa-pen-nib"></i>
@@ -313,18 +316,7 @@
                                         <p>Import Data</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="/admin/document-import" class="nav-link">
-                                        <i class="nav-icon fas fa-images"></i>
-                                        <p>Import Berkas System</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/admin/zip-import" class="nav-link">
-                                        <i class="nav-icon fas fa-file-archive"></i>
-                                        <p>Import ZIP Peserta</p>
-                                    </a>
-                                </li>
+
                                 <li class="nav-item">
                                     <a href="/admin/document-helper" class="nav-link">
                                         <i class="nav-icon fas fa-folder-open"></i>
@@ -346,6 +338,14 @@
                                         <p>Reminder Email</p>
                                     </a>
                                 </li>
+                                <?php if ($isSuperadmin): ?>
+                                    <li class="nav-item">
+                                        <a href="/admin/email/config" class="nav-link">
+                                            <i class="nav-icon fas fa-cogs"></i>
+                                            <p>Konfigurasi Email</p>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
                             <?php endif; ?>
 
                             <?php if ($canManageSettings): ?>

@@ -1,4 +1,26 @@
-<?php ob_start(); ?>
+<?php ob_start();
+// Path Resolution Helper
+$resolvePath = function ($filename, $type) {
+    if (empty($filename))
+        return '';
+    // Check if new structure (already contains path)
+    if (strpos($filename, 'photos/') !== false || strpos($filename, 'documents/') !== false) {
+        return '/storage/' . $filename;
+    }
+    // Legacy mapping
+    $legacyBase = '/storage';
+    if ($type === 'foto')
+        return "$legacyBase/photos/$filename";
+    return "$legacyBase/documents/$type/$filename";
+};
+
+$photoUrl = $resolvePath($p['photo_filename'], 'foto');
+$ktpUrl = $resolvePath($p['ktp_filename'], 'ktp');
+$ijazahUrl = $resolvePath($p['ijazah_filename'], 'ijazah');
+$transkripUrl = $resolvePath($p['transkrip_filename'], 'transkrip');
+$ijazahS2Url = $resolvePath($p['ijazah_s2_filename'], 'ijazah_s2');
+$transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
+?>
 <style>
     :root {
         --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
@@ -176,8 +198,7 @@
                                 <div class="mr-4 text-center">
                                     <div class="position-relative">
                                         <?php if (!empty($p['photo_filename'])): ?>
-                                            <img src="/storage/photos/<?php echo $p['photo_filename']; ?>" alt="Foto"
-                                                class="rounded shadow-sm border"
+                                            <img src="<?php echo $photoUrl; ?>" alt="Foto" class="rounded shadow-sm border"
                                                 style="width: 120px; height: 160px; object-fit: cover;">
                                         <?php else: ?>
                                             <div class="bg-light rounded border d-flex align-items-center justify-content-center"
@@ -186,10 +207,12 @@
                                             </div>
                                         <?php endif; ?>
                                         <div class="mt-2">
-                                            <button type="button" class="btn btn-xs btn-outline-primary"
-                                                onclick="document.querySelector('a[href=\'#tab-foto\']').click(); document.getElementById('docTabs').scrollIntoView();">
-                                                <i class="fas fa-edit"></i> Edit Foto
-                                            </button>
+                                            <div class="mt-2">
+                                                <!-- Client-side rotate for header thumbnail? Or Server side -->
+                                                <button type="button" class="btn btn-xs btn-outline-secondary"
+                                                    onclick="rotateDoc('foto')" title="Putar Permanen"><i
+                                                        class="fas fa-sync-alt"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -673,8 +696,8 @@
                             <div class="row">
                                 <div class="col-md-4 text-center">
                                     <?php if (!empty($p['photo_filename'])): ?>
-                                        <img src="/storage/photos/<?php echo $p['photo_filename']; ?>" alt="Foto"
-                                            class="img-thumbnail" style="max-width:100%;max-height:300px">
+                                        <img src="<?php echo $photoUrl; ?>" alt="Foto" class="img-thumbnail"
+                                            style="max-width:100%;max-height:300px">
                                         <div class="mt-2"><small class="text-success"><i class="fas fa-check-circle"></i>
                                                 Tersedia</small></div>
                                     <?php else: ?>
@@ -685,23 +708,12 @@
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-8">
-                                    <div class="alert alert-info mb-3"><strong><i class="fas fa-info-circle mr-1"></i>
-                                            Info:</strong> JPG/PNG, maks 2MB</div>
-                                    <input type="file" class="form-control-file mb-3" id="foto-input" accept="image/*">
-                                    <button type="button" class="btn btn-primary btn-sm"
-                                        onclick="uploadDoc(<?php echo $p['id']; ?>, 'foto')"><i
-                                            class="fas fa-upload mr-1"></i> Upload</button>
-                                    <?php if (!empty($p['photo_filename'])): ?>
-                                        <div class="btn-group ml-2" role="group">
-                                            <button type="button" class="btn btn-secondary btn-sm" title="Rotate View"
-                                                onclick="rotateView('foto')">
-                                                <i class="fas fa-sync-alt mr-1"></i> Rotate View
-                                            </button>
-                                        </div>
-                                        <button type="button" class="btn btn-danger btn-sm ml-2"
-                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'foto')"><i
-                                                class="fas fa-trash mr-1"></i> Hapus</button>
-                                    <?php endif; ?>
+                                    <div class="mb-3">
+                                        <button type="button" class="btn btn-outline-dark btn-sm"
+                                            onclick="rotateDoc('foto')">
+                                            <i class="fas fa-sync-alt mr-1"></i> Putar Foto (Permanen)
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -712,8 +724,8 @@
                                     class="<?php echo !empty($p['ktp_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                     <?php if (!empty($p['ktp_filename'])): ?>
                                         <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                            <img src="/storage/documents/ktp/<?php echo $p['ktp_filename']; ?>" alt="KTP"
-                                                class="img-thumbnail" style="max-width:100%;max-height:1000px">
+                                            <img src="<?php echo $ktpUrl; ?>" alt="KTP" class="img-thumbnail" id="img-ktp"
+                                                style="max-width:100%;max-height:1000px">
                                         </div>
                                         <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
                                                     class="fas fa-check-circle mr-1"></i>
@@ -731,29 +743,14 @@
                                             <h3 class="card-title text-sm font-weight-bold"><i
                                                     class="fas fa-cog mr-1"></i> Kelola KTP</h3>
                                         </div>
-                                        <div class="card-body p-3">
-                                            <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                <i class="fas fa-info-circle mr-1"></i> JPG/PNG, maks 5MB
-                                            </div>
-                                            <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                id="ktp-input" accept="image/*">
-
-                                            <div class="d-flex flex-column gap-2">
-                                                <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                    onclick="uploadDoc(<?php echo $p['id']; ?>, 'ktp')">
-                                                    <i class="fas fa-upload mr-1"></i> Ganti/Upload
-                                                </button>
-
-                                                <?php if (!empty($p['ktp_filename'])): ?>
-                                                    <button type="button" class="btn btn-info btn-sm btn-block mb-2"
-                                                        title="Rotate View" onclick="rotateView('ktp')">
-                                                        <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
-                                                    </button>
-                                                    <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                        onclick="deleteDoc(<?php echo $p['id']; ?>, 'ktp')">
-                                                        <i class="fas fa-trash mr-1"></i> Hapus File
-                                                    </button>
-                                                <?php endif; ?>
+                                        <div class="card-body p-3 text-center">
+                                            <p class="small text-muted mb-3">Tools</p>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block" onclick="rotateDoc('ktp')">
+                                                <i class="fas fa-sync-alt mr-1"></i> Putar
+                                            </button>
+                                            <div class="mt-2 btn-group w-100">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ktp', 0.2)"><i class="fas fa-search-plus"></i></button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ktp', -0.2)"><i class="fas fa-search-minus"></i></button>
                                             </div>
                                         </div>
                                     </div>
@@ -767,8 +764,8 @@
                                     class="<?php echo !empty($p['ijazah_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                     <?php if (!empty($p['ijazah_filename'])): ?>
                                         <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                            <img src="/storage/documents/ijazah/<?php echo $p['ijazah_filename']; ?>"
-                                                alt="Ijazah" class="img-thumbnail" style="max-width:100%;max-height:1000px">
+                                            <img src="<?php echo $ijazahUrl; ?>" alt="Ijazah" class="img-thumbnail" id="img-ijazah"
+                                                style="max-width:100%;max-height:1000px">
                                         </div>
                                         <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
                                                     class="fas fa-check-circle mr-1"></i>
@@ -786,29 +783,15 @@
                                             <h3 class="card-title text-sm font-weight-bold"><i
                                                     class="fas fa-cog mr-1"></i> Kelola Ijazah</h3>
                                         </div>
-                                        <div class="card-body p-3">
-                                            <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                <i class="fas fa-info-circle mr-1"></i> JPG/PNG, maks 5MB
-                                            </div>
-                                            <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                id="ijazah-input" accept="image/*">
-
-                                            <div class="d-flex flex-column gap-2">
-                                                <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                    onclick="uploadDoc(<?php echo $p['id']; ?>, 'ijazah')">
-                                                    <i class="fas fa-upload mr-1"></i> Ganti/Upload
-                                                </button>
-
-                                                <?php if (!empty($p['ijazah_filename'])): ?>
-                                                    <button type="button" class="btn btn-info btn-sm btn-block mb-2"
-                                                        title="Rotate View" onclick="rotateView('ijazah')">
-                                                        <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
-                                                    </button>
-                                                    <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                        onclick="deleteDoc(<?php echo $p['id']; ?>, 'ijazah')">
-                                                        <i class="fas fa-trash mr-1"></i> Hapus File
-                                                    </button>
-                                                <?php endif; ?>
+                                        <div class="card-body p-3 text-center">
+                                            <p class="small text-muted mb-3">Tools</p>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block"
+                                                onclick="rotateDoc('ijazah')">
+                                                <i class="fas fa-sync-alt mr-1"></i> Putar
+                                            </button>
+                                            <div class="mt-2 btn-group w-100">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ijazah', 0.2)"><i class="fas fa-search-plus"></i></button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="zoomDoc('ijazah', -0.2)"><i class="fas fa-search-minus"></i></button>
                                             </div>
                                         </div>
                                     </div>
@@ -823,15 +806,14 @@
                                     <?php if (!empty($p['transkrip_filename'])): ?>
                                         <div class="document-viewer-container border rounded bg-light p-2 mb-3"
                                             style="height: 800px;">
-                                            <iframe
-                                                src="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>"
-                                                width="100%" height="100%" style="border: none;"></iframe>
+                                            <iframe src="<?php echo $transkripUrl; ?>" width="100%" height="100%"
+                                                style="border: none;"></iframe>
                                         </div>
                                         <div class="mt-2 text-left ml-2">
                                             <small class="text-success font-weight-bold"><i
                                                     class="fas fa-check-circle mr-1"></i> Tersedia</small>
-                                            <a href="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>"
-                                                target="_blank" class="btn btn-xs btn-outline-primary ml-2">
+                                            <a href="<?php echo $transkripUrl; ?>" target="_blank"
+                                                class="btn btn-xs btn-outline-primary ml-2">
                                                 <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
                                             </a>
                                         </div>
@@ -848,26 +830,12 @@
                                             <h3 class="card-title text-sm font-weight-bold"><i
                                                     class="fas fa-cog mr-1"></i> Kelola Transkrip</h3>
                                         </div>
-                                        <div class="card-body p-3">
-                                            <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                <i class="fas fa-info-circle mr-1"></i> PDF, maks 10MB
-                                            </div>
-                                            <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                id="transkrip-input" accept="application/pdf">
-
-                                            <div class="d-flex flex-column gap-2">
-                                                <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                    onclick="uploadDoc(<?php echo $p['id']; ?>, 'transkrip')">
-                                                    <i class="fas fa-upload mr-1"></i> Ganti/Upload
-                                                </button>
-
-                                                <?php if (!empty($p['transkrip_filename'])): ?>
-                                                    <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                        onclick="deleteDoc(<?php echo $p['id']; ?>, 'transkrip')">
-                                                        <i class="fas fa-trash mr-1"></i> Hapus File
-                                                    </button>
-                                                <?php endif; ?>
-                                            </div>
+                                        <div class="card-body p-3 text-center">
+                                            <p class="small text-muted mb-3">Gunakan Document Helper untuk mengelola
+                                                file ini.</p>
+                                            <a href="/admin/document-helper" class="btn btn-primary btn-sm btn-block">
+                                                <i class="fas fa-external-link-alt mr-1"></i> Buka Helper
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -881,8 +849,7 @@
                                         class="<?php echo !empty($p['ijazah_s2_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                         <?php if (!empty($p['ijazah_s2_filename'])): ?>
                                             <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                                <img src="/storage/documents/ijazah_s2/<?php echo $p['ijazah_s2_filename']; ?>"
-                                                    alt="Ijazah S2" class="img-thumbnail"
+                                                <img src="<?php echo $ijazahS2Url; ?>" alt="Ijazah S2" class="img-thumbnail"
                                                     style="max-width:100%;max-height:1000px">
                                             </div>
                                             <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
@@ -901,30 +868,12 @@
                                                 <h3 class="card-title text-sm font-weight-bold"><i
                                                         class="fas fa-cog mr-1"></i> Kelola Ijazah S2</h3>
                                             </div>
-                                            <div class="card-body p-3">
-                                                <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                    <i class="fas fa-info-circle mr-1"></i> JPG/PNG, maks 5MB
-                                                </div>
-                                                <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                    id="ijazah-s2-input" accept="image/*">
-
-                                                <div class="d-flex flex-column gap-2">
-                                                    <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                        onclick="uploadDoc(<?php echo $p['id']; ?>, 'ijazah_s2')">
-                                                        <i class="fas fa-upload mr-1"></i> Ganti/Upload
-                                                    </button>
-
-                                                    <?php if (!empty($p['ijazah_s2_filename'])): ?>
-                                                        <button type="button" class="btn btn-info btn-sm btn-block mb-2"
-                                                            title="Rotate View" onclick="rotateView('ijazah_s2')">
-                                                            <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
-                                                        </button>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'ijazah_s2')">
-                                                            <i class="fas fa-trash mr-1"></i> Hapus File
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                            <div class="card-body p-3 text-center">
+                                                <p class="small text-muted mb-3">Gunakan Document Helper untuk mengelola
+                                                    file ini.</p>
+                                                <a href="/admin/document-helper" class="btn btn-primary btn-sm btn-block">
+                                                    <i class="fas fa-external-link-alt mr-1"></i> Buka Helper
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -939,15 +888,14 @@
                                         <?php if (!empty($p['transkrip_s2_filename'])): ?>
                                             <div class="document-viewer-container border rounded bg-light p-2 mb-3"
                                                 style="height: 800px;">
-                                                <iframe
-                                                    src="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
-                                                    width="100%" height="100%" style="border: none;"></iframe>
+                                                <iframe src="<?php echo $transkripS2Url; ?>" width="100%" height="100%"
+                                                    style="border: none;"></iframe>
                                             </div>
                                             <div class="mt-2 text-left ml-2">
                                                 <small class="text-success font-weight-bold"><i
                                                         class="fas fa-check-circle mr-1"></i> Tersedia</small>
-                                                <a href="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
-                                                    target="_blank" class="btn btn-xs btn-outline-primary ml-2">
+                                                <a href="<?php echo $transkripS2Url; ?>" target="_blank"
+                                                    class="btn btn-xs btn-outline-primary ml-2">
                                                     <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
                                                 </a>
                                             </div>
@@ -965,26 +913,12 @@
                                                 <h3 class="card-title text-sm font-weight-bold"><i
                                                         class="fas fa-cog mr-1"></i> Kelola Transkrip S2</h3>
                                             </div>
-                                            <div class="card-body p-3">
-                                                <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                    <i class="fas fa-info-circle mr-1"></i> PDF, maks 10MB
-                                                </div>
-                                                <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                    id="transkrip-s2-input" accept="application/pdf">
-
-                                                <div class="d-flex flex-column gap-2">
-                                                    <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                        onclick="uploadDoc(<?php echo $p['id']; ?>, 'transkrip_s2')">
-                                                        <i class="fas fa-upload mr-1"></i> Ganti/Upload
-                                                    </button>
-
-                                                    <?php if (!empty($p['transkrip_s2_filename'])): ?>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'transkrip_s2')">
-                                                            <i class="fas fa-trash mr-1"></i> Hapus File
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                            <div class="card-body p-3 text-center">
+                                                <p class="small text-muted mb-3">Gunakan Document Helper untuk mengelola
+                                                    file ini.</p>
+                                                <a href="/admin/document-helper" class="btn btn-primary btn-sm btn-block">
+                                                    <i class="fas fa-external-link-alt mr-1"></i> Buka Helper
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -995,12 +929,10 @@
                     <!-- Auto-download All -->
                     <hr class="my-4">
                     <div class="text-center">
-                        <button type="button" class="btn btn-success"
-                            onclick="autoDownloadAllDocs(<?php echo $p['id']; ?>)">
-                            <i class="fas fa-cloud-download-alt mr-2"></i> Download Semua Dokumen Otomatis
-                        </button>
-                        <p class="text-muted mt-2 mb-0"><small><i class="fas fa-magic mr-1"></i> Ambil 4 dokumen dari
-                                sistem utama</small></p>
+                        <div class="alert alert-light border">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Sinkronisasi Dokumen Server sekarang dipusatkan di halaman <strong>Document Helper</strong>.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1022,101 +954,8 @@
 
 
 <script>
-    // Generic document upload
-    function uploadDoc(participantId, type) {
-        const inputId = type + '-input';
-        const input = document.getElementById(inputId);
-        const file = input ? input.files[0] : null;
-
-        if (!file) {
-            alert('Pilih file terlebih dahulu');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        fetch(`/admin/participants/${participantId}/upload-doc/${type}`, {
-            method: 'POST',
-            body: formData
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(err => {
-                alert('Terjadi kesalahan: ' + err.message);
-            });
-    }
-    // Generic document delete
-    function deleteDoc(participantId, type) {
-        if (!confirm(`Yakin ingin menghapus ${type}?`)) return;
-
-        fetch(`/admin/participants/${participantId}/delete-doc/${type}`, {
-            method: 'DELETE'
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(err => {
-                alert('Terjadi kesalahan: ' + err.message);
-            });
-    }
-    // Auto-download all documents
-    function autoDownloadAllDocs(participantId) {
-        if (!confirm('Download semua dokumen dari sistem utama?')) return;
-
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Downloading...';
-
-        fetch(`/admin/participants/${participantId}/auto-download-docs`, {
-            method: 'POST'
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    let msg = data.message + '\n\nDetail:\n';
-                    msg += '- Foto: ' + (data.results.foto.success ? '✓' : '✗') + '\n';
-                    msg += '- KTP: ' + (data.results.ktp.success ? '✓' : '✗') + '\n';
-                    msg += '- Ijazah: ' + (data.results.ijazah.success ? '✓' : '✗') + '\n';
-                    msg += '- Transkrip: ' + (data.results.transkrip.success ? '✓' : '✗');
-
-                    if (data.debug_files && data.debug_files.length > 0) {
-                        msg += '\n\n[DEBUG] File dalam ZIP:\n' + data.debug_files.slice(0, 10).join('\n');
-                        if (data.debug_files.length > 10) msg += '\n...dan ' + (data.debug_files.length - 10) + ' lainnya';
-                    }
-
-                    alert(msg);
-                    location.reload();
-                } else {
-                    let errMsg = 'Error: ' + data.message;
-                    if (data.debug_files && data.debug_files.length > 0) {
-                        errMsg += '\n\n[DEBUG] File ditemukan dalam ZIP (namun tidak cocok regex):\n' + data.debug_files.slice(0, 10).join('\n');
-                    }
-                    alert(errMsg);
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
-            })
-            .catch (err => {
-        alert('Terjadi kesalahan: ' + err.message);
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    });
-    }
+    // JS Logic for View Rotation (Visual only, no persistence)
+    // removed CRUD functions uploadDoc, deleteDoc, autoDownloadAllDocs
 
     // State to track rotation for each type
     const rotationState = {
@@ -1150,6 +989,55 @@
     }
 </script>
 
+</script>
+
+<script>
+    function rotateDoc(type) {
+        if(!confirm('Putar gambar 90 derajat searah jarum jam? (Aksi ini permanen, halaman akan direload)')) return;
+        
+        // Disable button/Show spinner...
+        const btn = event.target.closest('button');
+        if(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        }
+
+        fetch(`/admin/participants/<?= $p['id'] ?>/rotate-doc/${type}`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.success) {
+                location.reload(); 
+            } else {
+                alert('Gagal memutar gambar: ' + (data.message || 'Unknown error'));
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Putar';
+                }
+            }
+        })
+        .catch(e => {
+            alert('Error: ' + e);
+            if(btn) btn.disabled = false;
+        });
+    }
+
+    // Simple Zoom Logic for Edit Page
+    let editScales = {};
+    function zoomDoc(type, delta) {
+        const img = document.getElementById('img-' + type);
+        if(!img) return;
+        
+        if(!editScales[type]) editScales[type] = 1;
+        editScales[type] += delta;
+        if(editScales[type] < 0.2) editScales[type] = 0.2;
+        
+        img.style.transform = `scale(${editScales[type]})`;
+        img.style.transition = 'transform 0.2s';
+        img.style.transformOrigin = 'top center'; // Better for long documents
+    }
+</script>
 <?php
 $content = ob_get_clean();
 include __DIR__ . '/../../layouts/admin.php';

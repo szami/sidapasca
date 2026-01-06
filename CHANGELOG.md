@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-01-07
+
+### 🎉 Added - Advanced Email & Dashboard Refinements
+- **Email System Enhancements**:
+  - Added `{no_billing}` placeholder support in email templates for easier payment instructions.
+  - Significantly improved Google Apps Script (GAS) Email Driver with input validation and plain-text fallback.
+  - Enhanced GAS robustness for high-volume delivery.
+  
+- **Participant Dashboard UI/UX**:
+  - Completely redesigned participant dashboard with a "premium" mobile-responsive aesthetic.
+  - Added profile photo display.
+  - Integrated detailed examination schedule (Day, Date, Session, Room, Building/Faculty).
+  - Reorganized layout: Participant biodata is now the primary focus, with downloads positioned contextually.
+  
+- **Admin & Tools**:
+  - Added "Edit Action" for transcript documents in the participant download section to allow manual fixes for failed imports.
+  - Unified PDF layouts for Exam Cards and Registration Forms for consistent A4 paper aesthetic.
+  - Updated `.gitignore` to support dynamic year/semester storage subdirectories (e.g., `storage/20252-0/`).
+
+### 🔧 Fixed
+- **Summernote HTML**: Fixed issue where Summernote would double-escape HTML tags, causing raw code to be displayed after saving.
+- **Path Consistency**: Standardized controller and view naming for better Linux/Hosting compatibility.
+
+### 🧹 Removed
+- **Unused Components**: Deleted `ZipImportController`, `DocumentImportController`, and associated views to reduce codebase bloat.
+- **Legacy Files**: Removed obsolete debug and temporary files.
+
+---
+
 ## [1.2.1] - 2026-01-06
 
 ### 🔧 Fixed
