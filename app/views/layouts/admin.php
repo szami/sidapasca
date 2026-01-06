@@ -316,7 +316,19 @@
                                 <li class="nav-item">
                                     <a href="/admin/document-import" class="nav-link">
                                         <i class="nav-icon fas fa-images"></i>
-                                        <p>Import Berkas</p>
+                                        <p>Import Berkas System</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/zip-import" class="nav-link">
+                                        <i class="nav-icon fas fa-file-archive"></i>
+                                        <p>Import ZIP Peserta</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/admin/document-helper" class="nav-link">
+                                        <i class="nav-icon fas fa-folder-open"></i>
+                                        <p>Document Helper</p>
                                     </a>
                                 </li>
                             <?php endif; ?>

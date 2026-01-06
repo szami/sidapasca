@@ -146,6 +146,10 @@ $app->post('/admin/verification/physical/{id}/reset', 'App\Controllers\DocumentV
 $app->get('/admin/verification/physical/import/template', 'App\Controllers\DocumentVerificationController@downloadTemplate');
 $app->post('/admin/verification/physical/import', 'App\Controllers\DocumentVerificationController@import');
 
+// --- ZIP Import Interactive (Per-Participant) ---
+$app->get('/admin/zip-import', 'App\Controllers\ZipImportController@index');
+$app->post('/admin/zip-import/process', 'App\Controllers\ZipImportController@process');
+
 // Email Reminder Routes
 $app->get('/api/email/reminders/history', 'App\Controllers\EmailReminderController@apiHistory');
 $app->get('/api/email/reminders/participants', 'App\Controllers\EmailReminderController@apiData');
@@ -215,6 +219,14 @@ $app->post('/admin/change-password', 'App\Controllers\UserController@changePassw
 $app->get('/admin/documents/download', 'App\Controllers\DocumentDownloadController@index');
 $app->post('/admin/documents/preview', 'App\Controllers\DocumentDownloadController@preview');
 $app->post('/admin/documents/generate-zip', 'App\Controllers\DocumentDownloadController@generateZip');
+
+// --- Document Helper (NEW 2026) ---
+$app->get('/admin/document-helper', 'App\Controllers\DocumentHelperController@index');
+$app->get('/api/document-helper/participants', 'App\Controllers\DocumentHelperController@apiData'); // NEW API Route
+$app->get('/api/document-helper/prodis', 'App\Controllers\DocumentHelperController@apiProdis'); // Dynamic Filter
+$app->post('/api/document-helper/sync/{id}', 'App\Controllers\DocumentHelperController@sync'); // Auto Sync
+$app->get('/admin/document-helper/get-docs/{id}', 'App\Controllers\DocumentHelperController@getDocs');
+$app->post('/admin/document-helper/import-zip/{id}', 'App\Controllers\DocumentHelperController@importZip');
 
 // --- Admin - Participants ---
 // Participant CRUD Routes
