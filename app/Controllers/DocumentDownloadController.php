@@ -11,8 +11,8 @@ class DocumentDownloadController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // Allow Admin Prodi now
@@ -143,8 +143,8 @@ class DocumentDownloadController
     public function generateZip()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // if (!\App\Utils\RoleHelper::canCRUD()) { ... }

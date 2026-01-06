@@ -12,8 +12,8 @@ class ExamCardController
     {
         // Auth Check
         if (!isset($_SESSION['user'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         $id = $_SESSION['user'];
@@ -25,8 +25,8 @@ class ExamCardController
         $participant = $db->query($query)->bind($id)->first();
 
         if (!$participant) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         // Validate Status (Only 'Lulus' and 'Paid')
@@ -119,16 +119,16 @@ class ExamCardController
     public function downloadFormulir()
     {
         if (!isset($_SESSION['user'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         $id = $_SESSION['user'];
         $participant = Participant::find($id);
 
         if (!$participant) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
 
@@ -145,8 +145,8 @@ class ExamCardController
     public function adminViewCard($id)
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         $db = \App\Utils\Database::connection();
@@ -181,8 +181,8 @@ class ExamCardController
     public function adminViewForm($id)
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         $participant = Participant::find($id);
@@ -200,8 +200,8 @@ class ExamCardController
     public function attendanceFilter()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         // Get active semester
@@ -252,8 +252,8 @@ class ExamCardController
     public function catScheduleFilter()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         // Get active semester
@@ -300,8 +300,8 @@ class ExamCardController
     public function catSchedulePrint()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         // Get active semester
@@ -321,8 +321,10 @@ class ExamCardController
         $db = \App\Utils\Database::connection();
 
         // Base query - MUST have schedule set (ruang_ujian, sesi_ujian, tanggal_ujian NOT NULL)
-        $query = "SELECT p.id, p.nomor_peserta, p.nama_lengkap, p.nama_prodi, p.ruang_ujian, p.sesi_ujian, p.tanggal_ujian, p.waktu_ujian
+        // Join with exam_rooms to get 'fakultas' as Building (Gedung)
+        $query = "SELECT p.id, p.nomor_peserta, p.nama_lengkap, p.nama_prodi, p.ruang_ujian, p.sesi_ujian, p.tanggal_ujian, p.waktu_ujian, r.fakultas as gedung
                   FROM participants p
+                  LEFT JOIN exam_rooms r ON p.ruang_ujian = r.nama_ruang
                   WHERE p.semester_id = '$semesterId'
                   AND p.status_berkas = 'lulus'
                   AND p.status_pembayaran = 1
@@ -345,6 +347,12 @@ class ExamCardController
         $query .= " ORDER BY p.ruang_ujian ASC, p.sesi_ujian ASC, p.nama_lengkap ASC";
 
         $participants = $db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Format dates for Indonesian display
+        foreach ($participants as &$p) {
+            $p['tanggal_formatted'] = $this->formatDateID($p['tanggal_ujian']);
+        }
+        unset($p); // Break reference
 
         // Check if empty
         if (empty($participants)) {
@@ -389,8 +397,8 @@ class ExamCardController
     public function attendancePrint()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/');
-            return;
+            header('Location: /');
+            exit;
         }
 
         // Get active semester

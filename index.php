@@ -74,6 +74,7 @@ $app->get('/admin/laporan', 'App\Controllers\ReportController@index');
 $app->post('/admin/laporan/cetak', 'App\Controllers\ReportController@print');
 
 // Semester Routes
+$app->get('/api/master/semesters', 'App\Controllers\SemesterController@apiData');
 $app->get('/admin/semesters', 'App\Controllers\SemesterController@index');
 $app->get('/admin/semesters/create', 'App\Controllers\SemesterController@create');
 $app->post('/admin/semesters/store', 'App\Controllers\SemesterController@store');
@@ -101,8 +102,10 @@ $app->get('/admin/master/sessions/edit/{id}', 'App\Controllers\ExamSessionContro
 $app->post('/admin/master/sessions/update/{id}', 'App\Controllers\ExamSessionController@update');
 $app->get('/admin/master/sessions/delete/{id}', 'App\Controllers\ExamSessionController@destroy');
 
-// Scheduler
-$app->get('/api/scheduler', 'App\Controllers\ExamSchedulerController@apiData');
+// Scheduler API
+$app->get('/admin/api/scheduler-data', 'App\Controllers\ExamSchedulerController@apiData');
+
+// Scheduler (View)
 $app->get('/admin/scheduler', 'App\Controllers\ExamSchedulerController@index');
 $app->get('/admin/scheduler/rooms', 'App\Controllers\ExamSchedulerController@roomView'); // NEW
 $app->post('/admin/scheduler/assign', 'App\Controllers\ExamSchedulerController@assign');
@@ -196,6 +199,7 @@ $app->get('/admin/graduation/quotas', 'App\Controllers\GraduationController@quot
 $app->post('/admin/graduation/quotas/save', 'App\Controllers\GraduationController@saveQuotas');
 
 // --- Admin - User Management (Superadmin only) ---
+$app->get('/api/master/users', 'App\Controllers\UserController@apiData');
 $app->get('/admin/users', 'App\Controllers\UserController@index');
 $app->get('/admin/users/create', 'App\Controllers\UserController@create');
 $app->post('/admin/users/store', 'App\Controllers\UserController@store');

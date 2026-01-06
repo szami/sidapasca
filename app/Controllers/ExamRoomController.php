@@ -11,8 +11,8 @@ class ExamRoomController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         $rooms = Database::connection()->select('exam_rooms')->orderBy('id', 'desc')->fetchAll();
@@ -77,8 +77,10 @@ class ExamRoomController
 
     public function create()
     {
-        if (!isset($_SESSION['admin']))
-            return;
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /admin/login');
+            exit;
+        }
         echo View::render('admin.master.rooms.create');
     }
 
@@ -95,7 +97,8 @@ class ExamRoomController
         ];
 
         Database::connection()->insert('exam_rooms')->params($insertData)->execute();
-        response()->redirect('/admin/master/rooms');
+        header('Location: /admin/master/rooms');
+        exit;
     }
 
     public function edit($id)
@@ -120,7 +123,8 @@ class ExamRoomController
         ];
 
         Database::connection()->update('exam_rooms')->params($updateData)->where('id', $id)->execute();
-        response()->redirect('/admin/master/rooms');
+        header('Location: /admin/master/rooms');
+        exit;
     }
 
     public function destroy($id)
@@ -129,6 +133,7 @@ class ExamRoomController
             return;
 
         Database::connection()->delete('exam_rooms')->where('id', $id)->execute();
-        response()->redirect('/admin/master/rooms');
+        header('Location: /admin/master/rooms');
+        exit;
     }
 }

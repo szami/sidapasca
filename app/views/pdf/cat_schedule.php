@@ -1,8 +1,11 @@
+<?php
+// This view is for printing only - no filter form, just the schedule table
+?>
 <!DOCTYPE html>
 <html>
 
 <head>
-    <title>JADWAL CAT ADMISI PASCASARJANA</title>
+    <title>JADWAL TES POTENSI AKADEMIK (CAT) PASCASARJANA</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
     <style>
         body {
@@ -10,42 +13,36 @@
             font-size: 12px;
             margin: 0;
             padding: 0;
-        }
-
-        table {
-            font-family: "Roboto", Arial, sans-serif;
-            font-size: 11px;
-        }
-
-        table.header {
-            font-size: 11px;
-            color: #333333;
-            border-collapse: collapse;
-        }
-
-        table.header td {
-            padding: 8px;
+            background: #eee;
         }
 
         page[size="A4"] {
             background: white;
             width: 21cm;
-            height: 29.7cm;
+            min-height: 29.7cm;
+            /* Changed from height to min-height */
             display: block;
             margin: 0 auto;
-            padding: 25px;
+            padding: 2cm;
             margin-bottom: 0.5cm;
-            border: 1px solid #dadada;
+            box-shadow: 0 0 0.5cm rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+            page-break-after: always;
+            /* Ensure next group starts on new page */
         }
 
         @media print {
+            body {
+                background: white;
+            }
 
-            body,
             page[size="A4"] {
                 margin: 0;
-                padding: 0;
-                border: none;
                 box-shadow: none;
+                width: 100%;
+                padding: 0;
+                page-break-before: always;
+                /* Force new page for each group */
             }
 
             .no-print {
@@ -53,157 +50,158 @@
             }
         }
 
-        body {
-            background: #eee;
-        }
-
         .no-print {
             text-align: center;
             padding: 20px;
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-print {
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: sans-serif;
-            text-decoration: none;
-        }
-
-        .btn-print:hover {
-            background: #0056b3;
-        }
-
-        table.schedule {
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
 
-        table.schedule th,
-        table.schedule td {
+        table.attendance th,
+        table.attendance td {
             border: 1px solid #333;
-            padding: 8px;
+            padding: 4px 8px;
             text-align: left;
         }
 
-        table.schedule th {
+        table.attendance th {
             background-color: #f0f0f0;
             font-weight: bold;
             text-align: center;
         }
 
-        table.schedule td.center {
+        .center {
             text-align: center;
+        }
+
+        /* Ensure headers don't split from content */
+        .group-header {
+            page-break-after: avoid;
         }
     </style>
 </head>
 
 <body>
     <div class="no-print">
-        <button class="btn-print" onclick="window.print()">Cetak / Simpan sebagai PDF</button>
+        <button class="btn-print" onclick="window.print()">
+            <i class="fa fa-print"></i> Cetak / Simpan sebagai PDF
+        </button>
+        <button class="btn-print btn-secondary" onclick="window.close()">
+            Tutup Tab
+        </button>
     </div>
-    <page size="A4">
-        <!-- Letterhead (Dynamic from Settings) -->
-        <?php if (!empty($letterhead)): ?>
-            <?php echo $letterhead; ?>
-        <?php else: ?>
-            <!-- Default Letterhead if not set -->
-            <table class="header" width="100%">
-                <tbody>
-                    <tr>
-                        <td width="120px" align="center">
-                            <img src="https://simari.ulm.ac.id/logo/ulm.png" alt="Logo ULM" width="100px">
-                        </td>
-                        <td align="center">
-                            <b style="font-size:18px;">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</b><br>
-                            <b style="font-size:20px;">UNIVERSITAS LAMBUNG MANGKURAT</b><br>
-                            <b style="font-size:24px;">ADMISI PASCASARJANA</b><br>
-                            <span style="font-size:11px;">Jl. Unlam No.12, Pangeran, Banjarmasin Utara, Kota Banjarmasin,
-                                Kalimantan Selatan 70123</span><br>
-                            <span style="font-size:11px;">Telp. (0511) 33066003, 3304177, 3306694, 3305195, Kotak Pos
-                                219</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        <?php endif; ?>
-        <hr style="border: 1px solid #000;">
 
-        <!-- Title -->
-        <table width="100%" style="font-weight:bold; margin-top: 20px;">
-            <tbody>
-                <tr>
-                    <td align="center" style="font-size:16px;">JADWAL CAT ADMISI PASCASARJANA</td>
-                </tr>
-                <tr>
-                    <td align="center" style="font-size:14px; font-weight:normal; padding-top: 10px;">
-                        Semester:
-                        <?php echo $semesterName ?? '-'; ?>
-                    </td>
-                </tr>
-                <?php if (($filterSesi ?? 'all') !== 'all' || ($filterRuang ?? 'all') !== 'all'): ?>
-                    <tr>
-                        <td align="center" style="font-size:12px; font-weight:normal; padding-top: 5px;">
-                            <?php if (($filterSesi ?? 'all') !== 'all'): ?>
-                                <strong>Sesi:</strong>
-                                <?php echo htmlspecialchars($filterSesi); ?>
-                            <?php endif; ?>
-                            <?php if (($filterSesi ?? 'all') !== 'all' && ($filterRuang ?? 'all') !== 'all'): ?>
-                                |
-                            <?php endif; ?>
-                            <?php if (($filterRuang ?? 'all') !== 'all'): ?>
-                                <strong>Ruang:</strong>
-                                <?php echo htmlspecialchars($filterRuang); ?>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
+    <?php
+    // Group participants by Room and Session
+    $groups = [];
+    foreach ($participants as $p) {
+        $key = $p['ruang_ujian'] . ' - ' . $p['sesi_ujian'];
+        if (!isset($groups[$key])) {
+            $groups[$key] = [
+                'ruang' => $p['ruang_ujian'],
+                'gedung' => $p['gedung'] ?? '-',
+                'sesi' => $p['sesi_ujian'],
+                'tanggal' => $p['tanggal_formatted'] ?? $p['tanggal_ujian'],
+                'waktu' => $p['waktu_ujian'],
+                'participants' => []
+            ];
+        }
+        $groups[$key]['participants'][] = $p;
+    }
+    // Sort logic handled in query, but grouping maintains order.
+    ?>
+
+    <?php foreach ($groups as $key => $group): ?>
+        <page size="A4">
+            <div class="group-header">
+                <!-- Letterhead (Dynamic from Settings) -->
+                <?php if (!empty($letterhead)): ?>
+                    <?php echo $letterhead; ?>
+                <?php else: ?>
+                    <!-- Default Letterhead if not set -->
+                    <table class="header">
+                        <tbody>
+                            <tr>
+                                <td width="100px" align="center">
+                                    <img src="https://simari.ulm.ac.id/logo/ulm.png" alt="Logo ULM" width="80px">
+                                </td>
+                                <td align="center">
+                                    <b style="font-size:16px;">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</b><br>
+                                    <b style="font-size:18px;">UNIVERSITAS LAMBUNG MANGKURAT</b><br>
+                                    <b style="font-size:22px;">ADMISI PASCASARJANA</b><br>
+                                    <span style="font-size:10px;">Jl. Unlam No.12, Pangeran, Banjarmasin Utara, Kota
+                                        Banjarmasin,
+                                        70123</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 <?php endif; ?>
-            </tbody>
-        </table>
+                <hr style="border: 1px solid #000; margin: 10px 0;">
 
-        <!-- Schedule Table -->
-        <table class="schedule">
-            <thead>
-                <tr>
-                    <th width="30px">NO.</th>
-                    <th width="100px">NOMOR PESERTA</th>
-                    <th>NAMA PESERTA</th>
-                    <th width="200px">PROGRAM STUDI</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($participants)): ?>
+                <!-- Title & Info -->
+                <div align="center" style="font-weight:bold; margin-bottom: 15px;">
+                    <div style="font-size:15px;">JADWAL TES POTENSI AKADEMIK (CAT)</div>
+                    <div style="font-size:15px;">PASCASARJANA</div>
+                </div>
+
+                <table style="margin-bottom: 12px; font-size: 11px;">
+                    <tr>
+                        <td width="80px">Semester</td>
+                        <td width="250px">: <strong><?php echo $semesterName ?? '-'; ?></strong></td>
+                        <td width="80px">Gedung</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['gedung']); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td>Tanggal</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['tanggal']); ?></strong></td>
+                        <td>Ruang</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['ruang']); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td>Waktu</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['waktu']); ?></strong></td>
+                        <td>Sesi</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['sesi']); ?></strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Schedule Table -->
+            <table class="attendance">
+                <thead>
+                    <tr>
+                        <th width="30px" class="center">NO.</th>
+                        <th width="100px" class="center">NOMOR PESERTA</th>
+                        <th>NAMA PESERTA</th>
+                        <th width="200px">PROGRAM STUDI</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <?php $no = 1;
-                    foreach ($participants as $participant): ?>
+                    foreach ($group['participants'] as $p): ?>
                         <tr>
-                            <td class="center">
-                                <?php echo $no++; ?>
-                            </td>
-                            <td class="center">
-                                <?php echo $participant['nomor_peserta']; ?>
-                            </td>
-                            <td>
-                                <?php echo strtoupper($participant['nama_lengkap']); ?>
-                            </td>
-                            <td>
-                                <?php echo strtoupper($participant['nama_prodi']); ?>
-                            </td>
+                            <td class="center" align="center"><?php echo $no++; ?></td>
+                            <td class="center" align="center"><?php echo $p['nomor_peserta']; ?></td>
+                            <td><?php echo strtoupper($p['nama_lengkap']); ?></td>
+                            <td><?php echo strtoupper($p['nama_prodi']); ?></td>
                         </tr>
                     <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="4" class="center">Belum ada peserta</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 
-    </page>
+            <!-- Removed Signature Area -->
+
+        </page>
+    <?php endforeach; ?>
 </body>
 
 </html>

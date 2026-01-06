@@ -118,6 +118,35 @@
 </style>
 
 <div class="row justify-content-center">
+    <?php if (isset($_GET['error'])): ?>
+        <div class="col-xl-11 mb-3">
+            <?php if ($_GET['error'] === 'duplicate_nomor'): ?>
+                <div class="alert alert-danger shadow-sm border-0">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> <strong>Gagal Update!</strong> Nomor Peserta tersebut sudah
+                    digunakan oleh peserta lain. Mohon gunakan nomor yang berbeda.
+                </div>
+            <?php elseif ($_GET['error'] === 'unauthorized'): ?>
+                <div class="alert alert-danger shadow-sm border-0">
+                    <i class="fas fa-lock mr-2"></i> <strong>Akses Ditolak!</strong> Anda tidak memiliki izin untuk melakukan
+                    aksi ini.
+                </div>
+            <?php else: ?>
+                <div class="alert alert-danger shadow-sm border-0">
+                    <i class="fas fa-exclamation-circle mr-2"></i> Terjadi kesalahan:
+                    <?php echo htmlspecialchars($_GET['error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'success'): ?>
+        <div class="col-xl-11 mb-3">
+            <div class="alert alert-success shadow-sm border-0">
+                <i class="fas fa-check-circle mr-2"></i> Data berhasil diperbarui.
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="col-xl-11">
         <form action="/admin/participants/update/<?php echo $p['id']; ?>" method="POST">
             <!-- Header Card -->
@@ -287,7 +316,7 @@
                                     </div>
                                 </div>
 
-                                </div>
+                            </div>
 
                             <div class="alert alert-warning border-0 shadow-sm rounded-lg p-3">
                                 <small class="d-block font-weight-bold mb-1"><i
@@ -506,77 +535,77 @@
                 $isS3 = (stripos($p['nama_prodi'] ?? '', 'S3') !== false || stripos($p['nama_prodi'] ?? '', 'DOKTOR') !== false);
                 if ($isS3):
                     ?>
-                        <div class="col-12 mb-4">
-                            <div class="card premium-card shadow-sm border-0">
-                                <div class="card-header border-0 bg-white pt-4 px-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="icon-container bg-purple-soft">
-                                            <i class="fas fa-user-graduate"></i>
-                                        </div>
-                                        <h5 class="mb-0 font-weight-bold text-dark">Riwayat Pendidikan Magister (S2)</h5>
+                    <div class="col-12 mb-4">
+                        <div class="card premium-card shadow-sm border-0">
+                            <div class="card-header border-0 bg-white pt-4 px-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-container bg-purple-soft">
+                                        <i class="fas fa-user-graduate"></i>
                                     </div>
+                                    <h5 class="mb-0 font-weight-bold text-dark">Riwayat Pendidikan Magister (S2)</h5>
                                 </div>
-                                <div class="card-body px-4 pb-4 pt-2">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label class="section-label">Nama Perguruan Tinggi</label>
-                                                <input type="text" name="s2_perguruan_tinggi"
-                                                    class="form-control form-control-premium font-weight-bold"
-                                                    value="<?php echo $p['s2_perguruan_tinggi'] ?? ''; ?>">
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group mb-3">
-                                                        <label class="section-label">Fakultas</label>
-                                                        <input type="text" name="s2_fakultas"
-                                                            class="form-control form-control-premium"
-                                                            value="<?php echo $p['s2_fakultas'] ?? ''; ?>">
-                                                    </div>
+                            </div>
+                            <div class="card-body px-4 pb-4 pt-2">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="section-label">Nama Perguruan Tinggi</label>
+                                            <input type="text" name="s2_perguruan_tinggi"
+                                                class="form-control form-control-premium font-weight-bold"
+                                                value="<?php echo $p['s2_perguruan_tinggi'] ?? ''; ?>">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="section-label">Fakultas</label>
+                                                    <input type="text" name="s2_fakultas"
+                                                        class="form-control form-control-premium"
+                                                        value="<?php echo $p['s2_fakultas'] ?? ''; ?>">
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group mb-3">
-                                                        <label class="section-label">Program Studi</label>
-                                                        <input type="text" name="s2_prodi"
-                                                            class="form-control form-control-premium"
-                                                            value="<?php echo $p['s2_prodi'] ?? ''; ?>">
-                                                    </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="section-label">Program Studi</label>
+                                                    <input type="text" name="s2_prodi"
+                                                        class="form-control form-control-premium"
+                                                        value="<?php echo $p['s2_prodi'] ?? ''; ?>">
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="row mb-3">
-                                                <div class="col-6">
-                                                    <label class="section-label">Tahun Masuk</label>
-                                                    <input type="text" name="s2_tahun_masuk"
-                                                        class="form-control form-control-premium"
-                                                        value="<?php echo $p['s2_tahun_masuk'] ?? ''; ?>">
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="section-label">Tahun Lulus</label>
-                                                    <input type="text" name="s2_tahun_tamat"
-                                                        class="form-control form-control-premium"
-                                                        value="<?php echo $p['s2_tahun_tamat'] ?? ''; ?>">
-                                                </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <label class="section-label">Tahun Masuk</label>
+                                                <input type="text" name="s2_tahun_masuk"
+                                                    class="form-control form-control-premium"
+                                                    value="<?php echo $p['s2_tahun_masuk'] ?? ''; ?>">
                                             </div>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <label class="section-label">IPK Akhir</label>
-                                                    <input type="text" name="s2_ipk"
-                                                        class="form-control form-control-premium font-weight-bold text-purple"
-                                                        value="<?php echo $p['s2_ipk'] ?? ''; ?>" style="font-size: 1.1rem;">
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="section-label">Gelar S2</label>
-                                                    <input type="text" name="s2_gelar" class="form-control form-control-premium"
-                                                        value="<?php echo $p['s2_gelar'] ?? ''; ?>" placeholder="Contoh: M.Kom">
-                                                </div>
+                                            <div class="col-6">
+                                                <label class="section-label">Tahun Lulus</label>
+                                                <input type="text" name="s2_tahun_tamat"
+                                                    class="form-control form-control-premium"
+                                                    value="<?php echo $p['s2_tahun_tamat'] ?? ''; ?>">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="section-label">IPK Akhir</label>
+                                                <input type="text" name="s2_ipk"
+                                                    class="form-control form-control-premium font-weight-bold text-purple"
+                                                    value="<?php echo $p['s2_ipk'] ?? ''; ?>" style="font-size: 1.1rem;">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="section-label">Gelar S2</label>
+                                                <input type="text" name="s2_gelar" class="form-control form-control-premium"
+                                                    value="<?php echo $p['s2_gelar'] ?? ''; ?>" placeholder="Contoh: M.Kom">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
                 <?php endif; ?>
             </div>
 
@@ -595,46 +624,46 @@
                             <a class="nav-link active" data-toggle="tab" href="#tab-foto">
                                 <i class="fas fa-camera mr-1"></i> Foto
                                 <?php if (!empty($p['photo_filename'])): ?><i
-                                            class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
+                                        class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" data-toggle="tab" href="#tab-ktp">
                                 <i class="fas fa-id-card mr-1"></i> KTP
                                 <?php if (!empty($p['ktp_filename'])): ?><i
-                                            class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
+                                        class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" data-toggle="tab" href="#tab-ijazah">
                                 <i class="fas fa-graduation-cap mr-1"></i> Ijazah
                                 <?php if (!empty($p['ijazah_filename'])): ?><i
-                                            class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
+                                        class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" data-toggle="tab" href="#tab-transkrip">
                                 <i class="fas fa-file-alt mr-1"></i> Transkrip S1
                                 <?php if (!empty($p['transkrip_filename'])): ?><i
-                                            class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
+                                        class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
                             </a>
                         </li>
                         <!-- S2 Tabs -->
                         <?php if ($isS3): ?>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#tab-ijazah-s2">
-                                        <i class="fas fa-graduation-cap mr-1"></i> Ijazah S2
-                                            <?php if (!empty($p['ijazah_s2_filename'])): ?><i
-                                                    class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#tab-transkrip-s2">
-                                        <i class="fas fa-file-alt mr-1"></i> Transkrip S2
-                                     <?php if (!empty($p['transkrip_s2_filename'])): ?><i
-                                                    class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
-                                    </a>
-                                </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#tab-ijazah-s2">
+                                    <i class="fas fa-graduation-cap mr-1"></i> Ijazah S2
+                                    <?php if (!empty($p['ijazah_s2_filename'])): ?><i
+                                            class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#tab-transkrip-s2">
+                                    <i class="fas fa-file-alt mr-1"></i> Transkrip S2
+                                    <?php if (!empty($p['transkrip_s2_filename'])): ?><i
+                                            class="fas fa-check-circle text-success ml-1"></i><?php endif; ?>
+                                </a>
+                            </li>
                         <?php endif; ?>
                     </ul>
                     <!-- Tab Content -->
@@ -644,15 +673,15 @@
                             <div class="row">
                                 <div class="col-md-4 text-center">
                                     <?php if (!empty($p['photo_filename'])): ?>
-                                            <img src="/storage/photos/<?php echo $p['photo_filename']; ?>" alt="Foto"
-                                                class="img-thumbnail" style="max-width:100%;max-height:300px">
-                                            <div class="mt-2"><small class="text-success"><i class="fas fa-check-circle"></i>
-                                                    Tersedia</small></div>
+                                        <img src="/storage/photos/<?php echo $p['photo_filename']; ?>" alt="Foto"
+                                            class="img-thumbnail" style="max-width:100%;max-height:300px">
+                                        <div class="mt-2"><small class="text-success"><i class="fas fa-check-circle"></i>
+                                                Tersedia</small></div>
                                     <?php else: ?>
-                                            <div class="border p-4 rounded"><i
-                                                    class="fas fa-user-circle fa-5x text-muted mb-2"></i>
-                                                <p class="text-muted mb-0"><small>Belum ada</small></p>
-                                            </div>
+                                        <div class="border p-4 rounded"><i
+                                                class="fas fa-user-circle fa-5x text-muted mb-2"></i>
+                                            <p class="text-muted mb-0"><small>Belum ada</small></p>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-8">
@@ -663,15 +692,15 @@
                                         onclick="uploadDoc(<?php echo $p['id']; ?>, 'foto')"><i
                                             class="fas fa-upload mr-1"></i> Upload</button>
                                     <?php if (!empty($p['photo_filename'])): ?>
-                                            <div class="btn-group ml-2" role="group">
-                                                <button type="button" class="btn btn-secondary btn-sm" title="Rotate View"
-                                                    onclick="rotateView('foto')">
-                                                    <i class="fas fa-sync-alt mr-1"></i> Rotate View
-                                                </button>
-                                            </div>
-                                            <button type="button" class="btn btn-danger btn-sm ml-2"
-                                                onclick="deleteDoc(<?php echo $p['id']; ?>, 'foto')"><i
-                                                    class="fas fa-trash mr-1"></i> Hapus</button>
+                                        <div class="btn-group ml-2" role="group">
+                                            <button type="button" class="btn btn-secondary btn-sm" title="Rotate View"
+                                                onclick="rotateView('foto')">
+                                                <i class="fas fa-sync-alt mr-1"></i> Rotate View
+                                            </button>
+                                        </div>
+                                        <button type="button" class="btn btn-danger btn-sm ml-2"
+                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'foto')"><i
+                                                class="fas fa-trash mr-1"></i> Hapus</button>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -682,18 +711,18 @@
                                 <div
                                     class="<?php echo !empty($p['ktp_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                     <?php if (!empty($p['ktp_filename'])): ?>
-                                            <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                                <img src="/storage/documents/ktp/<?php echo $p['ktp_filename']; ?>" alt="KTP"
-                                                    class="img-thumbnail" style="max-width:100%;max-height:1000px">
-                                            </div>
-                                            <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
-                                                        class="fas fa-check-circle mr-1"></i>
-                                                    Tersedia</small></div>
+                                        <div class="document-viewer-container border rounded bg-light p-2 mb-3">
+                                            <img src="/storage/documents/ktp/<?php echo $p['ktp_filename']; ?>" alt="KTP"
+                                                class="img-thumbnail" style="max-width:100%;max-height:1000px">
+                                        </div>
+                                        <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
+                                                    class="fas fa-check-circle mr-1"></i>
+                                                Tersedia</small></div>
                                     <?php else: ?>
-                                            <div class="border p-5 rounded bg-light mb-3"><i
-                                                    class="fas fa-id-card fa-5x text-muted mb-3 d-block"></i>
-                                                <p class="text-muted mb-0"><strong>Belum ada dokumen KTP</strong></p>
-                                            </div>
+                                        <div class="border p-5 rounded bg-light mb-3"><i
+                                                class="fas fa-id-card fa-5x text-muted mb-3 d-block"></i>
+                                            <p class="text-muted mb-0"><strong>Belum ada dokumen KTP</strong></p>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="<?php echo !empty($p['ktp_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
@@ -716,14 +745,14 @@
                                                 </button>
 
                                                 <?php if (!empty($p['ktp_filename'])): ?>
-                                                        <button type="button" class="btn btn-info btn-sm btn-block mb-2"
-                                                            title="Rotate View" onclick="rotateView('ktp')">
-                                                            <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
-                                                        </button>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'ktp')">
-                                                            <i class="fas fa-trash mr-1"></i> Hapus File
-                                                        </button>
+                                                    <button type="button" class="btn btn-info btn-sm btn-block mb-2"
+                                                        title="Rotate View" onclick="rotateView('ktp')">
+                                                        <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger btn-sm btn-block"
+                                                        onclick="deleteDoc(<?php echo $p['id']; ?>, 'ktp')">
+                                                        <i class="fas fa-trash mr-1"></i> Hapus File
+                                                    </button>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -737,18 +766,18 @@
                                 <div
                                     class="<?php echo !empty($p['ijazah_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                     <?php if (!empty($p['ijazah_filename'])): ?>
-                                            <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                                <img src="/storage/documents/ijazah/<?php echo $p['ijazah_filename']; ?>"
-                                                    alt="Ijazah" class="img-thumbnail" style="max-width:100%;max-height:1000px">
-                                            </div>
-                                            <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
-                                                        class="fas fa-check-circle mr-1"></i>
-                                                    Tersedia</small></div>
+                                        <div class="document-viewer-container border rounded bg-light p-2 mb-3">
+                                            <img src="/storage/documents/ijazah/<?php echo $p['ijazah_filename']; ?>"
+                                                alt="Ijazah" class="img-thumbnail" style="max-width:100%;max-height:1000px">
+                                        </div>
+                                        <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
+                                                    class="fas fa-check-circle mr-1"></i>
+                                                Tersedia</small></div>
                                     <?php else: ?>
-                                            <div class="border p-5 rounded bg-light mb-3"><i
-                                                    class="fas fa-graduation-cap fa-5x text-muted mb-3 d-block"></i>
-                                                <p class="text-muted mb-0"><strong>Belum ada dokumen Ijazah</strong></p>
-                                            </div>
+                                        <div class="border p-5 rounded bg-light mb-3"><i
+                                                class="fas fa-graduation-cap fa-5x text-muted mb-3 d-block"></i>
+                                            <p class="text-muted mb-0"><strong>Belum ada dokumen Ijazah</strong></p>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="<?php echo !empty($p['ijazah_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
@@ -771,14 +800,14 @@
                                                 </button>
 
                                                 <?php if (!empty($p['ijazah_filename'])): ?>
-                                                        <button type="button" class="btn btn-info btn-sm btn-block mb-2"
-                                                            title="Rotate View" onclick="rotateView('ijazah')">
-                                                            <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
-                                                        </button>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'ijazah')">
-                                                            <i class="fas fa-trash mr-1"></i> Hapus File
-                                                        </button>
+                                                    <button type="button" class="btn btn-info btn-sm btn-block mb-2"
+                                                        title="Rotate View" onclick="rotateView('ijazah')">
+                                                        <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger btn-sm btn-block"
+                                                        onclick="deleteDoc(<?php echo $p['id']; ?>, 'ijazah')">
+                                                        <i class="fas fa-trash mr-1"></i> Hapus File
+                                                    </button>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -792,25 +821,25 @@
                                 <div
                                     class="<?php echo !empty($p['transkrip_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
                                     <?php if (!empty($p['transkrip_filename'])): ?>
-                                            <div class="document-viewer-container border rounded bg-light p-2 mb-3"
-                                                style="height: 800px;">
-                                                <iframe
-                                                    src="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>"
-                                                    width="100%" height="100%" style="border: none;"></iframe>
-                                            </div>
-                                            <div class="mt-2 text-left ml-2">
-                                                <small class="text-success font-weight-bold"><i
-                                                        class="fas fa-check-circle mr-1"></i> Tersedia</small>
-                                                <a href="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>"
-                                                    target="_blank" class="btn btn-xs btn-outline-primary ml-2">
-                                                    <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
-                                                </a>
-                                            </div>
+                                        <div class="document-viewer-container border rounded bg-light p-2 mb-3"
+                                            style="height: 800px;">
+                                            <iframe
+                                                src="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>"
+                                                width="100%" height="100%" style="border: none;"></iframe>
+                                        </div>
+                                        <div class="mt-2 text-left ml-2">
+                                            <small class="text-success font-weight-bold"><i
+                                                    class="fas fa-check-circle mr-1"></i> Tersedia</small>
+                                            <a href="/storage/documents/transkrip/<?php echo $p['transkrip_filename']; ?>"
+                                                target="_blank" class="btn btn-xs btn-outline-primary ml-2">
+                                                <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
+                                            </a>
+                                        </div>
                                     <?php else: ?>
-                                            <div class="border p-5 rounded bg-light mb-3"><i
-                                                    class="fas fa-file-pdf fa-5x text-muted mb-3 d-block"></i>
-                                                <p class="text-muted mb-0"><strong>Belum ada dokumen Transkrip</strong></p>
-                                            </div>
+                                        <div class="border p-5 rounded bg-light mb-3"><i
+                                                class="fas fa-file-pdf fa-5x text-muted mb-3 d-block"></i>
+                                            <p class="text-muted mb-0"><strong>Belum ada dokumen Transkrip</strong></p>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="<?php echo !empty($p['transkrip_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
@@ -833,10 +862,10 @@
                                                 </button>
 
                                                 <?php if (!empty($p['transkrip_filename'])): ?>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'transkrip')">
-                                                            <i class="fas fa-trash mr-1"></i> Hapus File
-                                                        </button>
+                                                    <button type="button" class="btn btn-danger btn-sm btn-block"
+                                                        onclick="deleteDoc(<?php echo $p['id']; ?>, 'transkrip')">
+                                                        <i class="fas fa-trash mr-1"></i> Hapus File
+                                                    </button>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -846,121 +875,121 @@
                         </div>
                         <!-- Ijazah S2 Tab -->
                         <?php if ($isS3): ?>
-                                <div class="tab-pane fade" id="tab-ijazah-s2">
-                                    <div class="row">
-                                        <div
-                                            class="<?php echo !empty($p['ijazah_s2_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
-                                            <?php if (!empty($p['ijazah_s2_filename'])): ?>
-                                                    <div class="document-viewer-container border rounded bg-light p-2 mb-3">
-                                                        <img src="/storage/documents/ijazah_s2/<?php echo $p['ijazah_s2_filename']; ?>"
-                                                            alt="Ijazah S2" class="img-thumbnail"
-                                                            style="max-width:100%;max-height:1000px">
-                                                    </div>
-                                                    <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
-                                                                class="fas fa-check-circle mr-1"></i>
-                                                            Tersedia</small></div>
-                                            <?php else: ?>
-                                                    <div class="border p-5 rounded bg-light mb-3"><i
-                                                            class="fas fa-graduation-cap fa-5x text-muted mb-3 d-block"></i>
-                                                        <p class="text-muted mb-0"><strong>Belum ada dokumen Ijazah S2</strong></p>
-                                                    </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="<?php echo !empty($p['ijazah_s2_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
-                                            <div class="card shadow-none border">
-                                                <div class="card-header bg-light">
-                                                    <h3 class="card-title text-sm font-weight-bold"><i
-                                                            class="fas fa-cog mr-1"></i> Kelola Ijazah S2</h3>
+                            <div class="tab-pane fade" id="tab-ijazah-s2">
+                                <div class="row">
+                                    <div
+                                        class="<?php echo !empty($p['ijazah_s2_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
+                                        <?php if (!empty($p['ijazah_s2_filename'])): ?>
+                                            <div class="document-viewer-container border rounded bg-light p-2 mb-3">
+                                                <img src="/storage/documents/ijazah_s2/<?php echo $p['ijazah_s2_filename']; ?>"
+                                                    alt="Ijazah S2" class="img-thumbnail"
+                                                    style="max-width:100%;max-height:1000px">
+                                            </div>
+                                            <div class="mt-2 text-left ml-2"><small class="text-success font-weight-bold"><i
+                                                        class="fas fa-check-circle mr-1"></i>
+                                                    Tersedia</small></div>
+                                        <?php else: ?>
+                                            <div class="border p-5 rounded bg-light mb-3"><i
+                                                    class="fas fa-graduation-cap fa-5x text-muted mb-3 d-block"></i>
+                                                <p class="text-muted mb-0"><strong>Belum ada dokumen Ijazah S2</strong></p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="<?php echo !empty($p['ijazah_s2_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
+                                        <div class="card shadow-none border">
+                                            <div class="card-header bg-light">
+                                                <h3 class="card-title text-sm font-weight-bold"><i
+                                                        class="fas fa-cog mr-1"></i> Kelola Ijazah S2</h3>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="alert alert-info py-2 px-3 text-xs mb-3">
+                                                    <i class="fas fa-info-circle mr-1"></i> JPG/PNG, maks 5MB
                                                 </div>
-                                                <div class="card-body p-3">
-                                                    <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                        <i class="fas fa-info-circle mr-1"></i> JPG/PNG, maks 5MB
-                                                    </div>
-                                                    <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                        id="ijazah-s2-input" accept="image/*">
+                                                <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
+                                                    id="ijazah-s2-input" accept="image/*">
 
-                                                    <div class="d-flex flex-column gap-2">
-                                                        <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                            onclick="uploadDoc(<?php echo $p['id']; ?>, 'ijazah_s2')">
-                                                            <i class="fas fa-upload mr-1"></i> Ganti/Upload
+                                                <div class="d-flex flex-column gap-2">
+                                                    <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
+                                                        onclick="uploadDoc(<?php echo $p['id']; ?>, 'ijazah_s2')">
+                                                        <i class="fas fa-upload mr-1"></i> Ganti/Upload
+                                                    </button>
+
+                                                    <?php if (!empty($p['ijazah_s2_filename'])): ?>
+                                                        <button type="button" class="btn btn-info btn-sm btn-block mb-2"
+                                                            title="Rotate View" onclick="rotateView('ijazah_s2')">
+                                                            <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
                                                         </button>
-
-                                                        <?php if (!empty($p['ijazah_s2_filename'])): ?>
-                                                                <button type="button" class="btn btn-info btn-sm btn-block mb-2"
-                                                                    title="Rotate View" onclick="rotateView('ijazah_s2')">
-                                                                    <i class="fas fa-sync-alt mr-1"></i> Putar Tampilan
-                                                                </button>
-                                                                <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                                    onclick="deleteDoc(<?php echo $p['id']; ?>, 'ijazah_s2')">
-                                                                    <i class="fas fa-trash mr-1"></i> Hapus File
-                                                                </button>
-                                                        <?php endif; ?>
-                                                    </div>
+                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
+                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'ijazah_s2')">
+                                                            <i class="fas fa-trash mr-1"></i> Hapus File
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Transkrip S2 Tab -->
-                                <div class="tab-pane fade" id="tab-transkrip-s2">
-                                    <div class="row">
-                                        <div
-                                            class="<?php echo !empty($p['transkrip_s2_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
-                                            <?php if (!empty($p['transkrip_s2_filename'])): ?>
-                                                    <div class="document-viewer-container border rounded bg-light p-2 mb-3"
-                                                        style="height: 800px;">
-                                                        <iframe
-                                                            src="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
-                                                            width="100%" height="100%" style="border: none;"></iframe>
-                                                    </div>
-                                                    <div class="mt-2 text-left ml-2">
-                                                        <small class="text-success font-weight-bold"><i
-                                                                class="fas fa-check-circle mr-1"></i> Tersedia</small>
-                                                        <a href="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
-                                                            target="_blank" class="btn btn-xs btn-outline-primary ml-2">
-                                                            <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
-                                                        </a>
-                                                    </div>
-                                            <?php else: ?>
-                                                    <div class="border p-5 rounded bg-light mb-3"><i
-                                                            class="fas fa-file-pdf fa-5x text-muted mb-3 d-block"></i>
-                                                        <p class="text-muted mb-0"><strong>Belum ada dokumen Transkrip S2</strong></p>
-                                                    </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div
-                                            class="<?php echo !empty($p['transkrip_s2_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
-                                            <div class="card shadow-none border">
-                                                <div class="card-header bg-light">
-                                                    <h3 class="card-title text-sm font-weight-bold"><i
-                                                            class="fas fa-cog mr-1"></i> Kelola Transkrip S2</h3>
+                            <!-- Transkrip S2 Tab -->
+                            <div class="tab-pane fade" id="tab-transkrip-s2">
+                                <div class="row">
+                                    <div
+                                        class="<?php echo !empty($p['transkrip_s2_filename']) ? 'col-md-9' : 'col-md-12'; ?> text-center">
+                                        <?php if (!empty($p['transkrip_s2_filename'])): ?>
+                                            <div class="document-viewer-container border rounded bg-light p-2 mb-3"
+                                                style="height: 800px;">
+                                                <iframe
+                                                    src="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
+                                                    width="100%" height="100%" style="border: none;"></iframe>
+                                            </div>
+                                            <div class="mt-2 text-left ml-2">
+                                                <small class="text-success font-weight-bold"><i
+                                                        class="fas fa-check-circle mr-1"></i> Tersedia</small>
+                                                <a href="/storage/documents/transkrip_s2/<?php echo $p['transkrip_s2_filename']; ?>"
+                                                    target="_blank" class="btn btn-xs btn-outline-primary ml-2">
+                                                    <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
+                                                </a>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="border p-5 rounded bg-light mb-3"><i
+                                                    class="fas fa-file-pdf fa-5x text-muted mb-3 d-block"></i>
+                                                <p class="text-muted mb-0"><strong>Belum ada dokumen Transkrip S2</strong></p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div
+                                        class="<?php echo !empty($p['transkrip_s2_filename']) ? 'col-md-3' : 'col-md-12'; ?>">
+                                        <div class="card shadow-none border">
+                                            <div class="card-header bg-light">
+                                                <h3 class="card-title text-sm font-weight-bold"><i
+                                                        class="fas fa-cog mr-1"></i> Kelola Transkrip S2</h3>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="alert alert-info py-2 px-3 text-xs mb-3">
+                                                    <i class="fas fa-info-circle mr-1"></i> PDF, maks 10MB
                                                 </div>
-                                                <div class="card-body p-3">
-                                                    <div class="alert alert-info py-2 px-3 text-xs mb-3">
-                                                        <i class="fas fa-info-circle mr-1"></i> PDF, maks 10MB
-                                                    </div>
-                                                    <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
-                                                        id="transkrip-s2-input" accept="application/pdf">
+                                                <input type="file" class="form-control-file mb-3 border p-1 rounded text-sm"
+                                                    id="transkrip-s2-input" accept="application/pdf">
 
-                                                    <div class="d-flex flex-column gap-2">
-                                                        <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
-                                                            onclick="uploadDoc(<?php echo $p['id']; ?>, 'transkrip_s2')">
-                                                            <i class="fas fa-upload mr-1"></i> Ganti/Upload
+                                                <div class="d-flex flex-column gap-2">
+                                                    <button type="button" class="btn btn-primary btn-sm btn-block mb-2"
+                                                        onclick="uploadDoc(<?php echo $p['id']; ?>, 'transkrip_s2')">
+                                                        <i class="fas fa-upload mr-1"></i> Ganti/Upload
+                                                    </button>
+
+                                                    <?php if (!empty($p['transkrip_s2_filename'])): ?>
+                                                        <button type="button" class="btn btn-danger btn-sm btn-block"
+                                                            onclick="deleteDoc(<?php echo $p['id']; ?>, 'transkrip_s2')">
+                                                            <i class="fas fa-trash mr-1"></i> Hapus File
                                                         </button>
-
-                                                        <?php if (!empty($p['transkrip_s2_filename'])): ?>
-                                                                <button type="button" class="btn btn-danger btn-sm btn-block"
-                                                                    onclick="deleteDoc(<?php echo $p['id']; ?>, 'transkrip_s2')">
-                                                                    <i class="fas fa-trash mr-1"></i> Hapus File
-                                                                </button>
-                                                        <?php endif; ?>
-                                                    </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                     <!-- Auto-download All -->

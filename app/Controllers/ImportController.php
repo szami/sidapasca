@@ -11,8 +11,8 @@ class ImportController
     public function index()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canImportExport()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
         $semesters = \App\Models\Semester::all();
 
@@ -28,6 +28,11 @@ class ImportController
 
     public function import()
     {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canImportExport()) {
+            header('Location: /admin?error=unauthorized');
+            exit;
+        }
+
         // Enable realtime output
         if (function_exists('apache_setenv')) {
             @apache_setenv('no-gzip', 1);

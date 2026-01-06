@@ -10,8 +10,8 @@ class SemesterController
     public function index()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::isSuperadmin()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         echo \App\Utils\View::render('admin.semester.index');
@@ -87,7 +87,8 @@ class SemesterController
             'is_active' => 0
         ]);
 
-        response()->redirect('/admin/semesters');
+        header('Location: /admin/semesters');
+        exit;
     }
 
     public function setActive($id)
@@ -96,7 +97,8 @@ class SemesterController
             return;
 
         Semester::setActive($id);
-        response()->redirect('/admin/semesters');
+        header('Location: /admin/semesters');
+        exit;
     }
 
     public function destroy($id)
@@ -105,7 +107,8 @@ class SemesterController
             return;
 
         Semester::delete($id);
-        response()->redirect('/admin/semesters');
+        header('Location: /admin/semesters');
+        exit;
     }
 
     public function cleanParticipants($id)
@@ -119,6 +122,7 @@ class SemesterController
             ->execute();
 
         // Optional: Flash message (Leaf doesn't have built-in flash in this setup, so maybe query param)
-        response()->redirect('/admin/semesters?msg=cleared');
+        header('Location: /admin/semesters?msg=cleared');
+        exit;
     }
 }

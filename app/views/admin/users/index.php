@@ -79,8 +79,12 @@
                 },
                 {
                     "data": "prodi_id",
-                    "render": function (data) {
-                        return data ? `<code>${data}</code>` : '<span class="text-muted">-</span>';
+                    "render": function (data, type, row) {
+                        if (data) {
+                            let name = row.nama_prodi || '';
+                            return `<div><code>${data}</code></div><small class="text-muted" style="font-size: 85%;">${name}</small>`;
+                        }
+                        return '<span class="text-muted">-</span>';
                     }
                 },
                 {

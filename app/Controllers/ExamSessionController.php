@@ -13,8 +13,8 @@ class ExamSessionController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // Get Active Semester
@@ -41,8 +41,10 @@ class ExamSessionController
 
     public function create()
     {
-        if (!isset($_SESSION['admin']))
-            return;
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /admin/login');
+            exit;
+        }
 
         // Get Rooms for Dropdown
         $rooms = Database::connection()->select('exam_rooms')->orderBy('nama_ruang', 'asc')->fetchAll();
@@ -57,8 +59,8 @@ class ExamSessionController
         $activeSemester = Semester::getActive();
         if (!$activeSemester) {
             // Should handle error gracefully
-            response()->redirect('/admin/master/sessions');
-            return;
+            header('Location: /admin/master/sessions');
+            exit;
         }
 
         $data = Request::body();
@@ -67,8 +69,8 @@ class ExamSessionController
         // Validation handles
         if (empty($roomIds)) {
             // flash error
-            response()->redirect('/admin/master/sessions/create');
-            return;
+            header('Location: /admin/master/sessions/create');
+            exit;
         }
 
         if (!is_array($roomIds)) {
@@ -88,7 +90,8 @@ class ExamSessionController
             Database::connection()->insert('exam_sessions')->params($insertData)->execute();
         }
 
-        response()->redirect('/admin/master/sessions');
+        header('Location: /admin/master/sessions');
+        exit;
     }
 
     public function edit($id)
@@ -120,7 +123,8 @@ class ExamSessionController
         ];
 
         Database::connection()->update('exam_sessions')->params($updateData)->where('id', $id)->execute();
-        response()->redirect('/admin/master/sessions');
+        header('Location: /admin/master/sessions');
+        exit;
     }
 
     public function destroy($id)
@@ -129,7 +133,8 @@ class ExamSessionController
             return;
 
         Database::connection()->delete('exam_sessions')->where('id', $id)->execute();
-        response()->redirect('/admin/master/sessions');
+        header('Location: /admin/master/sessions');
+        exit;
     }
     public function apiData()
     {

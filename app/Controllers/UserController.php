@@ -12,8 +12,8 @@ class UserController
     {
         // Only superadmin can access user management
         if (!RoleHelper::canManageUsers()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         echo View::render('admin.users.index');
@@ -58,10 +58,25 @@ class UserController
         $sql = "SELECT * FROM users $whereClause ORDER BY $orderBy $orderDir LIMIT $length OFFSET $start";
         $data = $db->query($sql)->fetchAll();
 
+        // Fetch prodi names map
+        $prodiIds = array_filter(array_column($data, 'prodi_id'));
+        $prodiMap = [];
+        if (!empty($prodiIds)) {
+            $idsStr = "'" . implode("','", array_map('addslashes', $prodiIds)) . "'";
+            $prodiRows = $db->query("SELECT DISTINCT kode_prodi, nama_prodi FROM participants WHERE kode_prodi IN ($idsStr)")->fetchAll();
+            foreach ($prodiRows as $pr) {
+                // Take the first name found for this code
+                if (!isset($prodiMap[$pr['kode_prodi']])) {
+                    $prodiMap[$pr['kode_prodi']] = $pr['nama_prodi'];
+                }
+            }
+        }
+
         // Add UI helpers
         foreach ($data as &$user) {
             $user['role_display'] = RoleHelper::getRoleDisplayName($user['role']);
             $user['role_badge'] = RoleHelper::getRoleBadgeClass($user['role']);
+            $user['nama_prodi'] = $prodiMap[$user['prodi_id']] ?? '';
         }
 
         response()->json([
@@ -75,8 +90,8 @@ class UserController
     public function create()
     {
         if (!RoleHelper::canManageUsers()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         // Get all prodi for dropdown
@@ -98,8 +113,8 @@ class UserController
     public function store()
     {
         if (!RoleHelper::canManageUsers()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         $username = request()->get('username');
@@ -109,15 +124,15 @@ class UserController
 
         // Validation
         if (empty($username) || empty($password) || empty($role)) {
-            response()->redirect('/admin/users/create?error=empty_fields');
-            return;
+            header('Location: /admin/users/create?error=empty_fields');
+            exit;
         }
 
         // For admin_prodi: username must equal prodi_id
         if ($role === 'admin_prodi') {
             if (empty($prodiId)) {
-                response()->redirect('/admin/users/create?error=prodi_required');
-                return;
+                header('Location: /admin/users/create?error=prodi_required');
+                exit;
             }
             // Auto-set username = prodi_id
             $username = $prodiId;
@@ -128,8 +143,8 @@ class UserController
         $existing = $db->select('users')->where('username', $username)->fetchAssoc();
 
         if ($existing) {
-            response()->redirect('/admin/users/create?error=username_exists');
-            return;
+            header('Location: /admin/users/create?error=username_exists');
+            exit;
         }
 
         // Hash password
@@ -143,22 +158,23 @@ class UserController
             'prodi_id' => $role === 'admin_prodi' ? $prodiId : null
         ])->execute();
 
-        response()->redirect('/admin/users?success=created');
+        header('Location: /admin/users?success=created');
+        exit;
     }
 
     public function edit($id)
     {
         if (!RoleHelper::canManageUsers()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         $db = Database::connection();
         $user = $db->select('users')->where('id', $id)->fetchAssoc();
 
         if (!$user) {
-            response()->redirect('/admin/users?error=not_found');
-            return;
+            header('Location: /admin/users?error=not_found');
+            exit;
         }
 
         // Get all prodi for dropdown
@@ -179,16 +195,16 @@ class UserController
     public function update($id)
     {
         if (!RoleHelper::canManageUsers()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         $db = Database::connection();
         $user = $db->select('users')->where('id', $id)->fetchAssoc();
 
         if (!$user) {
-            response()->redirect('/admin/users?error=not_found');
-            return;
+            header('Location: /admin/users?error=not_found');
+            exit;
         }
 
         $username = request()->get('username');
@@ -198,15 +214,15 @@ class UserController
 
         // Validation
         if (empty($username) || empty($role)) {
-            response()->redirect("/admin/users/edit/{$id}?error=empty_fields");
-            return;
+            header("Location: /admin/users/edit/{$id}?error=empty_fields");
+            exit;
         }
 
         // For admin_prodi: username must equal prodi_id
         if ($role === 'admin_prodi') {
             if (empty($prodiId)) {
-                response()->redirect("/admin/users/edit/{$id}?error=prodi_required");
-                return;
+                header("Location: /admin/users/edit/{$id}?error=prodi_required");
+                exit;
             }
             $username = $prodiId;
         }
@@ -218,8 +234,8 @@ class UserController
             ->fetchAssoc();
 
         if ($existing) {
-            response()->redirect("/admin/users/edit/{$id}?error=username_exists");
-            return;
+            header("Location: /admin/users/edit/{$id}?error=username_exists");
+            exit;
         }
 
         // Prepare update data
@@ -240,22 +256,23 @@ class UserController
             ->where('id', $id)
             ->execute();
 
-        response()->redirect('/admin/users?success=updated');
+        header('Location: /admin/users?success=updated');
+        exit;
     }
 
     public function destroy($id)
     {
         if (!RoleHelper::canManageUsers()) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         $db = Database::connection();
 
         // Prevent deleting own account
         if ($id == RoleHelper::getUserId()) {
-            response()->redirect('/admin/users?error=cannot_delete_self');
-            return;
+            header('Location: /admin/users?error=cannot_delete_self');
+            exit;
         }
 
         // Prevent deleting the only superadmin
@@ -263,14 +280,15 @@ class UserController
         if ($user && $user['role'] === 'superadmin') {
             $superadminCount = $db->select('users')->where('role', 'superadmin')->fetchAll();
             if (count($superadminCount) <= 1) {
-                response()->redirect('/admin/users?error=last_superadmin');
-                return;
+                header('Location: /admin/users?error=last_superadmin');
+                exit;
             }
         }
 
         $db->delete('users')->where('id', $id)->execute();
 
-        response()->redirect('/admin/users?success=deleted');
+        header('Location: /admin/users?success=deleted');
+        exit;
     }
 
     /**
@@ -279,8 +297,8 @@ class UserController
     public function changePasswordForm()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         echo View::render('admin.users.change_password');
@@ -292,8 +310,8 @@ class UserController
     public function changePassword()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         $currentPassword = request()->get('current_password');
@@ -302,18 +320,18 @@ class UserController
 
         // Validation
         if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-            response()->redirect('/admin/change-password?error=empty_fields');
-            return;
+            header('Location: /admin/change-password?error=empty_fields');
+            exit;
         }
 
         if ($newPassword !== $confirmPassword) {
-            response()->redirect('/admin/change-password?error=password_mismatch');
-            return;
+            header('Location: /admin/change-password?error=password_mismatch');
+            exit;
         }
 
         if (strlen($newPassword) < 6) {
-            response()->redirect('/admin/change-password?error=password_too_short');
-            return;
+            header('Location: /admin/change-password?error=password_too_short');
+            exit;
         }
 
         // Get current user
@@ -321,14 +339,14 @@ class UserController
         $user = $db->select('users')->where('id', $_SESSION['admin'])->fetchAssoc();
 
         if (!$user) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // Verify current password
         if (!password_verify($currentPassword, $user['password'])) {
-            response()->redirect('/admin/change-password?error=wrong_password');
-            return;
+            header('Location: /admin/change-password?error=wrong_password');
+            exit;
         }
 
         // Update password
@@ -338,6 +356,7 @@ class UserController
             ->where('id', $user['id'])
             ->execute();
 
-        response()->redirect('/admin/change-password?success=updated');
+        header('Location: /admin/change-password?success=updated');
+        exit;
     }
 }

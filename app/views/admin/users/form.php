@@ -34,18 +34,23 @@ $action = $isEdit ? "/admin/users/update/{$user['id']}" : '/admin/users/store';
                 <select name="role" id="roleSelect" class="form-control" required>
                     <option value="">- Pilih Role -</option>
                     <option value="superadmin" <?php echo ($user['role'] ?? '') === 'superadmin' ? 'selected' : ''; ?>>
-                        Super Admin (Full Access)
+                        Super Admin (Full Access + System)
                     </option>
                     <option value="admin" <?php echo ($user['role'] ?? '') === 'admin' ? 'selected' : ''; ?>>
-                        Administrator (Full Access)
+                        Administrator (Management Access)
                     </option>
-                    <option value="admin_prodi" <?php echo ($user['role'] ?? '') === 'admin_prodi' ? 'selected' : ''; ?>
-                        >
-                        Admin Prodi (Read Only, per Prodi)
+                    <option value="upkh" <?php echo ($user['role'] ?? '') === 'upkh' ? 'selected' : ''; ?>>
+                        Staf UPKH (Verifikator)
+                    </option>
+                    <option value="tu" <?php echo ($user['role'] ?? '') === 'tu' ? 'selected' : ''; ?>>
+                        Staf Tata Usaha (Keuangan/Arsip)
+                    </option>
+                    <option value="admin_prodi" <?php echo ($user['role'] ?? '') === 'admin_prodi' ? 'selected' : ''; ?>>
+                        Admin Prodi (Read Only per Prodi)
                     </option>
                 </select>
                 <small class="text-muted">
-                    ⚠️ <strong>Admin Prodi</strong> hanya bisa melihat dan download data prodi yang ditugaskan
+                    Sesuaikan role dengan tanggung jawab pengguna.
                 </small>
             </div>
 
@@ -132,10 +137,10 @@ $action = $isEdit ? "/admin/users/update/{$user['id']}" : '/admin/users/store';
                 const selectedProdi = prodiSelect.val();
                 if (selectedProdi) {
                     usernameInput.val(selectedProdi);
-                <?php if (!$isEdit): ?>
-                            passwordHelp.html('Password default: gunakan kode prodi yang sama dengan username');
-                <?php endif; ?>
-            }
+                    <?php if (!$isEdit): ?>
+                        passwordHelp.html('Password default: gunakan kode prodi yang sama dengan username');
+                    <?php endif; ?>
+                }
             } else {
                 // Hide prodi selector
                 prodiGroup.hide();

@@ -98,39 +98,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($participants as $p): ?>
-                                    <?php
-                                    $hasSchedule = !empty($p['ruang_ujian']);
-                                    $scheduleText = '-';
-                                    if ($hasSchedule) {
-                                        $scheduleText = "<b>" . date('d/m', strtotime($p['tanggal_ujian'])) . "</b><br>" . $p['waktu_ujian'] . "<br>" . $p['ruang_ujian'];
-                                    }
-                                    ?>
-                                    <tr>
-                                        <td class="text-center">
-                                            <input type="checkbox" name="participant_ids[]" value="<?php echo $p['id']; ?>"
-                                                class="p-check">
-                                        </td>
-                                        <td>
-                                            <?php echo $p['nomor_peserta']; ?>
-                                        </td>
-                                        <td>
-                                            <?php echo $p['nama_lengkap']; ?>
-                                        </td>
-                                        <td>
-                                            <?php echo $p['nama_prodi']; ?>
-                                        </td>
-                                        <td>
-                                            <?php if ($hasSchedule): ?>
-                                                <span class="text-success" style="font-size: 12px; line-height: 1.2">
-                                                    <?php echo $scheduleText; ?>
-                                                </span>
-                                            <?php else: ?>
-                                                <span class="badge badge-warning">Belum Ada Jadwal</span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                <!-- DataTables will populate this -->
                             </tbody>
                         </table>
                     </div>
@@ -140,10 +108,54 @@
     </div>
 
     <script>
-        // Simple Checkbox Logic
-        document.addEventListener("DOMContentLoaded", function () {
+        $(document).ready(function () {
+            // Init DataTable
+            const table = $('.datatable-check').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/api/scheduler-data",
+                    "data": function (d) {
+                        d.status = '<?php echo $filterStatus; ?>';
+                        d.prodi = '<?php echo $filterProdi; ?>';
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "id",
+                        "orderable": false,
+                        "className": "text-center",
+                        "render": function (data, type, row) {
+                            return '<input type="checkbox" name="participant_ids[]" value="' + data + '" class="p-check">';
+                        }
+                    },
+                    { "data": "nomor_peserta" },
+                    { "data": "nama_lengkap" },
+                    { "data": "nama_prodi" },
+                    {
+                        "data": "ruang_ujian",
+                        "render": function (data, type, row) {
+                            if (data) {
+                                // Simple date formatting if possible, or just raw
+                                return '<span class="text-success" style="font-size: 12px; line-height: 1.2"><b>' +
+                                    (row.tanggal_ujian || '-') + '</b><br>' +
+                                    (row.waktu_ujian || '-') + '<br>' +
+                                    data + '</span>';
+                            } else {
+                                return '<span class="badge badge-warning">Belum Ada Jadwal</span>';
+                            }
+                        }
+                    }
+                ],
+                "order": [[3, "asc"]], // Order by Prodi
+                "drawCallback": function () {
+                    updateCount(); // Update selected count on redraw
+                    // Re-bind events? No, using delegated event below
+                }
+            });
+
+            // Checkbox Logic
             const checkAll = document.getElementById("checkAll");
-            const checks = document.querySelectorAll(".p-check");
             const countBadge = document.getElementById("selectedCount");
 
             function updateCount() {
@@ -151,13 +163,22 @@
                 countBadge.innerText = count + " Peserta Dipilih";
             }
 
-            checkAll.addEventListener("change", function () {
-                checks.forEach(c => c.checked = checkAll.checked);
+            // Handle "Check All" click
+            $('#checkAll').on('click', function () {
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
                 updateCount();
             });
 
-            checks.forEach(c => {
-                c.addEventListener("change", updateCount);
+            // Handle individual checkbox click (delegated)
+            $('.datatable-check tbody').on('change', '.p-check', function () {
+                if (!this.checked) {
+                    var el = $('#checkAll').get(0);
+                    if (el && el.checked && ('indeterminate' in el)) {
+                        el.indeterminate = true;
+                    }
+                }
+                updateCount();
             });
         });
     </script>

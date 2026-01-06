@@ -12,7 +12,7 @@ class AttendanceController
     private function checkAuth()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+            header('Location: /admin/login');
             exit;
         }
     }
@@ -20,8 +20,8 @@ class AttendanceController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         $db = Database::connection();
@@ -78,8 +78,8 @@ class AttendanceController
     public function entry()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         $room = $_GET['ruang'] ?? null;
@@ -87,8 +87,8 @@ class AttendanceController
         $tanggal = $_GET['tanggal'] ?? null;
 
         if (!$room || !$sesi || !$tanggal) {
-            response()->redirect('/admin/attendance');
-            return;
+            header('Location: /admin/attendance');
+            exit;
         }
 
         $db = Database::connection();
@@ -118,8 +118,10 @@ class AttendanceController
 
     public function save()
     {
-        if (!isset($_SESSION['admin']))
-            return;
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /admin/login');
+            exit;
+        }
 
         $db = Database::connection();
         $activeSemester = Semester::getActive();
@@ -161,7 +163,8 @@ class AttendanceController
             }
         }
 
-        response()->redirect('/admin/attendance?msg=success');
+        header('Location: /admin/attendance?msg=success');
+        exit;
     }
     public function apiData()
     {

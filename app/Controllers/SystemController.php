@@ -12,8 +12,8 @@ class SystemController
     public function update()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // Get current version info
@@ -38,8 +38,8 @@ class SystemController
     public function performUpdate()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // Get user ID from session if available
@@ -50,12 +50,15 @@ class SystemController
 
         if ($result['success']) {
             if ($result['status'] === 'no_update') {
-                response()->redirect('/admin/system/update?status=no_update&message=' . urlencode($result['message']));
+                header('Location: /admin/system/update?status=no_update&message=' . urlencode($result['message']));
+                exit;
             } else {
-                response()->redirect('/admin/system/update?status=success&message=' . urlencode($result['message']));
+                header('Location: /admin/system/update?status=success&message=' . urlencode($result['message']));
+                exit;
             }
         } else {
-            response()->redirect('/admin/system/update?status=error&message=' . urlencode($result['message']));
+            header('Location: /admin/system/update?status=error&message=' . urlencode($result['message']));
+            exit;
         }
     }
 

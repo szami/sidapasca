@@ -130,7 +130,8 @@ class AuthController
         $_SESSION['user'] = $participant['id']; // Array access for Leaf Db v3 / PDO
         $_SESSION['role'] = 'participant';
 
-        response()->redirect('/dashboard');
+        header('Location: /dashboard');
+        exit;
     }
 
     public function adminLogin()
@@ -149,7 +150,7 @@ class AuthController
         // Check Maintenance Mode (Only allow superadmin if on)
         $maintenance = \App\Models\Setting::get('maintenance_mode', 'off');
         if ($maintenance === 'on' && (!$user || ($user['role'] ?? 'admin') !== 'superadmin')) {
-            response()->redirect('/admin?error=maintenance');
+            header('Location: /admin?error=maintenance');
             exit;
         }
 
@@ -164,21 +165,41 @@ class AuthController
                 $_SESSION['admin_prodi_id'] = $user['prodi_id'];
             }
 
-            response()->redirect('/admin');
+            header('Location: /admin');
+            exit;
         } else {
-            response()->redirect('/admin?error=1');
+            header('Location: /admin?error=1');
+            exit;
         }
     }
 
     public function logout()
     {
-        session_destroy();
-        response()->redirect('/');
+        // Only remove Participant session data
+        unset($_SESSION['user']);
+        unset($_SESSION['role']);
+
+        // Check if admin is logged in, if not, verify full destroy? 
+        // User asked "logout admin except participant". 
+        // Logic for Participant logout: 
+        // Usually logout means logout. 
+        // But if we want consistent dual-session handling:
+        // "Logout Peserta" should only kill participant session.
+
+        header('Location: /');
+        exit;
     }
 
     public function adminLogout()
     {
-        session_destroy();
-        response()->redirect('/admin');
+        // Only remove Admin session data, keeping Participant session if valid
+        unset($_SESSION['admin']);
+        unset($_SESSION['admin_role']);
+        unset($_SESSION['admin_username']);
+        unset($_SESSION['admin_prodi_id']);
+
+        // Use standard header for redirection to avoid framework issues
+        header('Location: /admin');
+        exit;
     }
 }

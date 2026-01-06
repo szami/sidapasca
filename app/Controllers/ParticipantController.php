@@ -11,8 +11,8 @@ class ParticipantController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         // Fetch all participants with simple pagination or all for DataTables
@@ -280,8 +280,8 @@ class ParticipantController
 
         $participant = Participant::find($id);
         if (!$participant) {
-            response()->redirect('/admin/participants');
-            return;
+            header('Location: /admin/participants');
+            exit;
         }
 
         echo \App\Utils\View::render('admin.participants.view', ['p' => $participant]);
@@ -293,14 +293,14 @@ class ParticipantController
     public function documents($id)
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canUploadDocuments()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $participant = Participant::find($id);
         if (!$participant) {
-            response()->redirect('/admin/participants');
-            return;
+            header('Location: /admin/participants');
+            exit;
         }
 
         echo \App\Utils\View::render('admin.participants.documents', ['p' => $participant]);
@@ -309,8 +309,8 @@ class ParticipantController
     public function update($id)
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canEditParticipant()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $data = Request::body();
@@ -370,24 +370,48 @@ class ParticipantController
             'payment_method' => $data['payment_method'] ?? null
         ];
 
+
+
+        // Sanitize nomor_peserta (convert empty string to NULL)
+        $rawNomor = $data['nomor_peserta'] ?? null;
+        $cleanNomor = ($rawNomor !== null && trim($rawNomor) !== '') ? trim($rawNomor) : null;
+        $updateData['nomor_peserta'] = $cleanNomor;
+
+        // Uniqueness check for nomor_peserta
+        if ($cleanNomor !== null) {
+            $existing = \App\Utils\Database::connection()->select('participants')
+                ->where('nomor_peserta', $cleanNomor)
+                ->where('id', '!=', $id)
+                ->first();
+
+            if ($existing) {
+                // Redirect back with error
+                // Preserve other data? ideally yes, but for now just error
+                header('Location: /admin/participants/edit/' . $id . '?error=duplicate_nomor');
+                exit;
+            }
+        }
+
         \App\Utils\Database::connection()->update('participants')
             ->params($updateData)
             ->where('id', $id)
             ->execute();
 
-        response()->redirect('/admin/participants');
+        header('Location: /admin/participants');
+        exit;
     }
 
 
     public function destroy($id)
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canDeleteParticipant()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         \App\Utils\Database::connection()->delete('participants')->where('id', $id)->execute();
-        response()->redirect('/admin/participants');
+        header('Location: /admin/participants');
+        exit;
     }
 
     public function uploadPhoto($id)
@@ -612,8 +636,8 @@ class ParticipantController
     public function exportExcel()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         $db = \App\Utils\Database::connection();
@@ -978,8 +1002,17 @@ class ParticipantController
         }
 
         // Download ZIP
-        $semesterCode = '1';
-        $url = "https://admisipasca.ulm.ac.id/administrator/formulir/download_zip/{$email}/{$semesterCode}";
+
+        // Download ZIP
+        $semester = \App\Models\Semester::find($participant['semester_id']);
+        // Use kode (e.g., 20242) or default to 1 if not found. 
+        // Note: External system might rely on specific integer IDs. If 'kode' is 20242, hoping that works.
+        // If external system needs an internal ID (like 55), we might need a mapping. 
+        // But usually kode is the key.
+        $semesterCode = $semester ? $semester['kode'] : '1';
+
+        $emailEnc = urlencode($email);
+        $url = "https://admisipasca.ulm.ac.id/administrator/formulir/download_zip/{$emailEnc}/{$semesterCode}";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -993,7 +1026,8 @@ class ParticipantController
         curl_close($ch);
 
         if ($httpCode !== 200 || empty($zipContent)) {
-            response()->json(['success' => false, 'message' => 'Gagal download ZIP. HTTP: ' . $httpCode], 500);
+            $debugMsg = "Gagal download ZIP. HTTP: $httpCode. URL: " . $url . ". Cookie set: " . (strlen($sessionCookie) > 0 ? 'Yes' : 'No');
+            response()->json(['success' => false, 'message' => $debugMsg], 500);
             return;
         }
 

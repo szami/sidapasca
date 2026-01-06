@@ -11,8 +11,8 @@ class DocumentImportController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin');
-            return;
+            header('Location: /admin');
+            exit;
         }
 
         // Get active semester

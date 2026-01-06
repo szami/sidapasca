@@ -11,7 +11,7 @@ class ExamCardSettingController
     protected function checkAuth()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
+            header('Location: /admin/login');
             exit();
         }
     }
@@ -115,6 +115,7 @@ class ExamCardSettingController
             Setting::set('exam_card_layout', $layout);
         }
 
-        response()->redirect('/admin/exam-card/design?msg=success');
+        header('Location: /admin/exam-card/design?msg=success');
+        exit;
     }
 }

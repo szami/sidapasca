@@ -13,14 +13,14 @@ class ExamSchedulerController
     public function index()
     {
         if (!isset($_SESSION['admin'])) {
-            response()->redirect('/admin/login');
-            return;
+            header('Location: /admin/login');
+            exit;
         }
 
         // Only Superadmin, Admin, TU can manage schedules
         if (!\App\Utils\RoleHelper::canManageSchedule()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $db = Database::connection();
@@ -68,8 +68,8 @@ class ExamSchedulerController
     public function assign()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $data = Request::body();
@@ -77,8 +77,8 @@ class ExamSchedulerController
         $sessionId = $data['session_id'] ?? null;
 
         if (empty($participantIds) || empty($sessionId)) {
-            response()->redirect('/admin/scheduler');
-            return;
+            header('Location: /admin/scheduler');
+            exit;
         }
 
         $db = Database::connection();
@@ -91,8 +91,8 @@ class ExamSchedulerController
         $session = $db->query($sqlSession)->bind($sessionId)->fetchAssoc();
 
         if (!$session) {
-            response()->redirect('/admin/scheduler');
-            return;
+            header('Location: /admin/scheduler');
+            exit;
         }
 
         // 2. Count Current Participants in this Session
@@ -120,8 +120,9 @@ class ExamSchedulerController
         if ($remainingSlots <= 0) {
             // Room Full
             // Redirect with error
-            response()->redirect('/admin/scheduler?status=unscheduled&msg=full');
-            return;
+            // Redirect with error
+            header('Location: /admin/scheduler?status=unscheduled&msg=full');
+            exit;
         }
 
         // 3. Assign up to limit
@@ -169,22 +170,23 @@ class ExamSchedulerController
             $msg .= "Gagal (Penuh): $failedCount.";
         }
 
-        response()->redirect('/admin/scheduler?status=scheduled&msg=' . urlencode($msg));
+        header('Location: /admin/scheduler?status=scheduled&msg=' . urlencode($msg));
+        exit;
     }
 
     public function unassign()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $data = Request::body();
         $participantIds = $data['participant_ids'] ?? [];
 
         if (empty($participantIds)) {
-            response()->redirect('/admin/scheduler');
-            return;
+            header('Location: /admin/scheduler');
+            exit;
         }
 
         $db = Database::connection();
@@ -199,14 +201,15 @@ class ExamSchedulerController
 
         $db->query($sql)->execute();
 
-        response()->redirect('/admin/scheduler?status=unscheduled');
+        header('Location: /admin/scheduler?status=unscheduled');
+        exit;
     }
 
     public function roomView()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $db = Database::connection();

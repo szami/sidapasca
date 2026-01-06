@@ -11,8 +11,8 @@ class SettingsController
     public function index()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         // Ensure table exists
@@ -39,8 +39,8 @@ class SettingsController
     public function save()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $data = Request::body();
@@ -89,21 +89,22 @@ class SettingsController
             }
         }
 
-        response()->redirect('/admin/settings');
+        header('Location: /admin/settings');
+        exit;
     }
 
     public function cleanSemester()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         $semesterId = Request::get('semester_id');
 
         if (!$semesterId) {
-            response()->redirect('/admin/settings');
-            return;
+            header('Location: /admin/settings');
+            exit;
         }
 
         // Delete all participants for this semester
@@ -112,14 +113,15 @@ class SettingsController
             ->bind($semesterId)
             ->execute();
 
-        response()->redirect('/admin/settings');
+        header('Location: /admin/settings');
+        exit;
     }
 
     public function backupDatabase()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         // Path to database
@@ -149,8 +151,8 @@ class SettingsController
     public function restoreDatabase()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         // Check if file was uploaded
@@ -192,8 +194,8 @@ class SettingsController
     public function optimizeDB()
     {
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSettings()) {
-            response()->redirect('/admin?error=unauthorized');
-            return;
+            header('Location: /admin?error=unauthorized');
+            exit;
         }
 
         try {
@@ -203,9 +205,11 @@ class SettingsController
             // ANALYZE: Updates statistics for the query planner
             $db->query("ANALYZE")->execute();
 
-            response()->redirect('/admin/settings?msg=optimized');
+            header('Location: /admin/settings?msg=optimized');
+            exit;
         } catch (\Exception $e) {
-            response()->redirect('/admin/settings?error=' . urlencode($e->getMessage()));
+            header('Location: /admin/settings?error=' . urlencode($e->getMessage()));
+            exit;
         }
     }
 }
