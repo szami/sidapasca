@@ -1093,19 +1093,29 @@
                     msg += '- KTP: ' + (data.results.ktp.success ? '✓' : '✗') + '\n';
                     msg += '- Ijazah: ' + (data.results.ijazah.success ? '✓' : '✗') + '\n';
                     msg += '- Transkrip: ' + (data.results.transkrip.success ? '✓' : '✗');
+
+                    if (data.debug_files && data.debug_files.length > 0) {
+                        msg += '\n\n[DEBUG] File dalam ZIP:\n' + data.debug_files.slice(0, 10).join('\n');
+                        if (data.debug_files.length > 10) msg += '\n...dan ' + (data.debug_files.length - 10) + ' lainnya';
+                    }
+
                     alert(msg);
                     location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    let errMsg = 'Error: ' + data.message;
+                    if (data.debug_files && data.debug_files.length > 0) {
+                        errMsg += '\n\n[DEBUG] File ditemukan dalam ZIP (namun tidak cocok regex):\n' + data.debug_files.slice(0, 10).join('\n');
+                    }
+                    alert(errMsg);
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }
             })
-            .catch(err => {
-                alert('Terjadi kesalahan: ' + err.message);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            });
+            .catch (err => {
+        alert('Terjadi kesalahan: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
     }
 
     // State to track rotation for each type

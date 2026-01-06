@@ -1004,12 +1004,8 @@ class ParticipantController
         // Download ZIP
 
         // Download ZIP
-        $semester = \App\Models\Semester::find($participant['semester_id']);
-        // Use kode (e.g., 20242) or default to 1 if not found. 
-        // Note: External system might rely on specific integer IDs. If 'kode' is 20242, hoping that works.
-        // If external system needs an internal ID (like 55), we might need a mapping. 
-        // But usually kode is the key.
-        $semesterCode = $semester ? $semester['kode'] : '1';
+        // External system always expects semester code = 1
+        $semesterCode = '1';
 
         $emailEnc = urlencode($email);
         $url = "https://admisipasca.ulm.ac.id/administrator/formulir/download_zip/{$emailEnc}/{$semesterCode}";
@@ -1021,25 +1017,75 @@ class ParticipantController
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
+        // Add browser-like headers to avoid bot detection
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language: id,en-US;q=0.9,en;q=0.8',
+            'Referer: https://admisipasca.ulm.ac.id/administrator/',
+            'Upgrade-Insecure-Requests: 1'
+        ]);
+
+        // Initialize detailed process log
+        $processLog = [];
+        $processLog[] = "📧 Email: " . $email;
+        $processLog[] = "🔗 URL: " . $url;
+        $processLog[] = "👤 Nomor Peserta: " . ($participant['nomor_peserta'] ?? 'N/A');
+
         $zipContent = curl_exec($ch);
+        // Check HTTP headers
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $downloadSize = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
+        $redirectUrl = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
         curl_close($ch);
 
+        $processLog[] = "📊 HTTP: $httpCode | Type: $contentType | Size: " . number_format($downloadSize) . "b";
+
         if ($httpCode !== 200 || empty($zipContent)) {
-            $debugMsg = "Gagal download ZIP. HTTP: $httpCode. URL: " . $url . ". Cookie set: " . (strlen($sessionCookie) > 0 ? 'Yes' : 'No');
-            response()->json(['success' => false, 'message' => $debugMsg], 500);
+            $debugMsg = "Gagal download ZIP. HTTP: $httpCode. Type: $contentType. Size: $downloadSize bytes.";
+            if ($redirectUrl) {
+                $debugMsg .= " Redirect to: $redirectUrl";
+                $processLog[] = "🔀 Redirect: $redirectUrl";
+            }
+            $processLog[] = "❌ Download failed";
+
+            response()->json(['success' => false, 'message' => $debugMsg, 'process_log' => $processLog], 500);
             return;
         }
+
+        // Check if content appears to be a ZIP (PK header)
+        if (substr($zipContent, 0, 2) !== 'PK') {
+            $preview = substr(strip_tags($zipContent), 0, 100);
+            $processLog[] = "❌ Bukan ZIP valid (header: " . bin2hex(substr($zipContent, 0, 2)) . ")";
+            $processLog[] = "📄 Preview: $preview";
+            response()->json(['success' => false, 'message' => "Response bukan file ZIP valid", 'process_log' => $processLog], 500);
+            return;
+        }
+
+        $processLog[] = "✅ ZIP header valid (PK)";
 
         // Save temp ZIP
         $tempZipPath = sys_get_temp_dir() . '/berkas_' . md5($email) . '.zip';
         file_put_contents($tempZipPath, $zipContent);
+        $processLog[] = "💾 Saved: $tempZipPath";
 
         // Extract documents
         $zip = new \ZipArchive();
         if ($zip->open($tempZipPath) !== true) {
             unlink($tempZipPath);
-            response()->json(['success' => false, 'message' => 'Gagal membuka ZIP'], 500);
+            $processLog[] = "❌ Gagal open ZIP";
+            response()->json(['success' => false, 'message' => 'Gagal membuka ZIP', 'process_log' => $processLog], 500);
+            return;
+        }
+
+        $processLog[] = "✅ ZIP opened";
+
+        if ($zip->numFiles === 0) {
+            $zip->close();
+            unlink($tempZipPath);
+            $processLog[] = "❌ ZIP kosong (0 files)";
+            response()->json(['success' => false, 'message' => 'ZIP kosong', 'process_log' => $processLog], 500);
             return;
         }
 
@@ -1047,8 +1093,24 @@ class ParticipantController
             'foto' => ['success' => false, 'message' => 'Tidak ditemukan'],
             'ktp' => ['success' => false, 'message' => 'Tidak ditemukan'],
             'ijazah' => ['success' => false, 'message' => 'Tidak ditemukan'],
-            'transkrip' => ['success' => false, 'message' => 'Tidak ditemukan']
+            'transkrip' => ['success' => false, 'message' => 'Tidak ditemukan'],
+            'ijazah_s2' => ['success' => false, 'message' => 'Tidak ditemukan'],
+            'transkrip_s2' => ['success' => false, 'message' => 'Tidak ditemukan']
         ];
+
+
+        // Debug: List all files in ZIP with details
+        $filesInZip = [];
+        $zipDebugInfo = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            $name = $stat['name'];
+            $size = $stat['size'];
+            $isDir = substr($name, -1) === '/';
+
+            $filesInZip[] = $name;
+            $zipDebugInfo[] = $name . ($isDir ? ' [DIR]' : ' [FILE:' . $size . 'b]');
+        }
 
         $nomor = $participant['nomor_peserta'] ?? 'temp_' . $id;
 
@@ -1057,12 +1119,22 @@ class ParticipantController
         $subfolder = $semester ? $semester['kode'] : 'legacy';
 
         // Extract each document type
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $filename = $zip->getNameIndex($i);
+        $processedCount = 0;
 
-            // Foto: pasfoto_umum_*.jpeg|jpg
-            if (preg_match('/pasfoto_umum_.*\.(jpeg|jpg|png)$/i', $filename)) {
-                $content = $zip->getFromIndex($i);
+        foreach ($filesInZip as $filename) {
+            $matched = false;
+
+            // Normalize filename just in case (e.g. remove path prefixes if flattened)
+            $basename = basename($filename);
+
+            // Skip directory entries (those ending with /)
+            if (empty($basename) || substr($filename, -1) === '/') {
+                continue;
+            }
+
+            // Foto: pasfoto*umum*.jpg|jpeg|png (simplified)
+            if (preg_match('/pasfoto.*umum.*\.(jpeg|jpg|png)$/i', $basename)) {
+                $content = $zip->getFromName($filename);
                 $folder = dirname(__DIR__, 2) . '/storage/photos';
                 $targetDir = $folder . '/' . $subfolder;
                 if (!is_dir($targetDir))
@@ -1075,7 +1147,7 @@ class ParticipantController
                 if (!empty($participant['photo_filename'])) {
                     $oldPath = $folder . '/' . $participant['photo_filename'];
                     if (file_exists($oldPath))
-                        unlink($oldPath);
+                        @unlink($oldPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1083,12 +1155,13 @@ class ParticipantController
                     ->params(['photo_filename' => $dbPath])
                     ->where('id', $id)->execute();
 
-                $results['foto'] = ['success' => true, 'filename' => $dbPath];
+                $results['foto'] = ['success' => true, 'filename' => $dbPath, 'original' => $filename];
+                $matched = true;
             }
 
-            // KTP: ktp_umum_*.jpg|jpeg|png  
-            elseif (preg_match('/ktp_umum_.*\.(jpg|jpeg|png)$/i', $filename)) {
-                $content = $zip->getFromIndex($i);
+            // KTP: ktp*umum*.jpg|jpeg|png (simplified)
+            elseif (preg_match('/ktp.*umum.*\.(jpg|jpeg|png)$/i', $basename)) {
+                $content = $zip->getFromName($filename);
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                 $folder = dirname(__DIR__, 2) . '/storage/documents/ktp';
                 $targetDir = $folder . '/' . $subfolder;
@@ -1102,7 +1175,7 @@ class ParticipantController
                 if (!empty($participant['ktp_filename'])) {
                     $oldPath = $folder . '/' . $participant['ktp_filename'];
                     if (file_exists($oldPath))
-                        unlink($oldPath);
+                        @unlink($oldPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1110,12 +1183,13 @@ class ParticipantController
                     ->params(['ktp_filename' => $dbPath])
                     ->where('id', $id)->execute();
 
-                $results['ktp'] = ['success' => true, 'filename' => $dbPath];
+                $results['ktp'] = ['success' => true, 'filename' => $dbPath, 'original' => $filename];
+                $matched = true;
             }
 
-            // Ijazah: S1_ijasah_*.jpeg|jpg|png
-            elseif (preg_match('/S1_ijasah_.*\.(jpeg|jpg|png)$/i', $filename)) {
-                $content = $zip->getFromIndex($i);
+            // Ijazah: S1*ijasah*.jpg|jpeg|png (simplified)
+            elseif (preg_match('/S1.*ijasah.*\.(jpeg|jpg|png)$/i', $basename)) {
+                $content = $zip->getFromName($filename);
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                 $folder = dirname(__DIR__, 2) . '/storage/documents/ijazah';
                 $targetDir = $folder . '/' . $subfolder;
@@ -1129,7 +1203,7 @@ class ParticipantController
                 if (!empty($participant['ijazah_filename'])) {
                     $oldPath = $folder . '/' . $participant['ijazah_filename'];
                     if (file_exists($oldPath))
-                        unlink($oldPath);
+                        @unlink($oldPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1137,12 +1211,13 @@ class ParticipantController
                     ->params(['ijazah_filename' => $dbPath])
                     ->where('id', $id)->execute();
 
-                $results['ijazah'] = ['success' => true, 'filename' => $dbPath];
+                $results['ijazah'] = ['success' => true, 'filename' => $dbPath, 'original' => $filename];
+                $matched = true;
             }
 
-            // Transkrip: S1_transkrip_*.pdf
-            elseif (preg_match('/S1_transkrip_.*\.pdf$/i', $filename)) {
-                $content = $zip->getFromIndex($i);
+            // Transkrip: S1*transkrip*.pdf (simplified)
+            elseif (preg_match('/S1.*transkrip.*\.pdf$/i', $basename)) {
+                $content = $zip->getFromName($filename);
                 $folder = dirname(__DIR__, 2) . '/storage/documents/transkrip';
                 $targetDir = $folder . '/' . $subfolder;
                 if (!is_dir($targetDir))
@@ -1155,7 +1230,7 @@ class ParticipantController
                 if (!empty($participant['transkrip_filename'])) {
                     $oldPath = $folder . '/' . $participant['transkrip_filename'];
                     if (file_exists($oldPath))
-                        unlink($oldPath);
+                        @unlink($oldPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1163,12 +1238,13 @@ class ParticipantController
                     ->params(['transkrip_filename' => $dbPath])
                     ->where('id', $id)->execute();
 
-                $results['transkrip'] = ['success' => true, 'filename' => $dbPath];
+                $results['transkrip'] = ['success' => true, 'filename' => $dbPath, 'original' => $filename];
+                $matched = true;
             }
 
             // Ijazah S2: S2_ijasah_*.jpeg|jpg|png
             elseif (preg_match('/S2_ijasah_.*\.(jpeg|jpg|png)$/i', $filename)) {
-                $content = $zip->getFromIndex($i);
+                $content = $zip->getFromName($filename);
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                 $folder = dirname(__DIR__, 2) . '/storage/documents/ijazah_s2';
                 $targetDir = $folder . '/' . $subfolder;
@@ -1182,7 +1258,7 @@ class ParticipantController
                 if (!empty($participant['ijazah_s2_filename'])) {
                     $oldPath = $folder . '/' . $participant['ijazah_s2_filename'];
                     if (file_exists($oldPath))
-                        unlink($oldPath);
+                        @unlink($oldPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1190,12 +1266,13 @@ class ParticipantController
                     ->params(['ijazah_s2_filename' => $dbPath])
                     ->where('id', $id)->execute();
 
-                $results['ijazah_s2'] = ['success' => true, 'filename' => $dbPath];
+                $results['ijazah_s2'] = ['success' => true, 'filename' => $dbPath, 'original' => $filename];
+                $matched = true;
             }
 
             // Transkrip S2: S2_transkrip_*.pdf
             elseif (preg_match('/S2_transkrip_.*\.pdf$/i', $filename)) {
-                $content = $zip->getFromIndex($i);
+                $content = $zip->getFromName($filename);
                 $folder = dirname(__DIR__, 2) . '/storage/documents/transkrip_s2';
                 $targetDir = $folder . '/' . $subfolder;
                 if (!is_dir($targetDir))
@@ -1208,7 +1285,7 @@ class ParticipantController
                 if (!empty($participant['transkrip_s2_filename'])) {
                     $oldPath = $folder . '/' . $participant['transkrip_s2_filename'];
                     if (file_exists($oldPath))
-                        unlink($oldPath);
+                        @unlink($oldPath);
                 }
 
                 file_put_contents($targetPath, $content);
@@ -1216,26 +1293,29 @@ class ParticipantController
                     ->params(['transkrip_s2_filename' => $dbPath])
                     ->where('id', $id)->execute();
 
-                $results['transkrip_s2'] = ['success' => true, 'filename' => $dbPath];
+                $results['transkrip_s2'] = ['success' => true, 'filename' => $dbPath, 'original' => $filename];
+                $matched = true;
             }
-        }
+
+            if ($matched)
+                $processedCount++;
+        } // End foreach
 
         $zip->close();
         unlink($tempZipPath);
 
-        // Count successes
-        $successCount = 0;
-        foreach ($results as $r) {
-            if ($r['success'])
-                $successCount++;
-        }
+        $processLog[] = "📦 Total files in ZIP: " . count($zipDebugInfo);
+        $processLog[] = "✅ Processed: $processedCount files";
 
         response()->json([
-            'success' => true,
-            'message' => "Berhasil download {$successCount}/4 dokumen",
-            'results' => $results
+            'success' => $processedCount > 0,
+            'message' => "Proses ekstraksi selesai. Ditemukan $processedCount dokumen.",
+            'results' => $results,
+            'debug_files' => $zipDebugInfo,
+            'debug_url' => $url,
+            'process_log' => $processLog
         ]);
-    }
+    } // End autoDownloadDocuments
 
     public function rotateDocument($id, $type)
     {

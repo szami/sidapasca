@@ -138,8 +138,10 @@
                 <div class="col-md-6 mb-3">
                     <div class="card border-primary h-100">
                         <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-user-slash mr-2"></i>Download Peserta Tanpa Berkas</h5>
-                            <p class="card-text">Download berkas untuk semua peserta yang belum memiliki dokumen lengkap</p>
+                            <h5 class="card-title"><i class="fas fa-user-slash mr-2"></i>Download Peserta Tanpa Berkas
+                            </h5>
+                            <p class="card-text">Download berkas untuk semua peserta yang belum memiliki dokumen lengkap
+                            </p>
                             <p class="mb-2"><strong>Target:</strong> <?php echo $stats['without_photo']; ?> peserta</p>
                             <button class="btn btn-primary" onclick="startDownload('without_photo')">
                                 <i class="fas fa-download mr-2"></i>Mulai Download
@@ -151,8 +153,10 @@
                 <div class="col-md-6 mb-3">
                     <div class="card border-info h-100">
                         <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-calendar-check mr-2"></i>Download Peserta Terjadwal Tanpa Berkas</h5>
-                            <p class="card-text">Download berkas untuk peserta yang sudah dijadwalkan tapi belum ada dokumen lengkap</p>
+                            <h5 class="card-title"><i class="fas fa-calendar-check mr-2"></i>Download Peserta Terjadwal
+                                Tanpa Berkas</h5>
+                            <p class="card-text">Download berkas untuk peserta yang sudah dijadwalkan tapi belum ada
+                                dokumen lengkap</p>
                             <p class="mb-2"><strong>Target:</strong> <?php echo $stats['scheduled_without_photo']; ?>
                                 peserta</p>
                             <button class="btn btn-info" onclick="startDownload('scheduled_without_photo')">
@@ -167,7 +171,8 @@
                         <div class="card-body">
                             <h5 class="card-title"><i class="fas fa-users mr-2"></i>Download Semua Peserta Terjadwal
                             </h5>
-                            <p class="card-text">Download berkas untuk semua peserta yang sudah dijadwalkan (termasuk yang sudah punya)</p>
+                            <p class="card-text">Download berkas untuk semua peserta yang sudah dijadwalkan (termasuk
+                                yang sudah punya)</p>
                             <p class="mb-2"><strong>Target:</strong> <?php echo $stats['scheduled']; ?> peserta</p>
                             <button class="btn btn-success" onclick="startDownload('scheduled')">
                                 <i class="fas fa-download mr-2"></i>Mulai Download
@@ -312,11 +317,22 @@
             .then(data => {
                 if (data.success) {
                     results.success++;
-                    addLog('success', participant.nama + ' - Berhasil');
+                    let logMsg = participant.nama + ' - Berhasil';
+                    if (data.process_log && data.process_log.length > 0) {
+                        logMsg += '<br><small class="text-muted">' + data.process_log.join('<br>') + '</small>';
+                    }
+                    addLog('success', logMsg);
                 } else {
                     results.failed++;
+                    let errorMsg = participant.nama + ' - ' + data.message;
+                    if (data.process_log && data.process_log.length > 0) {
+                        errorMsg += '<br><small class="text-warning">' + data.process_log.join('<br>') + '</small>';
+                    }
+                    if (data.debug_files && data.debug_files.length > 0) {
+                        errorMsg += '<br><small class="text-info">Files: ' + data.debug_files.slice(0, 3).join(', ') + '</small>';
+                    }
                     results.failedList.push(participant.nama + ': ' + data.message);
-                    addLog('error', participant.nama + ' - ' + data.message);
+                    addLog('error', errorMsg);
                 }
             })
             .catch(err => {
