@@ -139,7 +139,46 @@
     </div>
 </div>
 
-<!-- Update Action Card -->
+<!-- Deployment Tool Information Card -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-outline card-success">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-rocket"></i> Deployment & Synchronization Tool</h3>
+            </div>
+            <div class="card-body">
+                <p>
+                    Anda dapat menyinkronkan kode antara folder <strong>devsida</strong> dan
+                    <strong>sidapasca-ulm</strong> di host yang sama menggunakan script otomasi ini.
+                    Script ini akan menjalankan perintah <code>git pull</code> dan <code>migration</code> database
+                    secara aman.
+                </p>
+                <div class="alert alert-light border">
+                    <strong>URL Deployment:</strong><br>
+                    <code
+                        class="text-primary"><?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"; ?>/deploy.php?token=sidapasca_deploy_2026_xyz</code>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Langkah Sinkronisasi:</h6>
+                        <ol class="small">
+                            <li>Lakukan <strong>Git Push</strong> dari komputer lokal (atau server dev).</li>
+                            <li>Buka URL di atas melalui browser (atau trigger via cron/webhook).</li>
+                            <li>Aplikasi di folder ini akan otomatis menarik kode terbaru dari GitHub.</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning py-2 mb-0">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Keamanan:</strong><br>
+                            <small>Sangat disarankan untuk mengubah <code>DEPLOY_TOKEN</code> di file
+                                <code>deploy.php</code> agar hanya Anda yang bisa men-trigger update ini.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="row">
     <div class="col-md-12">
         <div class="card card-warning">
