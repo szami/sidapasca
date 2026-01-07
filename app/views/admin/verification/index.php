@@ -154,11 +154,6 @@
                         <i class="fas fa-list-alt text-primary mr-2"></i> Daftar Peserta
                     </h3>
                     <div class="card-tools">
-                        <?php if (\App\Utils\RoleHelper::isSuperadmin()): ?>
-                            <button type="button" class="btn btn-primary btn-sm shadow-sm mr-1" id="btnMassSync">
-                                <i class="fas fa-sync mr-1"></i> Mass Sync ke Server Utama
-                            </button>
-                        <?php endif; ?>
                         <button type="button" class="btn btn-success btn-sm shadow-sm" data-toggle="modal"
                             data-target="#importModal">
                             <i class="fas fa-file-excel mr-1"></i> Import/Sync Excel
@@ -268,301 +263,154 @@
     </div>
 </div>
 
-<!-- Sync Progress Modal -->
-<div class="modal fade" id="syncProgressModal" data-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-body p-4">
-                <div class="text-center mb-4">
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="sr-only">Syncing...</span>
-                    </div>
-                    <h5 class="mt-3 font-weight-bold">Sinkronisasi sedang berjalan...</h5>
-                    <p class="text-muted">Jangan menutup halaman ini hingga proses selesai.</p>
-                </div>
 
-                <div class="progress mb-3" style="height: 25px;">
-                    <div id="syncProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                        role="progressbar" style="width: 0%;">0%</div>
-                </div>
+// Custom File Input Label
+$(".custom-file-input").on("change", function () {
+var fileName = $(this).val().split("\\").pop();
+$(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+});
 
-                <div class="d-flex justify-content-between small text-muted">
-                    <span id="syncStatus">Memulai...</span>
-                    <span id="syncCount">0 / 0</span>
-                </div>
+$(document).ready(function () {
+// Determine Semester ID from URL or Dropdown
+var urlParams = new URLSearchParams(window.location.search);
+var semesterId = $('select[name="semester_id"]').val() || urlParams.get('semester_id') || '';
 
-                <div id="syncLog" class="mt-3 p-2 bg-light rounded shadow-inner small"
-                    style="max-height: 100px; overflow-y: auto; display: none;">
-                </div>
-            </div>
-            <div class="modal-footer bg-light" id="syncFooter">
-                <button type="button" class="btn btn-danger mr-auto" id="btnStopSync">Batal / Stop</button>
-                <button type="button" class="btn btn-primary" data-dismiss="modal" id="btnCloseSync"
-                    style="display: none;">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
+// Set default eligibility filter
+$('#eligibilityFilter').val('eligible').trigger('change');
 
-<script>
-    let isSyncRunning = false;
+// Initialize DataTable
+var table = $('#verificationTable').DataTable({
+responsive: true,
+processing: true,
+serverSide: true,
+language: {
+"sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
+"sProcessing": "Sedang memproses...",
+"sLengthMenu": "Tampilkan _MENU_ entri",
+"sZeroRecords": "Tidak ditemukan data yang sesuai",
+"sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+"sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
+"sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
+"sInfoPostFix": "",
+"sSearch": "Cari:",
+"sUrl": "",
+"oPaginate": {
+"sFirst": "Pertama",
+"sPrevious": "Sebelumnya",
+"sNext": "Selanjutnya",
+"sLast": "Terakhir"
+}
+},
+ajax: {
+url: "/admin/verification/physical/api-data",
+data: function (d) {
+d.semester_id = $('select[name="semester_id"]').val();
+d.status = $('#statusFilter').val();
+d.prodi = $('#prodiFilter').val();
+d.eligibility = document.getElementById('eligibilityFilter').value;
+}
+},
+columns: [
+{
+data: null,
+orderable: false,
+searchable: false,
+className: "text-center align-middle",
+render: function (data, type, row, meta) {
+return meta.row + meta.settings._iDisplayStart + 1;
+}
+},
+{
+data: 'nomor_peserta',
+className: "align-middle font-weight-bold",
+render: function (data) {
+return data ? `<span class="text-primary">${data}</span>` : '<span class="text-muted font-italic">Pending</span>';
+}
+},
+{
+data: 'nama_lengkap',
+className: "align-middle",
+render: function (data, type, row) {
+return `<div class="d-flex flex-column">
+    <strong class="text-dark">${data}</strong>
+    <small class="text-muted"><i class="fas fa-envelope mr-1"></i> ${row.email || '-'}</small>
+</div>`;
+}
+},
+{ data: 'nama_prodi', className: "align-middle" },
+{
+data: 'status_berkas',
+className: "text-center align-middle",
+render: function (data) {
+if (data == 'lulus') return '<span class="badge badge-pill badge-success px-3 py-2 shadow-sm">Lulus</span>';
+if (data == 'gagal') return '<span class="badge badge-pill badge-danger px-3 py-2 shadow-sm">Gagal</span>';
+return '<span class="badge badge-pill badge-warning px-3 py-2 shadow-sm">Pending</span>';
+}
+},
+{
+data: 'status_verifikasi_fisik',
+className: "text-center align-middle",
+render: function (data, type, row) {
+var status = data || 'pending';
+var badge = '';
 
-    // Mass Sync Logic
-    $('#btnMassSync').on('click', function () {
-        if (!confirm('Apakah Anda yakin ingin mensinkronkan semua data verifikasi fisik ke server utama?')) return;
+if (status == 'lengkap') {
+badge = '<span class="badge badge-success shadow-sm"><i class="fas fa-check-circle mr-1"></i> Lengkap</span>';
+} else if (status == 'tidak_lengkap') {
+badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
+} else {
+badge = '<span class="badge badge-secondary shadow-sm"><i class="fas fa-clock mr-1"></i> Belum</span>';
+}
 
-        const semesterId = $('select[name="semester_id"]').val();
-
-        // Show progress modal
-        $('#syncProgressModal').modal('show');
-        $('#syncProgressBar').css('width', '0%').text('0%').removeClass('bg-success').addClass('bg-primary');
-        $('#syncStatus').text('Mengambil data...');
-        $('#syncCount').text('0 / 0');
-        $('#syncLog').empty().hide();
-        $('#syncFooter').show();
-        $('#btnStopSync').show();
-        $('#btnCloseSync').hide();
-
-        // Fetch data
-        $.get('/admin/verification/physical/api-sync-data', { semester_id: semesterId }, function (response) {
-            if (response.success && response.data.length > 0) {
-                isSyncRunning = true;
-                processSync(response.data);
-            } else {
-                $('#syncStatus').text('Tidak ada data untuk disinkronkan.');
-                $('#btnStopSync').hide();
-                $('#btnCloseSync').show();
-            }
-        }).fail(function () {
-            alert('Gagal mengambil data sinkronisasi.');
-            $('#syncProgressModal').modal('hide');
-        });
-    });
-
-    $('#btnStopSync').on('click', function () {
-        if (confirm('Hentikan sinkronisasi?')) {
-            isSyncRunning = false;
-            $('#syncStatus').text('Sinkronisasi dihentikan oleh pengguna.');
-            $(this).hide();
-            $('#btnCloseSync').show();
-        }
-    });
-
-    const delay = ms => new Promise(res => setTimeout(res, ms));
-
-    async function processSync(data) {
-        const total = data.length;
-        let success = 0;
-
-        $('#syncCount').text(`0 / ${total}`);
-        $('#syncLog').show();
-
-        for (let i = 0; i < total; i++) {
-            if (!isSyncRunning) break;
-
-            const item = data[i];
-            const status = item.status_verifikasi_fisik === 'lengkap' ? '1' : '0';
-            const prodi = status === '1' ? item.kode_prodi : 'null';
-            const url = `https://admisipasca.ulm.ac.id/administrator/kartu/isberkas/${status}/${item.nomor_peserta}/${prodi}`;
-
-            try {
-                // Changed method to POST as required by the remote system
-                await fetch(url, { method: 'POST', mode: 'no-cors', credentials: 'include' });
-                success++;
-                $('#syncLog').prepend(`<div><span class="text-success">✓</span> ${item.nomor_peserta}: Terkirim</div>`);
-            } catch (e) {
-                $('#syncLog').prepend(`<div><span class="text-danger">✗</span> ${item.nomor_peserta}: Gagal (${e.message})</div>`);
-            }
-
-            // Update Progress
-            const percent = Math.round(((i + 1) / total) * 100);
-            $('#syncProgressBar').css('width', `${percent}%`).text(`${percent}%`);
-            $('#syncCount').text(`${i + 1} / ${total}`);
-            $('#syncStatus').text('Sinkronisasi data...');
-
-            // Throttling: wait 3 seconds before next request to reduce server load
-            if (i < total - 1 && isSyncRunning) {
-                await delay(3000);
-            }
-        }
-
-        if (isSyncRunning) {
-            $('#syncStatus').text('Sinkronisasi selesai!');
-            $('#syncProgressBar').removeClass('bg-primary').addClass('bg-success');
-        }
-
-        isSyncRunning = false;
-        $('#btnStopSync').hide();
-        $('#btnCloseSync').show();
+if (row.bypass_verification == 1) {
+badge += '<div class="mt-1"><span class="badge badge-warning text-dark"><i class="fas fa-lock-open mr-1"></i>
+        Bypass</span></div>';
+}
+return badge;
+}
+},
+{
+data: 'catatan_admin',
+className: "text-center align-middle",
+render: function (data) {
+if (data && data.trim() !== '') {
+return '<i class="fas fa-check-square text-success" title="' + data.replace(/" /g, '&quot;' ) + '"></i>' ; }
+    return '<i class="far fa-square text-muted"></i>' ; } }, { data: 'updated_at' ,
+    className: "text-center align-middle text-muted small" , render: function (data) { if (!data) return '-' ; try {
+    return new Date(data).toLocaleDateString('id-ID', { day: 'numeric' , month: 'short' , year: 'numeric' // Fixed
+    typo 'numeri c' }); } catch (e) { return data; // Fallback } } }, { data: 'participant_id' ,
+    className: "text-center align-middle" , orderable: false, render: function (data) { return `<div class="btn-group">
+    <a href="/admin/verification/physical/${data}" class="btn btn-sm btn-info shadow-sm" title="Verifikasi">
+        <i class="fas fa-edit"></i> Verifikasi
+    </a>
+    </div>`;
     }
-
-    // Custom File Input Label
-    $(".custom-file-input").on("change", function () {
-        var fileName = $(this).val().split("\\").pop();
-        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+    }
+    ]
     });
 
-    $(document).ready(function () {
-        // Determine Semester ID from URL or Dropdown
-        var urlParams = new URLSearchParams(window.location.search);
-        var semesterId = $('select[name="semester_id"]').val() || urlParams.get('semester_id') || '';
-
-        // Set default eligibility filter
-        $('#eligibilityFilter').val('eligible').trigger('change');
-
-        // Initialize DataTable
-        var table = $('#verificationTable').DataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            language: {
-                "sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
-                "sProcessing": "Sedang memproses...",
-                "sLengthMenu": "Tampilkan _MENU_ entri",
-                "sZeroRecords": "Tidak ditemukan data yang sesuai",
-                "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                "sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
-                "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
-                "sInfoPostFix": "",
-                "sSearch": "Cari:",
-                "sUrl": "",
-                "oPaginate": {
-                    "sFirst": "Pertama",
-                    "sPrevious": "Sebelumnya",
-                    "sNext": "Selanjutnya",
-                    "sLast": "Terakhir"
-                }
-            },
-            ajax: {
-                url: "/admin/verification/physical/api-data",
-                data: function (d) {
-                    d.semester_id = $('select[name="semester_id"]').val();
-                    d.status = $('#statusFilter').val();
-                    d.prodi = $('#prodiFilter').val();
-                    d.eligibility = document.getElementById('eligibilityFilter').value;
-                }
-            },
-            columns: [
-                {
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    className: "text-center align-middle",
-                    render: function (data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                    }
-                },
-                {
-                    data: 'nomor_peserta',
-                    className: "align-middle font-weight-bold",
-                    render: function (data) {
-                        return data ? `<span class="text-primary">${data}</span>` : '<span class="text-muted font-italic">Pending</span>';
-                    }
-                },
-                {
-                    data: 'nama_lengkap',
-                    className: "align-middle",
-                    render: function (data, type, row) {
-                        return `<div class="d-flex flex-column">
-                                    <strong class="text-dark">${data}</strong>
-                                    <small class="text-muted"><i class="fas fa-envelope mr-1"></i> ${row.email || '-'}</small>
-                                </div>`;
-                    }
-                },
-                { data: 'nama_prodi', className: "align-middle" },
-                {
-                    data: 'status_berkas',
-                    className: "text-center align-middle",
-                    render: function (data) {
-                        if (data == 'lulus') return '<span class="badge badge-pill badge-success px-3 py-2 shadow-sm">Lulus</span>';
-                        if (data == 'gagal') return '<span class="badge badge-pill badge-danger px-3 py-2 shadow-sm">Gagal</span>';
-                        return '<span class="badge badge-pill badge-warning px-3 py-2 shadow-sm">Pending</span>';
-                    }
-                },
-                {
-                    data: 'status_verifikasi_fisik',
-                    className: "text-center align-middle",
-                    render: function (data, type, row) {
-                        var status = data || 'pending';
-                        var badge = '';
-
-                        if (status == 'lengkap') {
-                            badge = '<span class="badge badge-success shadow-sm"><i class="fas fa-check-circle mr-1"></i> Lengkap</span>';
-                        } else if (status == 'tidak_lengkap') {
-                            badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
-                        } else {
-                            badge = '<span class="badge badge-secondary shadow-sm"><i class="fas fa-clock mr-1"></i> Belum</span>';
-                        }
-
-                        if (row.bypass_verification == 1) {
-                            badge += '<div class="mt-1"><span class="badge badge-warning text-dark"><i class="fas fa-lock-open mr-1"></i> Bypass</span></div>';
-                        }
-                        return badge;
-                    }
-                },
-                {
-                    data: 'catatan_admin',
-                    className: "text-center align-middle",
-                    render: function (data) {
-                        if (data && data.trim() !== '') {
-                            return '<i class="fas fa-check-square text-success" title="' + data.replace(/"/g, '&quot;') + '"></i>';
-                        }
-                        return '<i class="far fa-square text-muted"></i>';
-                    }
-                },
-                {
-                    data: 'updated_at',
-                    className: "text-center align-middle text-muted small",
-                    render: function (data) {
-                        if (!data) return '-';
-                        try {
-                            return new Date(data).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric' // Fixed typo 'numeri c'
-                            });
-                        } catch (e) {
-                            return data; // Fallback
-                        }
-                    }
-                },
-                {
-                    data: 'participant_id',
-                    className: "text-center align-middle",
-                    orderable: false,
-                    render: function (data) {
-                        return `<div class="btn-group">
-                                    <a href="/admin/verification/physical/${data}" class="btn btn-sm btn-info shadow-sm" title="Verifikasi">
-                                        <i class="fas fa-edit"></i> Verifikasi
-                                    </a>
-                                </div>`;
-                    }
-                }
-            ]
-        });
-
-        // Handle Filter Button Logic
-        $('#btnFilter').click(function () {
-            table.ajax.reload();
-        });
-
-        // Auto-reload on filter change
-        $('#eligibilityFilter, #statusFilter').change(function () {
-            table.ajax.reload();
-        });
-
-        // Enter key support for filters
-        $('#filterForm input').keypress(function (e) {
-            if (e.which == 13) {
-                e.preventDefault();
-                table.ajax.reload();
-            }
-        });
+    // Handle Filter Button Logic
+    $('#btnFilter').click(function () {
+    table.ajax.reload();
     });
 
-</script>
+    // Auto-reload on filter change
+    $('#eligibilityFilter, #statusFilter').change(function () {
+    table.ajax.reload();
+    });
 
-<?php
-$content = ob_get_clean();
-include __DIR__ . '/../../layouts/admin.php';
-?>
+    // Enter key support for filters
+    $('#filterForm input').keypress(function (e) {
+    if (e.which == 13) {
+    e.preventDefault();
+    table.ajax.reload();
+    }
+    });
+    });
+
+    </script>
+
+    <?php
+    $content = ob_get_clean();
+    include __DIR__ . '/../../layouts/admin.php';
+    ?>
