@@ -20,9 +20,10 @@ Gunakan folder ini untuk mencoba fitur baru, testing input, atau modifikasi tamp
 
 ### Tahap 2: Di Folder Actual (`sidapasca-ulm`)
 Gunakan folder ini untuk publik/pendaftar asli.
-1.  Gunakan tool [deploy.php](file:///c:/laragon/www/sidapasca-ulm/deploy.php) dengan cara akses URL: `https://sidapasca-ulm.inovasidigital.link/deploy.php?token=sidapasca_deploy_2026_xyz`.
-2.  Script ini akan menarik kode terbaru dari Git.
-3.  Jika ada perubahan struktur tabel, script ini otomatis menjalankan `migrate` ke database actual tersebut.
+1.  **Cara A (Jika Git/exec Aktif)**: Gunakan tool [deploy.php](file:///c:/laragon/www/sidapasca-ulm/deploy.php) via URL: `https://sidapasca-ulm.inovasidigital.link/deploy.php?token=...`.
+2.  **Cara B (Hostinger / Shared Hosting)**: Jika muncul error "Git tidak terinstall", gunakan tool [sync.php](file:///c:/laragon/www/sidapasca-ulm/sync.php) via URL: `https://sidapasca-ulm.inovasidigital.link/sync.php?token=...`.
+    *   Script ini akan menyalin file langsung dari folder `devsida` ke `sidapasca-ulm` tanpa menggunakan Git.
+3.  Jika ada perubahan struktur tabel, kedua script di atas otomatis menjalankan `migrate` ke database actual tersebut.
 
 ---
 

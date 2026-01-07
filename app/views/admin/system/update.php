@@ -160,18 +160,23 @@
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Langkah Sinkronisasi:</h6>
-                        <ol class="small">
-                            <li>Lakukan <strong>Git Push</strong> dari komputer lokal (atau server dev).</li>
-                            <li>Buka URL di atas melalui browser (atau trigger via cron/webhook).</li>
-                            <li>Aplikasi di folder ini akan otomatis menarik kode terbaru dari GitHub.</li>
-                        </ol>
+                        <div class="alert alert-info py-2">
+                            <strong><i class="fas fa-server"></i> Untuk Hostinger / Shared Hosting:</strong><br>
+                            <small>
+                                Jika tombol "Check Updates" di bawah menunjukkan <strong>"Git tidak tersedia"</strong>
+                                atau <strong>"exec() disabled"</strong>, gunakan script sinkronisasi langsung (Native
+                                PHP Sync):<br>
+                                <code
+                                    class="text-dark"><?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"; ?>/sync.php?token=sidapasca_deploy_2026_xyz</code>
+                            </small>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="alert alert-warning py-2 mb-0">
                             <strong><i class="fas fa-exclamation-triangle"></i> Keamanan:</strong><br>
                             <small>Sangat disarankan untuk mengubah <code>DEPLOY_TOKEN</code> di file
-                                <code>deploy.php</code> agar hanya Anda yang bisa men-trigger update ini.</small>
+                                <code>deploy.php</code> dan <code>SYNC_TOKEN</code> di <code>sync.php</code> agar hanya
+                                Anda yang bisa men-trigger update ini.</small>
                         </div>
                     </div>
                 </div>
