@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.1] - 2026-01-07
+---
+
+## [1.3.2] - 2026-01-07
+
+### 🎉 Added - Role-Based User Guides
+- **Admin Prodi Guide**: Created a comprehensive HTML user guide for the `Admin Prodi` role, covering dashboard, participant management, and assessment scoring.
+- **System Guide Integration**: Unified the "Panduan Sistem" menu to be accessible by all roles (Admin Prodi, UPKH, TU) while maintaining management privileges for Superadmins.
+- **Improved Guide Viewer**: Added a modal-based viewer in the admin panel to allow users to read guides directly without leaving the page.
+
+### 🔧 Fixed
+- **Database Schema**: Fixed missing `guides` and `news` tables in the local SQLite database file to ensure guides and news functionality works correctly.
+
 
 ### 🔧 Fixed - External Sync Reliability
 - **Mass Sync Method**: Fixed synchronization failure with `admisipasca` by changing the HTTP method from `GET` to `POST` as required by the remote endpoint.

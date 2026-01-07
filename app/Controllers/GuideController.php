@@ -117,7 +117,15 @@ class GuideController
             return;
         }
 
-        $guides = Guide::all();
+        $role = $_SESSION['admin_role'] ?? 'admin';
+        $isAdmin = in_array($role, [\App\Utils\RoleHelper::ROLE_SUPERADMIN, \App\Utils\RoleHelper::ROLE_ADMIN]);
+
+        if ($isAdmin) {
+            $guides = Guide::all();
+        } else {
+            $guides = Guide::getByRole($role);
+        }
+
         response()->json(['data' => $guides]);
     }
 

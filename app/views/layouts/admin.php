@@ -307,21 +307,21 @@
 
 
                         <!-- MANAJEMEN KONTEN -->
+                        <li class="nav-header">INFORMASI & PANDUAN</li>
                         <?php if ($isSuperadmin || \App\Utils\RoleHelper::isAdmin()): ?>
-                            <li class="nav-header">MANAJEMEN KONTEN</li>
                             <li class="nav-item">
                                 <a href="/admin/news" class="nav-link">
                                     <i class="nav-icon fas fa-newspaper"></i>
                                     <p>Berita & Informasi</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="/admin/guides" class="nav-link">
-                                    <i class="nav-icon fas fa-book"></i>
-                                    <p>Panduan Sistem</p>
-                                </a>
-                            </li>
                         <?php endif; ?>
+                        <li class="nav-item">
+                            <a href="/admin/guides" class="nav-link">
+                                <i class="nav-icon fas fa-book"></i>
+                                <p>Panduan Sistem</p>
+                            </a>
+                        </li>
 
                         <!-- SYSTEM TOOLS -->
                         <?php if ($canImportExport || $canManageSettings || $canManageEmail || $canManageUsers): ?>
