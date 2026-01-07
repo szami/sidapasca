@@ -154,6 +154,11 @@
                         <i class="fas fa-list-alt text-primary mr-2"></i> Daftar Peserta
                     </h3>
                     <div class="card-tools">
+                        <?php if (\App\Utils\RoleHelper::isSuperadmin()): ?>
+                            <button type="button" class="btn btn-primary btn-sm shadow-sm mr-1" id="btnMassSync">
+                                <i class="fas fa-sync mr-1"></i> Mass Sync ke Server Utama
+                            </button>
+                        <?php endif; ?>
                         <button type="button" class="btn btn-success btn-sm shadow-sm" data-toggle="modal"
                             data-target="#importModal">
                             <i class="fas fa-file-excel mr-1"></i> Import/Sync Excel
@@ -263,7 +268,101 @@
     </div>
 </div>
 
+<!-- Sync Progress Modal -->
+<div class="modal fade" id="syncProgressModal" data-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="sr-only">Syncing...</span>
+                    </div>
+                    <h5 class="mt-3 font-weight-bold">Sinkronisasi sedang berjalan...</h5>
+                    <p class="text-muted">Jangan menutup halaman ini hingga proses selesai.</p>
+                </div>
+                
+                <div class="progress mb-3" style="height: 25px;">
+                    <div id="syncProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%;">0%</div>
+                </div>
+                
+                <div class="d-flex justify-content-between small text-muted">
+                    <span id="syncStatus">Memulai...</span>
+                    <span id="syncCount">0 / 0</span>
+                </div>
+                
+                <div id="syncLog" class="mt-3 p-2 bg-light rounded shadow-inner small" style="max-height: 100px; overflow-y: auto; display: none;">
+                </div>
+            </div>
+            <div class="modal-footer bg-light" id="syncFooter" style="display: none;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Mass Sync Logic
+    $('#btnMassSync').on('click', function() {
+        if (!confirm('Apakah Anda yakin ingin mensinkronkan semua data verifikasi fisik ke server utama?')) return;
+        
+        const semesterId = $('select[name="semester_id"]').val();
+        
+        // Show progress modal
+        $('#syncProgressModal').modal('show');
+        $('#syncProgressBar').css('width', '0%').text('0%');
+        $('#syncStatus').text('Mengambil data...');
+        $('#syncCount').text('0 / 0');
+        $('#syncLog').empty().hide();
+        $('#syncFooter').hide();
+
+        // Fetch data
+        $.get('/admin/verification/physical/api-sync-data', { semester_id: semesterId }, function(response) {
+            if (response.success && response.data.length > 0) {
+                processSync(response.data);
+            } else {
+                $('#syncStatus').text('Tidak ada data untuk disinkronkan.');
+                $('#syncFooter').show();
+            }
+        }).fail(function() {
+            alert('Gagal mengambil data sinkronisasi.');
+            $('#syncProgressModal').modal('hide');
+        });
+    });
+
+    async function processSync(data) {
+        const total = data.length;
+        let success = 0;
+        
+        $('#syncCount').text(`0 / ${total}`);
+        $('#syncLog').show();
+
+        for (let i = 0; i < total; i++) {
+            const item = data[i];
+            const status = item.status_verifikasi_fisik === 'lengkap' ? '1' : '0';
+            const prodi = status === '1' ? item.kode_prodi : 'null';
+            const url = `https://admisipasca.ulm.ac.id/administrator/kartu/isberkas/${status}/${item.nomor_peserta}/${prodi}`;
+
+            try {
+                // We use mode: 'no-cors' because we only need to "ping" the server
+                // and probably won't have CORS permission to read the response.
+                await fetch(url, { mode: 'no-cors' });
+                success++;
+                $('#syncLog').prepend(`<div><span class="text-success">✓</span> ${item.nomor_peserta}: Terkirim</div>`);
+            } catch (e) {
+                $('#syncLog').prepend(`<div><span class="text-danger">✗</span> ${item.nomor_peserta}: Gagal (${e.message})</div>`);
+            }
+
+            // Update Progress
+            const percent = Math.round(((i + 1) / total) * 100);
+            $('#syncProgressBar').css('width', `${percent}%`).text(`${percent}%`);
+            $('#syncCount').text(`${i + 1} / ${total}`);
+            $('#syncStatus').text('Sinkronisasi data...');
+        }
+
+        $('#syncStatus').text('Sinkronisasi selesai!');
+        $('#syncFooter').show();
+    }
+
     // Custom File Input Label
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();

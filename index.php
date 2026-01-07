@@ -170,6 +170,7 @@ $app->get('/admin/verification/physical/export', 'App\Controllers\DocumentVerifi
 $app->post('/admin/verification/physical/import', 'App\Controllers\DocumentVerificationController@import');
 $app->post('/admin/verification/physical/reset/{id}', 'App\Controllers\DocumentVerificationController@reset');
 $app->get('/admin/verification/physical/import/template', 'App\Controllers\DocumentVerificationController@downloadTemplate');
+$app->get('/admin/verification/physical/api-sync-data', 'App\Controllers\DocumentVerificationController@apiSyncData');
 $app->get('/admin/verification/physical/api-data', 'App\Controllers\DocumentVerificationController@apiData'); // NEW API Route
 $app->get('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@verify');
 $app->post('/admin/verification/physical/{id}/save', 'App\Controllers\DocumentVerificationController@save');

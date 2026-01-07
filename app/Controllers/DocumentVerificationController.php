@@ -481,4 +481,32 @@ class DocumentVerificationController
             response()->json(['status' => 'success', 'message' => 'Data verifikasi tidak ditemukan atau sudah bersih.']);
         }
     }
+
+    public function apiSyncData()
+    {
+        $this->checkAuth();
+
+        $db = \App\Utils\Database::connection();
+        $semesterId = Request::get('semester_id') ?? Semester::getActive()['id'] ?? null;
+
+        $where = "p.status_berkas = 'lulus' AND p.nomor_peserta IS NOT NULL AND p.nomor_peserta != ''";
+        if ($semesterId) {
+            $where .= " AND p.semester_id = '$semesterId'";
+        }
+
+        $sql = "SELECT 
+                    p.nomor_peserta, 
+                    p.kode_prodi,
+                    dv.status_verifikasi_fisik
+                FROM participants p
+                LEFT JOIN document_verifications dv ON p.id = dv.participant_id
+                WHERE $where";
+
+        $data = $db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+
+        response()->json([
+            "success" => true,
+            "data" => $data
+        ]);
+    }
 }
