@@ -102,6 +102,15 @@ class DocumentVerificationController
             exit;
         }
 
+        $participant = Participant::find($id);
+        if (!$participant) {
+            header('Location: /admin/verification/physical');
+            exit;
+        }
+
+        // Determine if S3 based on prodi name
+        $isS3 = (stripos($participant['nama_prodi'] ?? '', 'S3') !== false || stripos($participant['nama_prodi'] ?? '', 'DOKTOR') !== false);
+
         $data = [
             'formulir_pendaftaran' => Request::get('formulir_pendaftaran') ? 1 : 0,
             'formulir_pendaftaran_jumlah' => Request::get('formulir_pendaftaran_jumlah'),
@@ -133,55 +142,23 @@ class DocumentVerificationController
         $existing = DocumentVerification::findByParticipant($id);
         $bypassValue = $existing['bypass_verification'] ?? 0;
 
-        if (($_SESSION['admin_role'] ?? '') === 'superadmin') {
+        if ((\App\Utils\RoleHelper::isSuperAdmin())) {
             $bypassValue = Request::get('bypass_verification') ? 1 : 0;
         }
 
         $data['bypass_verification'] = $bypassValue;
         $data['verified_by'] = $_SESSION['admin'];
 
-        // LOGIC: Strict Validation Calculation
-        $participant = Participant::find($id);
-        if ($participant) {
-            $isS3 = (stripos($participant['nama_prodi'] ?? '', 'S3') !== false || stripos($participant['nama_prodi'] ?? '', 'DOKTOR') !== false);
+        // Update Document Verification Table
+        $verification = DocumentVerification::updateVerification($id, $data, $isS3);
 
-            $required = [
-                'formulir_pendaftaran',
-                'ijazah_s1_legalisir',
-                'transkrip_s1_legalisir',
-                'bukti_pembayaran',
-                'surat_rekomendasi'
-            ];
-
-            if ($isS3) {
-                $required[] = 'ijazah_s2_legalisir';
-                $required[] = 'transkrip_s2_legalisir';
-            }
-
-            $allValid = true;
-            foreach ($required as $field) {
-                // Check if checkbox is checked (value 1)
-                if (empty($data[$field]) || $data[$field] != 1) {
-                    $allValid = false;
-                    break;
-                }
-            }
-
-            $statusFisik = $allValid ? 'lengkap' : 'tidak_lengkap';
-
-            // Bypass overrides logic
-            if ($data['bypass_verification'] == 1) {
-                $statusFisik = 'lengkap';
-            }
-
-            // Update Participant Table
+        // SYNC: Update Participant Table status_verifikasi_fisik based on verification result
+        if ($verification) {
             \App\Utils\Database::connection()->update('participants')
-                ->params(['status_verifikasi_fisik' => $statusFisik])
+                ->params(['status_verifikasi_fisik' => $verification['status_verifikasi_fisik']])
                 ->where('id', $id)
                 ->execute();
         }
-
-        DocumentVerification::updateVerification($id, $data);
 
         // Redirect back with success message
         header("Location: /admin/verification/physical/$id?success=1");

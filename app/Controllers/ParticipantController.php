@@ -404,7 +404,16 @@ class ParticipantController
             // Payment Details
             'transaction_id' => $data['transaction_id'] ?? null,
             'payment_date' => $data['payment_date'] ?? null,
-            'payment_method' => $data['payment_method'] ?? null
+            'payment_method' => $data['payment_method'] ?? null,
+
+            // Berkas Fisik (Physical Verification)
+            'berkas_fisik_status' => $data['berkas_fisik_status'] ?? 'belum_lengkap',
+            'berkas_fisik_note' => $data['berkas_fisik_note'] ?? null,
+
+            // Hasil Seleksi (Selection Results)
+            'hasil_seleksi' => $data['hasil_seleksi'] ?? 'belum_ada',
+            'hasil_seleksi_note' => $data['hasil_seleksi_note'] ?? null,
+            'hasil_seleksi_date' => !empty($data['hasil_seleksi_date']) ? $data['hasil_seleksi_date'] : null
         ];
 
 

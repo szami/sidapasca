@@ -137,15 +137,42 @@ $app->post('/admin/exam-card/design/save', 'App\Controllers\ExamCardSettingContr
 $app->post('/admin/settings/save-cookie', 'App\Controllers\SettingsController@saveSessionCookie');
 // $app->post('/admin/document-import/save-cookie', 'App\Controllers\DocumentImportController@saveSessionCookie'); // Moved to Settings
 
+// Admin Routes - News
+$app->get('/admin/news', 'App\Controllers\NewsController@index');
+$app->get('/admin/news/create', 'App\Controllers\NewsController@create');
+$app->post('/admin/news/store', 'App\Controllers\NewsController@store');
+$app->get('/admin/news/edit/{id}', 'App\Controllers\NewsController@edit');
+$app->post('/admin/news/update/{id}', 'App\Controllers\NewsController@update');
+$app->get('/admin/news/delete/{id}', 'App\Controllers\NewsController@delete');
+$app->get('/admin/news/api-data', 'App\Controllers\NewsController@apiData');
+$app->post('/admin/news/upload-image', 'App\Controllers\NewsController@uploadImage');
+
+// Admin Routes - Guides
+$app->get('/admin/guides', 'App\Controllers\GuideController@index');
+$app->get('/admin/guides/create', 'App\Controllers\GuideController@create');
+$app->post('/admin/guides/store', 'App\Controllers\GuideController@store');
+$app->get('/admin/guides/edit/{id}', 'App\Controllers\GuideController@edit');
+$app->post('/admin/guides/update/{id}', 'App\Controllers\GuideController@update');
+$app->get('/admin/guides/delete/{id}', 'App\Controllers\GuideController@delete');
+$app->get('/admin/guides/activate/{id}', 'App\Controllers\GuideController@activate');
+$app->get('/admin/guides/deactivate/{id}', 'App\Controllers\GuideController@deactivate');
+$app->get('/admin/guides/api-data', 'App\Controllers\GuideController@apiData');
+$app->post('/admin/guides/upload-image', 'App\Controllers\GuideController@uploadImage');
+
+// Public/Participan API
+$app->get('/api/news/published', 'App\Controllers\NewsController@getPublished');
+$app->get('/api/news/get/{id}', 'App\Controllers\NewsController@get');
+$app->get('/api/guides/role/{role}', 'App\Controllers\GuideController@getByRole');
+
 // Physical Verification Routes
 $app->get('/admin/verification/physical', 'App\Controllers\DocumentVerificationController@index');
-$app->get('/admin/verification/physical/export', 'App\Controllers\DocumentVerificationController@exportTemplate');
+$app->get('/admin/verification/physical/export', 'App\Controllers\DocumentVerificationController@downloadTemplate');
 $app->post('/admin/verification/physical/import', 'App\Controllers\DocumentVerificationController@import');
 $app->post('/admin/verification/physical/reset/{id}', 'App\Controllers\DocumentVerificationController@reset');
 $app->get('/admin/verification/physical/import/template', 'App\Controllers\DocumentVerificationController@downloadTemplate');
 $app->get('/admin/verification/physical/api-data', 'App\Controllers\DocumentVerificationController@apiData'); // NEW API Route
 $app->get('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@verify');
-$app->post('/admin/verification/physical/{id}', 'App\Controllers\DocumentVerificationController@saveVerification');
+$app->post('/admin/verification/physical/{id}/save', 'App\Controllers\DocumentVerificationController@save');
 
 
 // --- ZIP Import Interactive (Per-Participant) - DEPRECATED (Replaced by Document Helper) ---
@@ -267,6 +294,9 @@ $app->get('/dashboard', function () {
     // Load Participant Data
     $participant = \App\Models\Participant::find($_SESSION['user']);
 
+    // Fetch Physical Verification Info
+    $verification = \App\Models\DocumentVerification::findByParticipant($_SESSION['user']);
+
     // Fetch Exam Room Info if assigned
     $examRoom = null;
     if (!empty($participant['ruang_ujian'])) {
@@ -277,6 +307,7 @@ $app->get('/dashboard', function () {
 
     echo \App\Utils\View::render('participant.dashboard', [
         'participant' => $participant,
+        'verification' => $verification,
         'examRoom' => $examRoom
     ]);
 });

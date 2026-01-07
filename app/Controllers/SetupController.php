@@ -361,17 +361,33 @@ class SetupController
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
 
-            $pdo->exec("CREATE TABLE IF NOT EXISTS update_logs (
+            $pdo->exec("CREATE TABLE IF NOT EXISTS news (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                version_from VARCHAR(20),
-                version_to VARCHAR(20),
-                status VARCHAR(20),
-                message TEXT,
-                performed_by INTEGER,
-                backup_file VARCHAR(255),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                title TEXT,
+                content TEXT,
+                content_type TEXT,
+                image_url TEXT,
+                category TEXT,
+                is_published BOOLEAN DEFAULT 0,
+                published_at DATETIME,
+                created_by TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
-            $log[] = "Verified New System tables (Emails, Docs, Logs).";
+
+            $pdo->exec("CREATE TABLE IF NOT EXISTS guides (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                content TEXT,
+                role TEXT,
+                order_index INTEGER DEFAULT 0,
+                is_active BOOLEAN DEFAULT 1,
+                created_by TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )");
+
+            $log[] = "Verified New System tables (Emails, Docs, News, Guides, Logs).";
 
             // Seed Admin if not exists
             $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :u");

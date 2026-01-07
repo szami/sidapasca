@@ -426,6 +426,49 @@ try {
     $pdo->exec($prodi_quotas);
     echo "Prodi Quotas table migrated.\n";
 
+    // 15. News Management Table
+    $newsSql = file_get_contents($baseDir . '/database/migrations/create_news_table.sql');
+    if ($newsSql) {
+        $pdo->exec($newsSql);
+        echo "News table migrated.\n";
+    }
+
+    // 16. Guide Management Table
+    $guidesSql = file_get_contents($baseDir . '/database/migrations/create_guides_table.sql');
+    if ($guidesSql) {
+        $pdo->exec($guidesSql);
+        echo "Guides table migrated.\n";
+    }
+
+    // 17. Participant Physical Docs & Selection Results (Task: Reorganisasi Halaman Peserta)
+    echo "Checking Participant Additional Columns (Physical Docs & Selection)...\n";
+    $cols = $pdo->query("PRAGMA table_info(participants)")->fetchAll(PDO::FETCH_ASSOC);
+    $existingCols = array_column($cols, 'name');
+
+    // Physical Documents
+    if (!in_array('berkas_fisik_status', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN berkas_fisik_status TEXT DEFAULT 'belum_lengkap'");
+        echo "Added berkas_fisik_status to participants.\n";
+    }
+    if (!in_array('berkas_fisik_note', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN berkas_fisik_note TEXT");
+        echo "Added berkas_fisik_note to participants.\n";
+    }
+
+    // Selection Results
+    if (!in_array('hasil_seleksi', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN hasil_seleksi TEXT DEFAULT 'belum_ada'");
+        echo "Added hasil_seleksi to participants.\n";
+    }
+    if (!in_array('hasil_seleksi_note', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN hasil_seleksi_note TEXT");
+        echo "Added hasil_seleksi_note to participants.\n";
+    }
+    if (!in_array('hasil_seleksi_date', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN hasil_seleksi_date DATETIME");
+        echo "Added hasil_seleksi_date to participants.\n";
+    }
+
 } catch (PDOException $e) {
     echo "Migration Error: " . $e->getMessage() . "\n";
     exit(1);

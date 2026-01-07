@@ -10,7 +10,7 @@ class DocumentVerification
     public static function find($id)
     {
         $db = \App\Utils\Database::connection();
-        return $db->query("SELECT * FROM document_verifications WHERE id = ?")->bind($id)->first();
+        return $db->select('document_verifications')->where('id', $id)->first();
     }
 
     /**
@@ -19,7 +19,7 @@ class DocumentVerification
     public static function findByParticipant($participantId)
     {
         $db = \App\Utils\Database::connection();
-        return $db->query("SELECT * FROM document_verifications WHERE participant_id = ?")->bind($participantId)->first();
+        return $db->select('document_verifications')->where('participant_id', $participantId)->first();
     }
 
     /**
@@ -87,10 +87,11 @@ class DocumentVerification
             return $existing;
         }
 
-        $db->query("
-            INSERT INTO document_verifications (participant_id, created_at, updated_at)
-            VALUES (?, datetime('now'), datetime('now'))
-        ")->bind($participantId)->execute();
+        $db->insert('document_verifications')->params([
+            'participant_id' => $participantId,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ])->execute();
 
         return self::findByParticipant($participantId);
     }
@@ -98,7 +99,10 @@ class DocumentVerification
     /**
      * Update verification record
      */
-    public static function updateVerification($participantId, $data)
+    /**
+     * Update verification record
+     */
+    public static function updateVerification($participantId, $data, $isS3 = false)
     {
         $db = \App\Utils\Database::connection();
 
@@ -109,54 +113,38 @@ class DocumentVerification
         }
 
         // Calculate status based on required documents
-        $status = self::calculateStatus($data);
+        $status = self::calculateStatus($data, $isS3);
 
-        $sql = "
-            UPDATE document_verifications SET
-                formulir_pendaftaran = ?,
-                formulir_pendaftaran_jumlah = ?,
-                ijazah_s1_legalisir = ?,
-                ijazah_s1_jumlah = ?,
-                transkrip_s1_legalisir = ?,
-                transkrip_s1_jumlah = ?,
-                bukti_pembayaran = ?,
-                bukti_pembayaran_jumlah = ?,
-                surat_rekomendasi = ?,
-                surat_rekomendasi_jumlah = ?,
-                ijazah_s2_legalisir = ?,
-                ijazah_s2_jumlah = ?,
-                transkrip_s2_legalisir = ?,
-                transkrip_s2_jumlah = ?,
-                status_verifikasi_fisik = ?,
-                catatan_admin = ?,
-                bypass_verification = ?,
-                verified_by = ?,
-                verified_at = datetime('now'),
-                updated_at = datetime('now')
-            WHERE participant_id = ?
-        ";
+        // Bypass overrides logic
+        if (!empty($data['bypass_verification']) && $data['bypass_verification'] == 1) {
+            $status = 'lengkap';
+        }
 
-        $db->query($sql)->bind(
-            $data['formulir_pendaftaran'] ?? 0,
-            $data['formulir_pendaftaran_jumlah'] ?? 0,
-            $data['ijazah_s1_legalisir'] ?? 0,
-            $data['ijazah_s1_jumlah'] ?? 0,
-            $data['transkrip_s1_legalisir'] ?? 0,
-            $data['transkrip_s1_jumlah'] ?? 0,
-            $data['bukti_pembayaran'] ?? 0,
-            $data['bukti_pembayaran_jumlah'] ?? 0,
-            $data['surat_rekomendasi'] ?? 0,
-            $data['surat_rekomendasi_jumlah'] ?? 0,
-            $data['ijazah_s2_legalisir'] ?? 0,
-            $data['ijazah_s2_jumlah'] ?? 0,
-            $data['transkrip_s2_legalisir'] ?? 0,
-            $data['transkrip_s2_jumlah'] ?? 0,
-            $status,
-            $data['catatan_admin'] ?? '',
-            isset($data['bypass_verification']) ? ($data['bypass_verification'] ? 1 : 0) : 0,
-            $data['verified_by'] ?? $_SESSION['admin']['id'] ?? null,
-            $participantId
-        )->execute();
+        $db->update('document_verifications')
+            ->params([
+                'formulir_pendaftaran' => $data['formulir_pendaftaran'] ?? 0,
+                'formulir_pendaftaran_jumlah' => $data['formulir_pendaftaran_jumlah'] ?? 0,
+                'ijazah_s1_legalisir' => $data['ijazah_s1_legalisir'] ?? 0,
+                'ijazah_s1_jumlah' => $data['ijazah_s1_jumlah'] ?? 0,
+                'transkrip_s1_legalisir' => $data['transkrip_s1_legalisir'] ?? 0,
+                'transkrip_s1_jumlah' => $data['transkrip_s1_jumlah'] ?? 0,
+                'bukti_pembayaran' => $data['bukti_pembayaran'] ?? 0,
+                'bukti_pembayaran_jumlah' => $data['bukti_pembayaran_jumlah'] ?? 0,
+                'surat_rekomendasi' => $data['surat_rekomendasi'] ?? 0,
+                'surat_rekomendasi_jumlah' => $data['surat_rekomendasi_jumlah'] ?? 0,
+                'ijazah_s2_legalisir' => $data['ijazah_s2_legalisir'] ?? 0,
+                'ijazah_s2_jumlah' => $data['ijazah_s2_jumlah'] ?? 0,
+                'transkrip_s2_legalisir' => $data['transkrip_s2_legalisir'] ?? 0,
+                'transkrip_s2_jumlah' => $data['transkrip_s2_jumlah'] ?? 0,
+                'status_verifikasi_fisik' => $status,
+                'catatan_admin' => $data['catatan_admin'] ?? '',
+                'bypass_verification' => isset($data['bypass_verification']) ? ($data['bypass_verification'] ? 1 : 0) : 0,
+                'verified_by' => $data['verified_by'] ?? $_SESSION['admin'] ?? null,
+                'verified_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ])
+            ->where('participant_id', $participantId)
+            ->execute();
 
         return self::findByParticipant($participantId);
     }
@@ -189,7 +177,7 @@ class DocumentVerification
     /**
      * Calculate verification status based on document completeness
      */
-    private static function calculateStatus($data)
+    private static function calculateStatus($data, $isS3 = false)
     {
         // Required documents for all
         $required = [
@@ -199,9 +187,6 @@ class DocumentVerification
             'bukti_pembayaran'
         ];
 
-        // Check if S3 (has S2 documents)
-        $isS3 = !empty($data['ijazah_s2_legalisir']) || !empty($data['transkrip_s2_legalisir']);
-
         if ($isS3) {
             $required[] = 'ijazah_s2_legalisir';
             $required[] = 'transkrip_s2_legalisir';
@@ -209,7 +194,7 @@ class DocumentVerification
 
         // Check if all required documents are checked
         foreach ($required as $doc) {
-            if (empty($data[$doc])) {
+            if (empty($data[$doc]) || $data[$doc] == 0) {
                 return 'tidak_lengkap';
             }
         }
