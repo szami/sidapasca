@@ -9,7 +9,27 @@ $getPhotoUrl = function ($filename) {
 };
 ?>
 <style>
-    @media (max-width: 767.98px) {
+    /* Force stack on mobile */
+    @media (max-width: 991.98px) {
+        .row-detail {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .col-detail-checklist {
+            order: 2 !important;
+            width: 100% !important;
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+
+        .col-detail-profile {
+            order: 1 !important;
+            width: 100% !important;
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 20px;
+        }
 
         .table-docs,
         .table-docs thead,
@@ -26,30 +46,39 @@ $getPhotoUrl = function ($filename) {
         }
 
         .table-docs tbody tr {
-            border: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-            border-radius: 0.5rem;
-            padding: 10px;
-            background: #fff;
+            border: 1px solid #dee2e6 !important;
+            margin-bottom: 1.5rem !important;
+            border-radius: 0.75rem !important;
+            padding: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
         }
 
         .table-docs td {
             border: none !important;
-            padding: 5px 0 !important;
+            padding: 10px 0 !important;
             display: flex !important;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: space-between !important;
+            align-items: center !important;
         }
 
         .table-docs td:not(:last-child) {
-            border-bottom: 1px solid #eee !important;
+            border-bottom: 1px solid #f8f9fa !important;
+        }
+
+        /* Labels */
+        .table-docs td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #6c757d;
         }
     }
 </style>
 
-<div class="row">
-    <!-- Center Column (Checklist) - Appears below profile on mobile -->
-    <div class="col-12 col-md-8 order-2 order-md-1">
+<div class="row row-detail">
+    <!-- Center Column (Checklist) -->
+    <div class="col-12 col-lg-8 col-detail-checklist">
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h3 class="card-title">
@@ -93,18 +122,18 @@ $getPhotoUrl = function ($filename) {
                             </tr>
 
                             <tr>
-                                <td>
+                                <td data-label="Nama Dokumen">
                                     <strong>Formulir Pendaftaran</strong><br>
                                     <small class="text-muted">Hasil cetak sistem (2 rangkap)</small>
                                 </td>
-                                <td class="text-center">
+                                <td data-label="Ketersediaan" class="text-center">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="check_formulir"
                                             name="formulir_pendaftaran" value="1" <?php echo (!empty($verification) ? ($verification['formulir_pendaftaran'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                         <label class="custom-control-label" for="check_formulir">Ada</label>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Jumlah Lembar">
                                     <div class="input-group input-group-sm">
                                         <input type="number" class="form-control" name="formulir_pendaftaran_jumlah"
                                             value="<?php echo $verification['formulir_pendaftaran_jumlah'] ?? 2; ?>"
@@ -117,18 +146,18 @@ $getPhotoUrl = function ($filename) {
                             </tr>
 
                             <tr>
-                                <td>
+                                <td data-label="Nama Dokumen">
                                     <strong>Ijazah S1 Legalisir</strong><br>
                                     <small class="text-muted">Fotokopi legalisir basah terbaru (3 rangkap)</small>
                                 </td>
-                                <td class="text-center">
+                                <td data-label="Ketersediaan" class="text-center">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="check_ijazah_s1"
                                             name="ijazah_s1_legalisir" value="1" <?php echo (!empty($verification) ? ($verification['ijazah_s1_legalisir'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                         <label class="custom-control-label" for="check_ijazah_s1">Ada</label>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Jumlah Lembar">
                                     <div class="input-group input-group-sm">
                                         <input type="number" class="form-control" name="ijazah_s1_jumlah"
                                             value="<?php echo $verification['ijazah_s1_jumlah'] ?? 3; ?>" min="0">
@@ -140,18 +169,18 @@ $getPhotoUrl = function ($filename) {
                             </tr>
 
                             <tr>
-                                <td>
+                                <td data-label="Nama Dokumen">
                                     <strong>Transkrip S1 Legalisir</strong><br>
                                     <small class="text-muted">Fotokopi legalisir basah terbaru (3 rangkap)</small>
                                 </td>
-                                <td class="text-center">
+                                <td data-label="Ketersediaan" class="text-center">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="check_transkrip_s1"
                                             name="transkrip_s1_legalisir" value="1" <?php echo (!empty($verification) ? ($verification['transkrip_s1_legalisir'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                         <label class="custom-control-label" for="check_transkrip_s1">Ada</label>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Jumlah Lembar">
                                     <div class="input-group input-group-sm">
                                         <input type="number" class="form-control" name="transkrip_s1_jumlah"
                                             value="<?php echo $verification['transkrip_s1_jumlah'] ?? 3; ?>" min="0">
@@ -163,18 +192,18 @@ $getPhotoUrl = function ($filename) {
                             </tr>
 
                             <tr>
-                                <td>
+                                <td data-label="Nama Dokumen">
                                     <strong>Bukti Setor / Slip Pembayaran</strong><br>
                                     <small class="text-muted">Asli atau fotokopi (1 rangkap)</small>
                                 </td>
-                                <td class="text-center">
+                                <td data-label="Ketersediaan" class="text-center">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="check_bukti_bayar"
                                             name="bukti_pembayaran" value="1" <?php echo (!empty($verification) ? ($verification['bukti_pembayaran'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                         <label class="custom-control-label" for="check_bukti_bayar">Ada</label>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Jumlah Lembar">
                                     <div class="input-group input-group-sm">
                                         <input type="number" class="form-control" name="bukti_pembayaran_jumlah"
                                             value="<?php echo $verification['bukti_pembayaran_jumlah'] ?? 1; ?>"
@@ -187,19 +216,19 @@ $getPhotoUrl = function ($filename) {
                             </tr>
 
                             <tr>
-                                <td>
+                                <td data-label="Nama Dokumen">
                                     <strong>Surat Rekomendasi</strong> <span
                                         class="badge badge-secondary">Opsional</span><br>
                                     <small class="text-muted">Dari atasan atau akademisi</small>
                                 </td>
-                                <td class="text-center">
+                                <td data-label="Ketersediaan" class="text-center">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="check_rekomendasi"
                                             name="surat_rekomendasi" value="1" <?php echo (!empty($verification) ? ($verification['surat_rekomendasi'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                         <label class="custom-control-label" for="check_rekomendasi">Ada</label>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Jumlah Lembar">
                                     <div class="input-group input-group-sm">
                                         <input type="number" class="form-control" name="surat_rekomendasi_jumlah"
                                             value="<?php echo $verification['surat_rekomendasi_jumlah'] ?? 0; ?>"
@@ -219,18 +248,18 @@ $getPhotoUrl = function ($filename) {
                                 </tr>
 
                                 <tr>
-                                    <td>
+                                    <td data-label="Nama Dokumen">
                                         <strong>Ijazah S2 Legalisir</strong><br>
                                         <small class="text-muted">Fotokopi legalisir basah terbaru (3 rangkap)</small>
                                     </td>
-                                    <td class="text-center">
+                                    <td data-label="Ketersediaan" class="text-center">
                                         <div class="custom-control custom-switch">
                                             <input type="checkbox" class="custom-control-input" id="check_ijazah_s2"
                                                 name="ijazah_s2_legalisir" value="1" <?php echo (!empty($verification) ? ($verification['ijazah_s2_legalisir'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                             <label class="custom-control-label" for="check_ijazah_s2">Ada</label>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td data-label="Jumlah Lembar">
                                         <div class="input-group input-group-sm">
                                             <input type="number" class="form-control" name="ijazah_s2_jumlah"
                                                 value="<?php echo $verification['ijazah_s2_jumlah'] ?? 3; ?>" min="0">
@@ -242,18 +271,18 @@ $getPhotoUrl = function ($filename) {
                                 </tr>
 
                                 <tr>
-                                    <td>
+                                    <td data-label="Nama Dokumen">
                                         <strong>Transkrip S2 Legalisir</strong><br>
                                         <small class="text-muted">Fotokopi legalisir basah terbaru (3 rangkap)</small>
                                     </td>
-                                    <td class="text-center">
+                                    <td data-label="Ketersediaan" class="text-center">
                                         <div class="custom-control custom-switch">
                                             <input type="checkbox" class="custom-control-input" id="check_transkrip_s2"
                                                 name="transkrip_s2_legalisir" value="1" <?php echo (!empty($verification) ? ($verification['transkrip_s2_legalisir'] ?? 0) : 1) ? 'checked' : ''; ?>>
                                             <label class="custom-control-label" for="check_transkrip_s2">Ada</label>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td data-label="Jumlah Lembar">
                                         <div class="input-group input-group-sm">
                                             <input type="number" class="form-control" name="transkrip_s2_jumlah"
                                                 value="<?php echo $verification['transkrip_s2_jumlah'] ?? 3; ?>" min="0">
@@ -292,8 +321,8 @@ $getPhotoUrl = function ($filename) {
         </div>
     </div>
 
-    <!-- Right Sidebar (Profile) - Appears first on mobile -->
-    <div class="col-12 col-md-4 order-1 order-md-2">
+    <!-- Right Sidebar (Profile) -->
+    <div class="col-12 col-lg-4 col-detail-profile">
         <!-- Participant Info -->
         <div class="card card-info card-outline">
             <div class="card-body box-profile">
