@@ -322,4 +322,85 @@ class ExamSchedulerController
             "data" => $data
         ]);
     }
+
+    /**
+     * Export Exam Schedule for CAT System
+     */
+    public function exportCat()
+    {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
+            header('Location: /admin?error=unauthorized');
+            exit;
+        }
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+
+        if (!$activeSemester) {
+            die("Belum ada semester aktif.");
+        }
+
+        $sql = "SELECT 
+                    p.nomor_peserta, 
+                    p.nama_lengkap, 
+                    p.nama_prodi,
+                    p.ruang_ujian,
+                    p.tanggal_ujian,
+                    p.waktu_ujian,
+                    p.sesi_ujian
+                FROM participants p
+                WHERE p.semester_id = ? 
+                AND p.ruang_ujian IS NOT NULL 
+                AND p.ruang_ujian != ''
+                ORDER BY p.tanggal_ujian ASC, p.sesi_ujian ASC, p.nama_prodi ASC, p.nama_lengkap ASC";
+
+        $participants = $db->query($sql)->bind($activeSemester['id'])->fetchAll();
+
+        if (empty($participants)) {
+            header('Location: /admin/scheduler?msg=' . urlencode('Tidak ada data peserta yang sudah dijadwalkan.'));
+            exit;
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Headers
+        $headers = ['No', 'Nomor Peserta', 'Nama Lengkap', 'Program Studi', 'Gedung/Ruangan', 'Tanggal Ujian', 'Waktu Ujian', 'Sesi'];
+        foreach ($headers as $col => $text) {
+            $sheet->setCellValueByColumnAndRow($col + 1, 1, $text);
+        }
+
+        // Style header
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+
+        // Data
+        $rowIdx = 2;
+        foreach ($participants as $i => $p) {
+            $sheet->setCellValue('A' . $rowIdx, $i + 1);
+            $sheet->setCellValue('B' . $rowIdx, $p['nomor_peserta']);
+            $sheet->setCellValue('C' . $rowIdx, $p['nama_lengkap']);
+            $sheet->setCellValue('D' . $rowIdx, $p['nama_prodi']);
+            $sheet->setCellValue('E' . $rowIdx, $p['ruang_ujian']);
+            $sheet->setCellValue('F' . $rowIdx, $p['tanggal_ujian']);
+            $sheet->setCellValue('G' . $rowIdx, $p['waktu_ujian']);
+            $sheet->setCellValue('H' . $rowIdx, $p['sesi_ujian']);
+            $rowIdx++;
+        }
+
+        // Auto width
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Output file
+        $filename = "Jadwal_CAT_PASCA_" . str_replace(' ', '_', $activeSemester['nama']) . ".xlsx";
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
+    }
 }

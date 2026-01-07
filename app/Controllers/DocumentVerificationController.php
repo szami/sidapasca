@@ -442,6 +442,7 @@ class DocumentVerificationController
                     p.email, 
                     p.nama_prodi, 
                     p.status_berkas, 
+                    p.no_hp,
                     p.semester_id,
                     dv.catatan_admin
                 FROM participants p
@@ -507,6 +508,7 @@ class DocumentVerificationController
         $sql = "SELECT 
                     p.nomor_peserta, 
                     p.kode_prodi,
+                    p.keputusan_akhir,
                     dv.status_verifikasi_fisik
                 FROM participants p
                 LEFT JOIN document_verifications dv ON p.id = dv.participant_id

@@ -47,6 +47,9 @@
                     <div class="card-header py-2">
                         <h3 class="card-title mt-1"><i class="fas fa-calendar-check mr-1"></i> Penjadwalan Massal</h3>
                         <div class="card-tools">
+                            <a href="/admin/scheduler/export-cat" class="btn btn-sm btn-success mr-1">
+                                <i class="fas fa-file-excel"></i> Export Jadwal CAT
+                            </a>
                             <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler/rooms"
                                 class="btn btn-sm btn-info">
                                 <i class="fas fa-desktop"></i> Monitor Ruangan

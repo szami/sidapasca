@@ -110,6 +110,7 @@ $app->get('/admin/scheduler', 'App\Controllers\ExamSchedulerController@index');
 $app->get('/admin/scheduler/rooms', 'App\Controllers\ExamSchedulerController@roomView'); // NEW
 $app->post('/admin/scheduler/assign', 'App\Controllers\ExamSchedulerController@assign');
 $app->post('/admin/scheduler/unassign', 'App\Controllers\ExamSchedulerController@unassign');
+$app->get('/admin/scheduler/export-cat', 'App\Controllers\ExamSchedulerController@exportCat');
 
 // Presence (NEW)
 $app->get('/admin/attendance', 'App\Controllers\AttendanceController@index');
@@ -202,6 +203,7 @@ $app->get('/admin/email/reminders/{id}', 'App\Controllers\EmailReminderControlle
 $app->get('/admin/system/update', 'App\Controllers\SystemController@update');
 $app->post('/admin/system/perform-update', 'App\Controllers\SystemController@performUpdate');
 $app->get('/admin/system/check-update', 'App\Controllers\SystemController@checkUpdate');
+$app->get('/admin/sync-guide', 'App\Controllers\SystemController@syncGuide');
 
 // Assessment Module
 $app->get('/admin/assessment/components', 'App\Controllers\AssessmentController@components');

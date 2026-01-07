@@ -8,8 +8,48 @@ $getPhotoUrl = function ($filename) {
     return '/storage/photos/' . $filename;
 };
 ?>
+<style>
+    @media (max-width: 767.98px) {
+
+        .table-docs,
+        .table-docs thead,
+        .table-docs tbody,
+        .table-docs th,
+        .table-docs td,
+        .table-docs tr {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        .table-docs thead {
+            display: none !important;
+        }
+
+        .table-docs tbody tr {
+            border: 1px solid #dee2e6;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .table-docs td {
+            border: none !important;
+            padding: 5px 0 !important;
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-docs td:not(:last-child) {
+            border-bottom: 1px solid #eee !important;
+        }
+    }
+</style>
+
 <div class="row">
-    <div class="col-8">
+    <!-- Center Column (Checklist) - Appears below profile on mobile -->
+    <div class="col-12 col-md-8 order-2 order-md-1">
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h3 class="card-title">
@@ -37,12 +77,12 @@ $getPhotoUrl = function ($filename) {
                     <?php endif; ?>
 
                     <!-- Document List Table -->
-                    <table class="table table-bordered">
+                    <table class="table table-bordered table-docs">
                         <thead class="bg-light">
                             <tr>
-                                <th width="50%">Nama Dokumen</th>
-                                <th width="20%" class="text-center">Ketersediaan</th>
-                                <th width="30%">Jumlah Lembar</th>
+                                <th>Nama Dokumen</th>
+                                <th class="text-center">Ketersediaan</th>
+                                <th>Jumlah Lembar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -252,8 +292,8 @@ $getPhotoUrl = function ($filename) {
         </div>
     </div>
 
-    <!-- Right Sidebar -->
-    <div class="col-4">
+    <!-- Right Sidebar (Profile) - Appears first on mobile -->
+    <div class="col-12 col-md-4 order-1 order-md-2">
         <!-- Participant Info -->
         <div class="card card-info card-outline">
             <div class="card-body box-profile">

@@ -16,29 +16,45 @@
     // Update this URL if your local SIDA Pasca is running on a different address
     const SIDA_PASCA_URL = 'https://sidapasca-ulm.inovasidigital.link/admin/verification/physical/api-sync-data';
 
-    // Add Sync Button to the UI
+    // Add Sync Buttons to the UI
     function injectUI() {
         const target = document.querySelector('.x_content .row.clearfix');
         if (!target) return;
 
-        const btnContainer = document.createElement('div');
-        btnContainer.className = 'col-md-2';
-        btnContainer.style.marginBottom = '5px';
+        // Button 1: Sync Berkas
+        const btnContainer1 = document.createElement('div');
+        btnContainer1.className = 'col-md-2';
+        btnContainer1.style.marginBottom = '5px';
 
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-warning';
-        btn.style.width = '100%';
-        btn.innerHTML = '<i class="fa fa-refresh"></i> Sync dari SIDA';
-        btn.onclick = startSync;
+        const btn1 = document.createElement('button');
+        btn1.className = 'btn btn-warning';
+        btn1.style.width = '100%';
+        btn1.innerHTML = '<i class="fa fa-refresh"></i> Sync Berkas';
+        btn1.onclick = () => startSync('berkas');
 
-        btnContainer.appendChild(btn);
-        target.appendChild(btnContainer);
+        btnContainer1.appendChild(btn1);
+        target.appendChild(btnContainer1);
+
+        // Button 2: Sync Kelulusan
+        const btnContainer2 = document.createElement('div');
+        btnContainer2.className = 'col-md-2';
+        btnContainer2.style.marginBottom = '5px';
+
+        const btn2 = document.createElement('button');
+        btn2.className = 'btn btn-success';
+        btn2.style.width = '100%';
+        btn2.innerHTML = '<i class="fa fa-graduation-cap"></i> Sync Kelulusan';
+        btn2.onclick = () => startSync('lulus');
+
+        btnContainer2.appendChild(btn2);
+        target.appendChild(btnContainer2);
     }
 
-    async function startSync() {
-        if (!confirm('Mulai sinkronisasi data dari SIDA Pasca Lokal?')) return;
+    async function startSync(type) {
+        const msg = type === 'berkas' ? 'Mulai sinkronisasi BERKAS FISIK?' : 'Mulai sinkronisasi HASIL KELULUSAN?';
+        if (!confirm(msg)) return;
 
-        const btn = this;
+        const btn = event.target.tagName === 'I' ? event.target.parentElement : event.target;
         const originalText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Mentransfer...';
@@ -50,7 +66,7 @@
                 try {
                     const result = JSON.parse(response.responseText);
                     if (result.success && result.data) {
-                        await processData(result.data, btn);
+                        await processData(result.data, btn, type);
                     } else {
                         alert('Gagal mengambil data: ' + (result.message || 'Unknown error'));
                     }
@@ -62,7 +78,7 @@
                 }
             },
             onerror: function (err) {
-                alert('Gagal terhubung ke SIDA Pasca. Pastikan Laragon aktif dan URL benar.\nURL: ' + SIDA_PASCA_URL);
+                alert('Gagal terhubung ke SIDA Pasca. URL: ' + SIDA_PASCA_URL);
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
@@ -71,44 +87,56 @@
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
 
-    async function processData(data, btn) {
+    async function processData(data, btn, type) {
         const total = data.length;
         let successCount = 0;
 
         for (let i = 0; i < total; i++) {
             const item = data[i];
-            const status = item.status_verifikasi_fisik === 'lengkap' ? '1' : '0';
-            const prodi = status === '1' ? item.kode_prodi : 'null';
-
             btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${i + 1}/${total}`;
 
             try {
-                // Call the native function on the page
-                // isberkas(status, noujian, no, kode_prodi)
-                // Note: 'no' is just for table reload, we can pass 0
-                await new Promise((resolve) => {
-                    $.ajax({
-                        url: "https://admisipasca.ulm.ac.id/administrator/kartu/isberkas/" + status + '/' + item.nomor_peserta + '/' + prodi,
-                        type: 'POST',
-                        success: function (msg) {
-                            successCount++;
-                            resolve();
-                        },
-                        error: function () {
-                            resolve();
-                        }
+                if (type === 'berkas') {
+                    // 1. Sync Physical Verification
+                    const statusBerkas = item.status_verifikasi_fisik === 'lengkap' ? '1' : '0';
+                    const prodi = statusBerkas === '1' ? item.kode_prodi : 'null';
+
+                    await new Promise((resolve) => {
+                        $.ajax({
+                            url: "https://admisipasca.ulm.ac.id/administrator/kartu/isberkas/" + statusBerkas + '/' + item.nomor_peserta + '/' + prodi,
+                            type: 'POST',
+                            success: function (msg) { successCount++; resolve(); },
+                            error: function () { resolve(); }
+                        });
                     });
-                });
+                } else if (type === 'lulus') {
+                    // 2. Sync Graduation Status
+                    if (item.keputusan_akhir) {
+                        const statusLulus = item.keputusan_akhir === 'lulus' ? '1' : '0';
+                        const prodiLulus = statusLulus === '1' ? item.kode_prodi : 'null';
+
+                        await new Promise((resolve) => {
+                            $.ajax({
+                                url: "https://admisipasca.ulm.ac.id/administrator/kartu/islulus/" + statusLulus + '/' + item.nomor_peserta + '/' + prodiLulus,
+                                type: 'POST',
+                                success: function (msg) { successCount++; resolve(); },
+                                error: function () { resolve(); }
+                            });
+                        });
+                    } else {
+                        // Skip if no graduation status
+                        successCount++;
+                    }
+                }
             } catch (e) {
                 console.error('Sync failed for ' + item.nomor_peserta, e);
             }
 
-            // Small delay to prevent hammering
             await delay(100);
         }
 
-        alert('Sinkronisasi selesai!\nBerhasil: ' + successCount + ' dari ' + total + ' data.');
-        location.reload(); // Reload to see changes
+        alert('Sinkronisasi ' + type.toUpperCase() + ' selesai!\nData diproses: ' + total);
+        location.reload();
     }
 
     // Initialize

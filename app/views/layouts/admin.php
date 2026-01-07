@@ -341,6 +341,12 @@
                                         <p>Document Helper</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="/admin/sync-guide" class="nav-link">
+                                        <i class="nav-icon fas fa-sync-alt"></i>
+                                        <p>Sinkronisasi Eksternal</p>
+                                    </a>
+                                </li>
                             <?php endif; ?>
 
                             <?php if ($canManageEmail): ?>

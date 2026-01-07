@@ -82,4 +82,23 @@ class SystemController
             'data' => $updateCheck
         ]);
     }
+
+    /**
+     * Display the External Synchronization Guide
+     */
+    public function syncGuide()
+    {
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /admin/login');
+            exit;
+        }
+
+        // Only Superadmin or Admin can access sync guide
+        if (!\App\Utils\RoleHelper::isAdmin()) {
+            header('Location: /admin?error=unauthorized');
+            exit;
+        }
+
+        echo View::render('admin.system.sync_guide');
+    }
 }

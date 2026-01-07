@@ -67,6 +67,89 @@
     </div>
 </div>
 
+<style>
+    /* Card view for mobile */
+    @media (max-width: 767.98px) {
+
+        #verificationTable,
+        #verificationTable thead,
+        #verificationTable tbody,
+        #verificationTable th,
+        #verificationTable td,
+        #verificationTable tr {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        #verificationTable thead {
+            display: none !important;
+        }
+
+        #verificationTable tbody tr {
+            margin-bottom: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            background: #fff;
+            padding: 10px;
+        }
+
+        #verificationTable td {
+            border: none !important;
+            padding: 0.5rem 0.25rem !important;
+            text-align: left !important;
+            position: relative;
+            display: flex !important;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f8f9fa !important;
+        }
+
+        #verificationTable td:last-child {
+            border-bottom: none !important;
+            padding-top: 10px !important;
+        }
+
+        /* Labels for mobile view */
+        #verificationTable td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* Disable centering in mobile */
+        #verificationTable .text-center {
+            text-align: left !important;
+        }
+
+        #verificationTable .badge {
+            font-size: 0.85rem;
+        }
+
+        .dataTables_wrapper .row {
+            flex-direction: column;
+        }
+
+        .dataTables_length,
+        .dataTables_filter {
+            text-align: center !important;
+        }
+
+        .btn-group-mobile {
+            display: flex;
+            width: 100%;
+        }
+
+        .btn-group-mobile a {
+            flex: 1;
+            padding: 10px;
+        }
+    }
+</style>
+
 <div class="row">
     <div class="col-12">
 
@@ -190,7 +273,7 @@
                                 <th>Nomor Peserta</th>
                                 <th>Nama Peserta</th>
                                 <th>Program Studi</th>
-                                <th class="text-center">Status Berkas</th>
+                                <th class="text-center">No HP</th>
                                 <th class="text-center">Verifikasi Fisik</th>
                                 <th class="text-center">Catatan</th>
                                 <th class="text-center">Update Terakhir</th>
@@ -264,153 +347,179 @@
 </div>
 
 
-// Custom File Input Label
-$(".custom-file-input").on("change", function () {
-var fileName = $(this).val().split("\\").pop();
-$(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-});
+<script>
+    // Custom File Input Label
+    $(".custom-file-input").on("change", function () {
+        var fileName = $(this).val().split("\\").pop();
+        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+    });
 
-$(document).ready(function () {
-// Determine Semester ID from URL or Dropdown
-var urlParams = new URLSearchParams(window.location.search);
-var semesterId = $('select[name="semester_id"]').val() || urlParams.get('semester_id') || '';
+    $(document).ready(function () {
+        // Determine Semester ID from URL or Dropdown
+        var urlParams = new URLSearchParams(window.location.search);
+        var semesterId = $('select[name="semester_id"]').val() || urlParams.get('semester_id') || '';
 
-// Set default eligibility filter
-$('#eligibilityFilter').val('eligible').trigger('change');
+        // Set default eligibility filter
+        $('#eligibilityFilter').val('eligible').trigger('change');
 
-// Initialize DataTable
-var table = $('#verificationTable').DataTable({
-responsive: true,
-processing: true,
-serverSide: true,
-language: {
-"sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
-"sProcessing": "Sedang memproses...",
-"sLengthMenu": "Tampilkan _MENU_ entri",
-"sZeroRecords": "Tidak ditemukan data yang sesuai",
-"sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-"sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
-"sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
-"sInfoPostFix": "",
-"sSearch": "Cari:",
-"sUrl": "",
-"oPaginate": {
-"sFirst": "Pertama",
-"sPrevious": "Sebelumnya",
-"sNext": "Selanjutnya",
-"sLast": "Terakhir"
-}
-},
-ajax: {
-url: "/admin/verification/physical/api-data",
-data: function (d) {
-d.semester_id = $('select[name="semester_id"]').val();
-d.status = $('#statusFilter').val();
-d.prodi = $('#prodiFilter').val();
-d.eligibility = document.getElementById('eligibilityFilter').value;
-}
-},
-columns: [
-{
-data: null,
-orderable: false,
-searchable: false,
-className: "text-center align-middle",
-render: function (data, type, row, meta) {
-return meta.row + meta.settings._iDisplayStart + 1;
-}
-},
-{
-data: 'nomor_peserta',
-className: "align-middle font-weight-bold",
-render: function (data) {
-return data ? `<span class="text-primary">${data}</span>` : '<span class="text-muted font-italic">Pending</span>';
-}
-},
-{
-data: 'nama_lengkap',
-className: "align-middle",
-render: function (data, type, row) {
-return `<div class="d-flex flex-column">
+        // Initialize DataTable
+        var table = $('#verificationTable').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            language: {
+                "sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
+                "sProcessing": "Sedang memproses...",
+                "sLengthMenu": "Tampilkan _MENU_ entri",
+                "sZeroRecords": "Tidak ditemukan data yang sesuai",
+                "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                "sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
+                "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
+                "sInfoPostFix": "",
+                "sSearch": "Cari:",
+                "sUrl": "",
+                "oPaginate": {
+                    "sFirst": "Pertama",
+                    "sPrevious": "Sebelumnya",
+                    "sNext": "Selanjutnya",
+                    "sLast": "Terakhir"
+                }
+            },
+            ajax: {
+                url: "/admin/verification/physical/api-data",
+                data: function (d) {
+                    d.semester_id = $('select[name="semester_id"]').val();
+                    d.status = $('#statusFilter').val();
+                    d.prodi = $('#prodiFilter').val();
+                    d.eligibility = document.getElementById('eligibilityFilter').value;
+                }
+            },
+            columns: [{
+                data: null,
+                orderable: false,
+                searchable: false,
+                className: "text-center align-middle d-mobile-none",
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            {
+                data: 'nomor_peserta',
+                className: "align-middle font-weight-bold",
+                render: function (data) {
+                    return data ? `<span class="text-primary">${data}</span>` : '<span class="text-muted font-italic">Pending</span>';
+                }
+            },
+            {
+                data: 'nama_lengkap',
+                className: "align-middle",
+                render: function (data, type, row) {
+                    return `<div class="d-flex flex-column">
     <strong class="text-dark">${data}</strong>
     <small class="text-muted"><i class="fas fa-envelope mr-1"></i> ${row.email || '-'}</small>
 </div>`;
-}
-},
-{ data: 'nama_prodi', className: "align-middle" },
-{
-data: 'status_berkas',
-className: "text-center align-middle",
-render: function (data) {
-if (data == 'lulus') return '<span class="badge badge-pill badge-success px-3 py-2 shadow-sm">Lulus</span>';
-if (data == 'gagal') return '<span class="badge badge-pill badge-danger px-3 py-2 shadow-sm">Gagal</span>';
-return '<span class="badge badge-pill badge-warning px-3 py-2 shadow-sm">Pending</span>';
-}
-},
-{
-data: 'status_verifikasi_fisik',
-className: "text-center align-middle",
-render: function (data, type, row) {
-var status = data || 'pending';
-var badge = '';
+                }
+            },
+            {
+                data: 'nama_prodi',
+                className: "align-middle"
+            },
+            {
+                data: 'no_hp',
+                className: "text-center align-middle font-weight-bold",
+                render: function (data) {
+                    if (!data) return '-';
+                    return `<a href="https://wa.me/${data.replace(/[^0-9]/g, '')}" target="_blank" class="text-success"><i class="fab fa-whatsapp mr-1"></i> ${data}</a>`;
+                }
+            },
+            {
+                data: 'status_verifikasi_fisik',
+                className: "text-center align-middle",
+                render: function (data, type, row) {
+                    var status = data || 'pending';
+                    var badge = '';
 
-if (status == 'lengkap') {
-badge = '<span class="badge badge-success shadow-sm"><i class="fas fa-check-circle mr-1"></i> Lengkap</span>';
-} else if (status == 'tidak_lengkap') {
-badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
-} else {
-badge = '<span class="badge badge-secondary shadow-sm"><i class="fas fa-clock mr-1"></i> Belum</span>';
-}
+                    if (status == 'lengkap') {
+                        badge = '<span class="badge badge-success shadow-sm"><i class="fas fa-check-circle mr-1"></i> Lengkap</span>';
+                    } else if (status == 'tidak_lengkap') {
+                        badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
+                    } else {
+                        badge = '<span class="badge badge-secondary shadow-sm"><i class="fas fa-clock mr-1"></i> Belum</span>';
+                    }
 
-if (row.bypass_verification == 1) {
-badge += '<div class="mt-1"><span class="badge badge-warning text-dark"><i class="fas fa-lock-open mr-1"></i>
-        Bypass</span></div>';
-}
-return badge;
-}
-},
-{
-data: 'catatan_admin',
-className: "text-center align-middle",
-render: function (data) {
-if (data && data.trim() !== '') {
-return '<i class="fas fa-check-square text-success" title="' + data.replace(/" /g, '&quot;' ) + '"></i>' ; }
-    return '<i class="far fa-square text-muted"></i>' ; } }, { data: 'updated_at' ,
-    className: "text-center align-middle text-muted small" , render: function (data) { if (!data) return '-' ; try {
-    return new Date(data).toLocaleDateString('id-ID', { day: 'numeric' , month: 'short' , year: 'numeric' // Fixed
-    typo 'numeri c' }); } catch (e) { return data; // Fallback } } }, { data: 'participant_id' ,
-    className: "text-center align-middle" , orderable: false, render: function (data) { return `<div class="btn-group">
-    <a href="/admin/verification/physical/${data}" class="btn btn-sm btn-info shadow-sm" title="Verifikasi">
+                    if (row.bypass_verification == 1) {
+                        badge += '<div class="mt-1"><span class="badge badge-warning text-dark"><i class="fas fa-lock-open mr-1"></i> Bypass</span></div>';
+                    }
+                    return badge;
+                }
+            },
+            {
+                data: 'catatan_admin',
+                className: "text-center align-middle",
+                render: function (data) {
+                    if (data && data.trim() !== '') {
+                        return '<i class="fas fa-check-square text-success" title="' + data + '"></i>';
+                    }
+                    return '<i class="far fa-square text-muted"></i>';
+                }
+            }, {
+                data: 'updated_at',
+                className: "text-center align-middle text-muted small",
+                render: function (data) {
+                    if (!data) return '-';
+                    try {
+                        return new Date(data).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                    } catch (e) {
+                        return data;
+                    }
+                }
+            }, {
+                data: 'participant_id',
+                className: "text-center align-middle",
+                orderable: false,
+                render: function (data) {
+                    return `<div class="btn-group btn-group-mobile">
+    <a href="/admin/verification/physical/${data}" class="btn btn-sm btn-info shadow-sm py-2" title="Verifikasi">
         <i class="fas fa-edit"></i> Verifikasi
     </a>
     </div>`;
-    }
-    }
-    ]
-    });
+                }
+            }
+            ],
+            createdRow: function (row, data, dataIndex) {
+                // Add labels for mobile view
+                const labels = ['No', 'No Ujian', 'Nama', 'Prodi', 'WhatsApp', 'Status', 'Catatan', 'Update', 'Aksi'];
+                $('td', row).each(function (i) {
+                    $(this).attr('data-label', labels[i]);
+                });
+            }
+        });
 
-    // Handle Filter Button Logic
-    $('#btnFilter').click(function () {
-    table.ajax.reload();
-    });
+        // Handle Filter Button Logic
+        $('#btnFilter').click(function () {
+            table.ajax.reload();
+        });
 
-    // Auto-reload on filter change
-    $('#eligibilityFilter, #statusFilter').change(function () {
-    table.ajax.reload();
-    });
+        // Auto-reload on filter change
+        $('#eligibilityFilter, #statusFilter').change(function () {
+            table.ajax.reload();
+        });
 
-    // Enter key support for filters
-    $('#filterForm input').keypress(function (e) {
-    if (e.which == 13) {
-    e.preventDefault();
-    table.ajax.reload();
-    }
+        // Enter key support for filters
+        $('#filterForm input').keypress(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                table.ajax.reload();
+            }
+        });
     });
-    });
+</script>
 
-    </script>
-
-    <?php
-    $content = ob_get_clean();
-    include __DIR__ . '/../../layouts/admin.php';
-    ?>
+<?php
+$content = ob_get_clean();
+include __DIR__ . '/../../layouts/admin.php';
+?>
