@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2026-01-07
+
+### 🔧 Fixed - External Sync Reliability
+- **Mass Sync Method**: Fixed synchronization failure with `admisipasca` by changing the HTTP method from `GET` to `POST` as required by the remote endpoint.
+- **Improved Sync Throttling**: Added comments and refined `fetch` parameters for better reliability.
+
+### 🔬 Research & Analysis
+- **Local Analysis Folder**: Added `/research/` directory to `.gitignore` to allow for local analysis of remote HTML files without cluttering the Git repository.
+
+---
+
 ## [1.3.0] - 2026-01-07
 
 ### 🎉 Added - Advanced Email & Dashboard Refinements

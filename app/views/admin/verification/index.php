@@ -297,7 +297,8 @@
             </div>
             <div class="modal-footer bg-light" id="syncFooter">
                 <button type="button" class="btn btn-danger mr-auto" id="btnStopSync">Batal / Stop</button>
-                <button type="button" class="btn btn-primary" data-dismiss="modal" id="btnCloseSync" style="display: none;">Tutup</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="btnCloseSync"
+                    style="display: none;">Tutup</button>
             </div>
         </div>
     </div>
@@ -307,11 +308,11 @@
     let isSyncRunning = false;
 
     // Mass Sync Logic
-    $('#btnMassSync').on('click', function() {
+    $('#btnMassSync').on('click', function () {
         if (!confirm('Apakah Anda yakin ingin mensinkronkan semua data verifikasi fisik ke server utama?')) return;
-        
+
         const semesterId = $('select[name="semester_id"]').val();
-        
+
         // Show progress modal
         $('#syncProgressModal').modal('show');
         $('#syncProgressBar').css('width', '0%').text('0%').removeClass('bg-success').addClass('bg-primary');
@@ -323,7 +324,7 @@
         $('#btnCloseSync').hide();
 
         // Fetch data
-        $.get('/admin/verification/physical/api-sync-data', { semester_id: semesterId }, function(response) {
+        $.get('/admin/verification/physical/api-sync-data', { semester_id: semesterId }, function (response) {
             if (response.success && response.data.length > 0) {
                 isSyncRunning = true;
                 processSync(response.data);
@@ -332,13 +333,13 @@
                 $('#btnStopSync').hide();
                 $('#btnCloseSync').show();
             }
-        }).fail(function() {
+        }).fail(function () {
             alert('Gagal mengambil data sinkronisasi.');
             $('#syncProgressModal').modal('hide');
         });
     });
 
-    $('#btnStopSync').on('click', function() {
+    $('#btnStopSync').on('click', function () {
         if (confirm('Hentikan sinkronisasi?')) {
             isSyncRunning = false;
             $('#syncStatus').text('Sinkronisasi dihentikan oleh pengguna.');
@@ -352,7 +353,7 @@
     async function processSync(data) {
         const total = data.length;
         let success = 0;
-        
+
         $('#syncCount').text(`0 / ${total}`);
         $('#syncLog').show();
 
@@ -365,10 +366,8 @@
             const url = `https://admisipasca.ulm.ac.id/administrator/kartu/isberkas/${status}/${item.nomor_peserta}/${prodi}`;
 
             try {
-                // We use mode: 'no-cors' because we only need to "ping" the server
-                // and probably won't have CORS permission to read the response.
-                // Added credentials: 'include' to ensure cookies are sent.
-                await fetch(url, { mode: 'no-cors', credentials: 'include' });
+                // Changed method to POST as required by the remote system
+                await fetch(url, { method: 'POST', mode: 'no-cors', credentials: 'include' });
                 success++;
                 $('#syncLog').prepend(`<div><span class="text-success">✓</span> ${item.nomor_peserta}: Terkirim</div>`);
             } catch (e) {
@@ -391,7 +390,7 @@
             $('#syncStatus').text('Sinkronisasi selesai!');
             $('#syncProgressBar').removeClass('bg-primary').addClass('bg-success');
         }
-        
+
         isSyncRunning = false;
         $('#btnStopSync').hide();
         $('#btnCloseSync').show();
@@ -490,7 +489,7 @@
                         if (status == 'lengkap') {
                             badge = '<span class="badge badge-success shadow-sm"><i class="fas fa-check-circle mr-1"></i> Lengkap</span>';
                         } else if (status == 'tidak_lengkap') {
-                          badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
+                            badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
                         } else {
                             badge = '<span class="badge badge-secondary shadow-sm"><i class="fas fa-clock mr-1"></i> Belum</span>';
                         }
