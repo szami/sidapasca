@@ -280,17 +280,19 @@
                     <h5 class="mt-3 font-weight-bold">Sinkronisasi sedang berjalan...</h5>
                     <p class="text-muted">Jangan menutup halaman ini hingga proses selesai.</p>
                 </div>
-                
+
                 <div class="progress mb-3" style="height: 25px;">
-                    <div id="syncProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%;">0%</div>
+                    <div id="syncProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                        role="progressbar" style="width: 0%;">0%</div>
                 </div>
-                
+
                 <div class="d-flex justify-content-between small text-muted">
                     <span id="syncStatus">Memulai...</span>
                     <span id="syncCount">0 / 0</span>
                 </div>
-                
-                <div id="syncLog" class="mt-3 p-2 bg-light rounded shadow-inner small" style="max-height: 100px; overflow-y: auto; display: none;">
+
+                <div id="syncLog" class="mt-3 p-2 bg-light rounded shadow-inner small"
+                    style="max-height: 100px; overflow-y: auto; display: none;">
                 </div>
             </div>
             <div class="modal-footer bg-light" id="syncFooter" style="display: none;">
@@ -329,6 +331,8 @@
         });
     });
 
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
     async function processSync(data) {
         const total = data.length;
         let success = 0;
@@ -345,7 +349,8 @@
             try {
                 // We use mode: 'no-cors' because we only need to "ping" the server
                 // and probably won't have CORS permission to read the response.
-                await fetch(url, { mode: 'no-cors' });
+                // Added credentials: 'include' to ensure cookies are sent.
+                await fetch(url, { mode: 'no-cors', credentials: 'include' });
                 success++;
                 $('#syncLog').prepend(`<div><span class="text-success">✓</span> ${item.nomor_peserta}: Terkirim</div>`);
             } catch (e) {
@@ -357,6 +362,11 @@
             $('#syncProgressBar').css('width', `${percent}%`).text(`${percent}%`);
             $('#syncCount').text(`${i + 1} / ${total}`);
             $('#syncStatus').text('Sinkronisasi data...');
+
+            // Throttling: wait 1 second before next request to reduce server load
+            if (i < total - 1) {
+                await delay(1000);
+            }
         }
 
         $('#syncStatus').text('Sinkronisasi selesai!');
@@ -456,7 +466,7 @@
                         if (status == 'lengkap') {
                             badge = '<span class="badge badge-success shadow-sm"><i class="fas fa-check-circle mr-1"></i> Lengkap</span>';
                         } else if (status == 'tidak_lengkap') {
-                            badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
+                          badge = '<span class="badge badge-danger shadow-sm"><i class="fas fa-times-circle mr-1"></i> Kurang</span>';
                         } else {
                             badge = '<span class="badge badge-secondary shadow-sm"><i class="fas fa-clock mr-1"></i> Belum</span>';
                         }
