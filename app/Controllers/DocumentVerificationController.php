@@ -484,6 +484,16 @@ class DocumentVerificationController
 
     public function apiSyncData()
     {
+        // Allow CORS for Tampermonkey script
+        header('Access-Control-Allow-Origin: https://admisipasca.ulm.ac.id');
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+        // Handle preflight request
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            exit;
+        }
+
         $this->checkAuth();
 
         $db = \App\Utils\Database::connection();
