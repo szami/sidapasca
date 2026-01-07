@@ -295,14 +295,17 @@
                     style="max-height: 100px; overflow-y: auto; display: none;">
                 </div>
             </div>
-            <div class="modal-footer bg-light" id="syncFooter" style="display: none;">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+            <div class="modal-footer bg-light" id="syncFooter">
+                <button type="button" class="btn btn-danger mr-auto" id="btnStopSync">Batal / Stop</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="btnCloseSync" style="display: none;">Tutup</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    let isSyncRunning = false;
+
     // Mass Sync Logic
     $('#btnMassSync').on('click', function() {
         if (!confirm('Apakah Anda yakin ingin mensinkronkan semua data verifikasi fisik ke server utama?')) return;
@@ -311,24 +314,37 @@
         
         // Show progress modal
         $('#syncProgressModal').modal('show');
-        $('#syncProgressBar').css('width', '0%').text('0%');
+        $('#syncProgressBar').css('width', '0%').text('0%').removeClass('bg-success').addClass('bg-primary');
         $('#syncStatus').text('Mengambil data...');
         $('#syncCount').text('0 / 0');
         $('#syncLog').empty().hide();
-        $('#syncFooter').hide();
+        $('#syncFooter').show();
+        $('#btnStopSync').show();
+        $('#btnCloseSync').hide();
 
         // Fetch data
         $.get('/admin/verification/physical/api-sync-data', { semester_id: semesterId }, function(response) {
             if (response.success && response.data.length > 0) {
+                isSyncRunning = true;
                 processSync(response.data);
             } else {
                 $('#syncStatus').text('Tidak ada data untuk disinkronkan.');
-                $('#syncFooter').show();
+                $('#btnStopSync').hide();
+                $('#btnCloseSync').show();
             }
         }).fail(function() {
             alert('Gagal mengambil data sinkronisasi.');
             $('#syncProgressModal').modal('hide');
         });
+    });
+
+    $('#btnStopSync').on('click', function() {
+        if (confirm('Hentikan sinkronisasi?')) {
+            isSyncRunning = false;
+            $('#syncStatus').text('Sinkronisasi dihentikan oleh pengguna.');
+            $(this).hide();
+            $('#btnCloseSync').show();
+        }
     });
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -341,6 +357,8 @@
         $('#syncLog').show();
 
         for (let i = 0; i < total; i++) {
+            if (!isSyncRunning) break;
+
             const item = data[i];
             const status = item.status_verifikasi_fisik === 'lengkap' ? '1' : '0';
             const prodi = status === '1' ? item.kode_prodi : 'null';
@@ -363,14 +381,20 @@
             $('#syncCount').text(`${i + 1} / ${total}`);
             $('#syncStatus').text('Sinkronisasi data...');
 
-            // Throttling: wait 1 second before next request to reduce server load
-            if (i < total - 1) {
-                await delay(1000);
+            // Throttling: wait 3 seconds before next request to reduce server load
+            if (i < total - 1 && isSyncRunning) {
+                await delay(3000);
             }
         }
 
-        $('#syncStatus').text('Sinkronisasi selesai!');
-        $('#syncFooter').show();
+        if (isSyncRunning) {
+            $('#syncStatus').text('Sinkronisasi selesai!');
+            $('#syncProgressBar').removeClass('bg-primary').addClass('bg-success');
+        }
+        
+        isSyncRunning = false;
+        $('#btnStopSync').hide();
+        $('#btnCloseSync').show();
     }
 
     // Custom File Input Label
