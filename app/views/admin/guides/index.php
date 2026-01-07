@@ -85,6 +85,8 @@ $isAdmin = in_array($role, [\App\Utils\RoleHelper::ROLE_SUPERADMIN, \App\Utils\R
                             if (data === 'admin') badge = 'badge-info';
                             if (data === 'superadmin') badge = 'badge-danger';
                             if (data === 'admin_prodi') badge = 'badge-warning';
+                            if (data === 'upkh') badge = 'badge-primary';
+                            if (data === 'tu') badge = 'badge-secondary';
                             return '<span class="badge ' + badge + '">' + data.toUpperCase() + '</span>';
                         }
                     },

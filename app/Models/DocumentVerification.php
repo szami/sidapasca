@@ -146,6 +146,12 @@ class DocumentVerification
             ->where('participant_id', $participantId)
             ->execute();
 
+        // SYNC to participants table
+        $db->update('participants')
+            ->params(['status_verifikasi_fisik' => $status])
+            ->where('id', $participantId)
+            ->execute();
+
         return self::findByParticipant($participantId);
     }
 
@@ -155,7 +161,13 @@ class DocumentVerification
     public static function deleteByParticipant($participantId)
     {
         $db = \App\Utils\Database::connection();
-        return $db->query("DELETE FROM document_verifications WHERE participant_id = ?")->bind($participantId)->execute();
+        $db->query("DELETE FROM document_verifications WHERE participant_id = ?")->bind($participantId)->execute();
+
+        // Also reset sync status in participants table
+        return $db->update('participants')
+            ->params(['status_verifikasi_fisik' => 'pending'])
+            ->where('id', $participantId)
+            ->execute();
     }
 
     /**

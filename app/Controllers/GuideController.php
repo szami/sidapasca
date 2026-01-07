@@ -37,7 +37,7 @@ class GuideController
 
         $insertData = [
             'title' => request()->get('title'),
-            'content' => request()->get('content'),
+            'content' => request()->get('content', false),
             'role' => request()->get('role'),
             'order_index' => request()->get('order_index') ?? 0,
             'is_active' => request()->get('is_active') ? 1 : 0,
@@ -69,7 +69,7 @@ class GuideController
 
         $updateData = [
             'title' => request()->get('title'),
-            'content' => request()->get('content'),
+            'content' => request()->get('content', false),
             'role' => request()->get('role'),
             'order_index' => request()->get('order_index') ?? 0,
             'is_active' => request()->get('is_active') ? 1 : 0,

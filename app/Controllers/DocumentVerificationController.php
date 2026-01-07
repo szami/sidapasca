@@ -152,13 +152,7 @@ class DocumentVerificationController
         // Update Document Verification Table
         $verification = DocumentVerification::updateVerification($id, $data, $isS3);
 
-        // SYNC: Update Participant Table status_verifikasi_fisik based on verification result
-        if ($verification) {
-            \App\Utils\Database::connection()->update('participants')
-                ->params(['status_verifikasi_fisik' => $verification['status_verifikasi_fisik']])
-                ->where('id', $id)
-                ->execute();
-        }
+        // SYNC: No longer needed here, moved to DocumentVerification::updateVerification model
 
         // Redirect back with success message
         header("Location: /admin/verification/physical/$id?success=1");
@@ -330,7 +324,13 @@ class DocumentVerificationController
                     $data['bypass_verification'] = 0;
                 }
 
-                DocumentVerification::updateVerification($participantId, $data);
+                $participant = Participant::find($participantId);
+                $isS3 = false;
+                if ($participant) {
+                    $isS3 = (stripos($participant['nama_prodi'] ?? '', 'S3') !== false || stripos($participant['nama_prodi'] ?? '', 'DOKTOR') !== false);
+                }
+
+                DocumentVerification::updateVerification($participantId, $data, $isS3);
                 $count++;
             }
 

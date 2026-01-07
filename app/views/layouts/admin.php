@@ -224,6 +224,12 @@
                                         <p>Kehadiran Ujian</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="/admin/scheduler/export-cat" class="nav-link">
+                                        <i class="nav-icon fas fa-file-excel"></i>
+                                        <p>Export Jadwal CAT</p>
+                                    </a>
+                                </li>
                             <?php endif; ?>
 
                             <?php if ($canPrintSchedule): ?>

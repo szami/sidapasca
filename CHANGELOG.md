@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+---
+---
+
+## [1.3.3] - 2026-01-07
+
+### 🎉 Added - CAT Export & Sync Reliability
+- **CAT Excel Export**: Integrated "Export Jadwal CAT" link in the Admin Sidebar and a dedicated button in the Scheduler view. This ensures the IT team receives compatible data for the CAT system.
+- **Summernote-Friendly Fragments**: Cleaned all guide HTML files in `research/` by removing `<html>` and `<body>` tags, making them ready for Summernote's fragment-based input.
+
+### 🔧 Fixed & Improved
+- **Exam Card Download Sync**: Centralized the "Physical Verification" status synchronization to the `DocumentVerification` model. This ensures participants can download their cards immediately after manual save OR Excel import.
+- **Summernote HTML Preservation**: Updated `GuideController` to allow raw HTML storage, preventing the system from stripping complex tags or styling.
+- **S3 Import Logic**: Improved Program Doktor (S3) detection during Excel imports to ensure correct verification rules are applied for doctoral candidates.
+
+---
+
 ## [1.3.2] - 2026-01-07
 
 ### 🎉 Added - Role-Based User Guides
