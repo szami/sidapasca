@@ -234,6 +234,32 @@ $app->get('/api/master/quotas', 'App\Controllers\GraduationController@apiData');
 $app->get('/admin/graduation/quotas', 'App\Controllers\GraduationController@quotas');
 $app->post('/admin/graduation/quotas/save', 'App\Controllers\GraduationController@saveQuotas');
 
+// SYSTEM TOOLS HUB
+$app->get('/admin/tools', function () {
+    if (!\App\Utils\RoleHelper::canAccessToolsHub()) {
+        response()->redirect('/admin?error=unauthorized');
+    }
+    echo \App\Utils\View::render('admin.tools.index');
+});
+
+// MANAJEMEN UJIAN HUB
+$app->get('/admin/exam', function () {
+    if (!\App\Utils\RoleHelper::canManageSchedule() && !\App\Utils\RoleHelper::canPrintSchedule()) {
+        response()->redirect('/admin?error=unauthorized');
+    }
+    echo \App\Utils\View::render('admin.exam.index');
+});
+
+// PENILAIAN & KELULUSAN HUB
+$app->get('/admin/assessment', function () {
+    $allowed = \App\Utils\RoleHelper::isSuperadmin() || \App\Utils\RoleHelper::isAdmin() || \App\Utils\RoleHelper::canManageAssessmentBidang();
+    if (!$allowed) {
+        response()->redirect('/admin?error=unauthorized');
+    }
+    echo \App\Utils\View::render('admin.assessment.hub');
+});
+
+
 // --- Admin - User Management (Superadmin only) ---
 $app->get('/api/master/users', 'App\Controllers\UserController@apiData');
 $app->get('/admin/users', 'App\Controllers\UserController@index');

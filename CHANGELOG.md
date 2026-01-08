@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 ---
 
+
+## [1.3.4] - 2026-01-08
+
+### 🚨 Critical Fixes
+- **Exam Card Download Logic**:
+  - Simplified conditions to 4 explicit points: Has Participant Number, Has Schedule, Physical Verification Complete, and Admin Setting Enabled.
+  - **Data Sync Fix**: Changed logic to default to `document_verifications` table as the Single Source of Truth for physical verification status, resolving discrepancies where the participants table status was outdated.
+
 ## [1.3.3] - 2026-01-07
 
 ### 🎉 Added - CAT Export & Sync Reliability

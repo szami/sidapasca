@@ -299,6 +299,18 @@ class RoleHelper
         return self::getProdiId() === $prodiId;
     }
 
+    /**
+     * Check if user can access System Tools Hub
+     * Consolidates checks for all tools
+     */
+    public static function canAccessToolsHub(): bool
+    {
+        return self::canImportExport() ||
+            self::canManageSettings() ||
+            self::canManageEmail() ||
+            self::canManageUsers();
+    }
+
     // ==========================================
     // MENU ACCESS
     // ==========================================
