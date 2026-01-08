@@ -121,6 +121,12 @@
         </p>
     </a>
 </li>
+<li class="nav-item">
+    <a href="/admin/system/deploy-from-dev" class="nav-link">
+        <i class="nav-icon fas fa-rocket"></i>
+        <p>Deploy from Dev</p>
+    </a>
+</li>
 
 <li class="nav-item">
     <a href="/admin/users" class="nav-link">

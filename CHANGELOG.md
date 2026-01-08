@@ -13,6 +13,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 
+## [1.4.0] - 2026-01-08
+
+### 🚀 Added - System Deployment Tools
+- **Deploy from Dev Feature**:
+  - Implemented a secure, native deployment mechanism for Hostinger shared hosting environments.
+  - Allows Superadmins to deploy updates from the `devsida/` folder to production directly via the Admin Panel.
+  - Features version comparison, exclusion lists (preserving `.env`, `storage`), and automatic migration runner.
+  - Detailed deployment history logging.
+  - Environment-specific URL display configuration.
+
+### 🧹 Database & Schema Cleanup
+- **Participant Table Optimization**:
+  - Removed 5 redundant columns (`alamat`, `asal_mk`, `s1_universitas`, `s1_tahun_lulus`, `asal_s2`) that were duplicates or unused.
+  - Updated `migrate.php` and `SetupController` to reflect the cleaner schema.
+  - Preserved data integrity by backing up before column removal.
+
+### 📊 Enhanced - Exam Management & UX
+- **Physical Verification Status Display**:
+  - Added dedicated "Verifikasi Fisik" badge to Participant View page for clearer status tracking.
+  - Updated participant edit form to remove redundant verification fields (enforcing Single Source of Truth).
+- **Exam Management Hub**:
+  - Fixed layout issues and standardized UI.
+  - Added real-time statistics for Eligible vs Verified vs Scheduled participants.
+  - Implemented visual progress bars for scheduling completion.
+- **UI Improvements**:
+  - Removed photo thumbnail columns from DataTables (`participants` and `document_helper`) for cleaner tabular display.
+
+---
+
 ## [1.3.4] - 2026-01-08
 
 ### 🚨 Critical Fixes

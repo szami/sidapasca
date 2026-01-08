@@ -242,6 +242,16 @@ $app->get('/admin/tools', function () {
     echo \App\Utils\View::render('admin.tools.index');
 });
 
+// SYSTEM UPDATE & SYNC
+$app->get('/admin/system/update', 'App\Controllers\SystemController@update');
+$app->get('/admin/system/check-update-ajax', 'App\Controllers\SystemController@checkUpdate');
+$app->get('/admin/system/perform-update', 'App\Controllers\SystemController@performUpdate');
+
+// Hostinger Folder Sync Deployment
+$app->get('/admin/system/deploy-from-dev', 'App\Controllers\SystemController@deployFromDev');
+$app->post('/admin/system/deploy-from-dev/execute', 'App\Controllers\SystemController@performFolderSync');
+$app->get('/admin/system/sync-guide', 'App\Controllers\SystemController@syncGuide');
+
 // MANAJEMEN UJIAN HUB
 $app->get('/admin/exam', function () {
     if (!\App\Utils\RoleHelper::canManageSchedule() && !\App\Utils\RoleHelper::canPrintSchedule()) {
