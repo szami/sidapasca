@@ -331,7 +331,6 @@
                     style="width:100%">
                     <thead>
                         <tr>
-                            <th width="50">Foto</th>
                             <th>Email</th>
                             <th>Nama Peserta</th>
                             <th>Prodi</th>
@@ -433,7 +432,12 @@
                 <!-- Inline Log Area -->
                 <div class="bg-secondary text-white small" id="previewLogArea">
                     <div class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom border-dark">
-                        <span><i class="fas fa-terminal mr-1"></i> Log</span>
+                        <span>
+                            <i class="fas fa-terminal mr-1"></i> Log
+                            <span id="previewLoading" class="ml-2 d-none">
+                                <i class="fas fa-spinner fa-spin text-warning"></i>
+                            </span>
+                        </span>
                         <button type="button" class="btn btn-sm btn-outline-light py-0 px-1" onclick="clearLog()"
                             title="Clear Log">
                             <i class="fas fa-times"></i>
@@ -525,13 +529,10 @@
         formData.append('file', file);
         formData.append('type', type);
 
-        // Show loading
-        Swal.fire({
-            title: 'Mengupload...',
-            text: 'Mohon tunggu',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+        // Show loading in log area
+        clearLog();
+        appendLog(`Mengupload ${type}...`);
+        setPreviewLoading(true);
 
         fetch(`/admin/document-helper/upload-single/${currentPreviewId}`, {
             method: 'POST',
@@ -539,14 +540,9 @@
         })
             .then(r => r.json())
             .then(data => {
+                setPreviewLoading(false);
                 if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'Dokumen berhasil diperbarui',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                    appendLog(`✅ ${type} berhasil diperbarui`);
 
                     // Update Preview Content Immdiately
                     refreshSingleDocPreview(type, data.url);
@@ -557,13 +553,15 @@
                     // Reload Table
                     $('#helperTable').DataTable().ajax.reload(null, false);
                 } else {
+                    appendLog(`❌ Gagal: ${data.message}`);
                     Swal.fire('Gagal', data.message, 'error');
                 }
                 // Reset input
                 $('#singleDocUpload').val('');
             })
             .catch(e => {
-                Swal.fire('Error', 'Server Error', 'error');
+                setPreviewLoading(false);
+                appendLog('❌ Error: Server tidak merespon');
                 $('#singleDocUpload').val('');
             });
     }
@@ -681,12 +679,6 @@
                 }
             },
             "columns": [
-                {
-                    "data": "photo_url",
-                    "render": function (data, type, row) {
-                        return `<div class="text-center"><img src="${data}" class="img-circle img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;"></div>`;
-                    }
-                },
                 { "data": "email" },
                 {
                     "data": "nama_lengkap",
@@ -801,12 +793,14 @@
     function syncParticipant(id) {
         clearLog();
         appendLog('Memulai sync...');
+        setPreviewLoading(true);
 
         fetch(`/api/document-helper/sync/${id}`, {
             method: 'POST'
         })
             .then(r => r.json())
             .then(data => {
+                setPreviewLoading(false);
                 if (data.success) {
                     if (data.log && data.log.length > 0) {
                         data.log.forEach(msg => appendLog(msg));
@@ -819,8 +813,21 @@
                 }
             })
             .catch(e => {
+                setPreviewLoading(false);
                 appendLog('❌ Error: Server tidak merespon');
             });
+    }
+
+    function setPreviewLoading(isLoading) {
+        if (isLoading) {
+            $('#previewLoading').removeClass('d-none');
+            // Disable all action buttons in footer
+            $('.modal-footer button, .modal-footer label, .modal-footer a').addClass('disabled').css('pointer-events', 'none');
+        } else {
+            $('#previewLoading').addClass('d-none');
+            // Re-enable
+            $('.modal-footer button, .modal-footer label, .modal-footer a').removeClass('disabled').css('pointer-events', 'auto');
+        }
     }
 
     // --- Log Helper Functions ---
@@ -842,6 +849,7 @@
 
         clearLog();
         appendLog('Mengupload dan memproses ZIP...');
+        setPreviewLoading(true);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -852,6 +860,7 @@
         })
             .then(r => r.json())
             .then(data => {
+                setPreviewLoading(false);
                 if (data.success) {
                     if (data.log && data.log.length > 0) {
                         data.log.forEach(msg => appendLog(msg));
@@ -865,6 +874,7 @@
                 $('#importFileInline').val(''); // Reset file input
             })
             .catch(e => {
+                setPreviewLoading(false);
                 appendLog('❌ Error: Server tidak merespon');
                 $('#importFileInline').val('');
             });

@@ -224,16 +224,11 @@ try {
     $bioCols = [
         'tempat_lahir' => 'VARCHAR(255) NULL',
         'jenis_kelamin' => 'CHAR(1) NULL',
-        'alamat' => 'TEXT NULL',
         'no_hp' => 'VARCHAR(50) NULL',
-        // S1
-        'asal_mk' => 'VARCHAR(255) NULL',
-        's1_universitas' => 'VARCHAR(255) NULL',
+        // S1 (removed duplicates: asal_mk, s1_universitas, s1_tahun_lulus)
         's1_prodi' => 'VARCHAR(255) NULL',
-        's1_tahun_lulus' => 'VARCHAR(10) NULL',
         's1_ipk' => 'VARCHAR(10) NULL',
-        // S2
-        'asal_s2' => 'VARCHAR(255) NULL',
+        // S2 (removed duplicate: asal_s2)
         's2_perguruan_tinggi' => 'VARCHAR(255) NULL',
         's2_prodi' => 'VARCHAR(255) NULL',
         's2_tahun_masuk' => 'VARCHAR(10) NULL',

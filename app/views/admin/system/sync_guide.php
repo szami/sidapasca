@@ -41,7 +41,8 @@
                             <li class="mb-2">Anda akan melihat dua tombol baru: <span
                                     class="badge badge-warning text-dark">Sync Berkas</span> dan <span
                                     class="badge badge-success">Sync Kelulusan</span> di bagian atas tabel.</li>
-                            <li>Klik tombol yang sesuai dan tunggu prosesnya hingga selesai.</li>
+                            <li>Klik tombol yang sesuai. Script secara otomatis akan mengecek data yang sudah sinkron
+                                dan hanya mengupdate data yang berbeda (Smart Sync).</li>
                         </ol>
 
                         <div class="callout callout-warning mt-4">

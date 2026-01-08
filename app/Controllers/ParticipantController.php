@@ -31,6 +31,14 @@ class ParticipantController
         $filter = Request::get('filter') ?? 'exam_ready';
         $prodiFilter = Request::get('prodi') ?? 'all'; // NEW: Prodi filter
         $paymentFilter = Request::get('payment') ?? 'all'; // NEW: Payment filter
+
+        // RBAC: Restricted Filters for certain roles
+        if (!\App\Utils\RoleHelper::isAdmin() && in_array($filter, ['pending', 'lulus', 'gagal'])) {
+            // Redirect non-admins trying to access registration filters
+            header('Location: /admin/participants?filter=exam_ready');
+            exit;
+        }
+
         $hideExamNumber = false;
         $hideBilling = false;
         $hidePaymentStatus = false;
@@ -321,7 +329,13 @@ class ParticipantController
             exit;
         }
 
-        echo \App\Utils\View::render('admin.participants.view', ['p' => $participant]);
+        // Fetch physical verification status from document_verifications table
+        $verification = \App\Models\DocumentVerification::findByParticipant($id);
+
+        echo \App\Utils\View::render('admin.participants.view', [
+            'p' => $participant,
+            'verification' => $verification
+        ]);
     }
 
     /**
@@ -711,8 +725,12 @@ class ParticipantController
         }
 
         $db = \App\Utils\Database::connection();
-        $activeSemester = Semester::getActive();
-        $semesterId = $activeSemester['id'] ?? null;
+
+        // Get semester from request or fallback to active
+        $semesterId = Request::get('semester_id') ?: (Semester::getActive()['id'] ?? null);
+
+        // Fetch semester details for naming and filtering
+        $activeSemester = $db->query("SELECT * FROM semesters WHERE id = ?")->bind($semesterId)->fetchAssoc();
 
         if (!$semesterId) {
             echo "Tidak ada semester aktif untuk ekspor.";
@@ -725,7 +743,7 @@ class ParticipantController
                 WHERE p.semester_id = '$semesterId' 
                 AND p.nomor_peserta IS NOT NULL 
                 AND p.ruang_ujian IS NOT NULL 
-                ORDER BY p.ruang_ujian ASC, p.nama_lengkap ASC";
+                ORDER BY p.tanggal_ujian ASC, p.sesi_ujian ASC, r.fakultas ASC, p.ruang_ujian ASC, p.waktu_ujian ASC, p.nama_lengkap ASC";
 
         $participants = $db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -739,7 +757,7 @@ class ParticipantController
 
         // Header - Sesuai urutan yang diminta
         $headers = [
-            'ID',
+            'NO',
             'GEDUNG',
             'RUANG',
             'TANGGAL',
@@ -803,7 +821,7 @@ class ParticipantController
             $password = $p['tgl_lahir'] ?? '-';
 
             // Data sesuai kolom yang diminta
-            $sheet->setCellValue('A' . $rowNum, $p['id']);                                                      // ID
+            $sheet->setCellValue('A' . $rowNum, $rowNum - 1);                                                   // NO (Urut)
             $sheet->setCellValue('B' . $rowNum, $p['fakultas'] ?? 'Gedung Pascasarjana ULM');                  // GEDUNG
             $sheet->setCellValue('C' . $rowNum, $p['ruang_ujian']);                                            // RUANG
             $sheet->setCellValue('D' . $rowNum, $tanggal_pelaksanaan);                                         // TANGGAL_PELAKSANAAN

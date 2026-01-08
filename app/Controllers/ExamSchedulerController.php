@@ -25,10 +25,12 @@ class ExamSchedulerController
 
         $db = Database::connection();
 
-        // Active Semester Only
-        $activeSemester = Semester::getActive();
+        // Support semester_id from request or fallback to active
+        $semesterId = Request::get('semester_id') ?: (Semester::getActive()['id'] ?? null);
+        $activeSemester = $db->query("SELECT * FROM semesters WHERE id = ?")->bind($semesterId)->fetchAssoc();
+
         if (!$activeSemester) {
-            echo "Belum ada Semester Aktif.";
+            echo "Semester tidak ditemukan.";
             return;
         }
 
@@ -253,8 +255,9 @@ class ExamSchedulerController
         }
 
         $db = Database::connection();
-        $activeSemester = Semester::getActive();
-        $semesterId = $activeSemester['id'] ?? null;
+
+        // Support semester_id from request
+        $semesterId = Request::get('semester_id') ?: (Semester::getActive()['id'] ?? null);
 
         // DataTables parameters
         $draw = intval(Request::get('draw') ?? 1);
@@ -334,10 +337,13 @@ class ExamSchedulerController
         }
 
         $db = Database::connection();
-        $activeSemester = Semester::getActive();
+
+        // Support semester_id from request
+        $semesterId = Request::get('semester_id') ?: (Semester::getActive()['id'] ?? null);
+        $activeSemester = $db->query("SELECT * FROM semesters WHERE id = ?")->bind($semesterId)->fetchAssoc();
 
         if (!$activeSemester) {
-            die("Belum ada semester aktif.");
+            die("Semester tidak ditemukan.");
         }
 
         $sql = "SELECT 

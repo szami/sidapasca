@@ -5,6 +5,26 @@
         <!-- Filter Card -->
         <div class="card mb-3">
             <div class="card-body p-2">
+                <?php
+                $db = \App\Utils\Database::connection();
+                $semesters = $db->query("SELECT * FROM semesters ORDER BY id DESC")->fetchAll();
+                $selectedSemesterId = \Leaf\Http\Request::get('semester_id') ?: (\App\Models\Semester::getActive()['id'] ?? null);
+                ?>
+                <div class="row align-items-center mb-2">
+                    <div class="col-md-4">
+                        <form method="GET" action="" id="semesterFilterForm" class="form-inline">
+                            <label class="mr-2 font-weight-bold">Semester:</label>
+                            <select name="semester_id" class="form-control form-control-sm shadow-sm" style="min-width: 200px;" onchange="this.form.submit()">
+                                <?php foreach ($semesters as $sem): ?>
+                                    <option value="<?= $sem['id'] ?>" <?= $selectedSemesterId == $sem['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sem['nama']) ?> (<?= htmlspecialchars($sem['kode']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
                 <span class="mr-2 font-weight-bold">Filter Status:</span>
                 <div class="btn-group btn-group-toggle">
                     <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler?status=unscheduled"
@@ -22,6 +42,7 @@
                     <div class="row align-items-center mt-2">
                         <div class="col-md-6">
                             <form method="GET" action="/admin/scheduler" class="form-inline">
+                                <input type="hidden" name="semester_id" value="<?php echo $selectedSemesterId; ?>">
                                 <input type="hidden" name="status" value="<?php echo $filterStatus; ?>">
                                 <label class="mr-2">Filter Prodi:</label>
                                 <select name="prodi" class="form-control form-control-sm mr-2" style="max-width: 300px;"
@@ -47,8 +68,11 @@
                     <div class="card-header py-2">
                         <h3 class="card-title mt-1"><i class="fas fa-calendar-check mr-1"></i> Penjadwalan Massal</h3>
                         <div class="card-tools">
-                            <a href="/admin/scheduler/export-cat" class="btn btn-sm btn-success mr-1">
-                                <i class="fas fa-file-excel"></i> Export Jadwal CAT
+                            <a href="/admin/scheduler/export-cat?semester_id=<?php echo $selectedSemesterId; ?>" class="btn btn-sm btn-success mr-1">
+                                <i class="fas fa-file-excel"></i> Export Jadwal
+                            </a>
+                            <a href="/admin/participants/export?semester_id=<?php echo $selectedSemesterId; ?>" class="btn btn-sm btn-danger mr-1">
+                                <i class="fas fa-user-shield"></i> Export Detail IT
                             </a>
                             <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/scheduler/rooms"
                                 class="btn btn-sm btn-info">
@@ -119,6 +143,7 @@
                 "ajax": {
                     "url": "<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/api/scheduler-data",
                     "data": function (d) {
+                        d.semester_id = '<?php echo $selectedSemesterId; ?>';
                         d.status = '<?php echo $filterStatus; ?>';
                         d.prodi = '<?php echo $filterProdi; ?>';
                     }

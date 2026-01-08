@@ -283,7 +283,21 @@ if (!empty($photoVal)) {
                         <div class="px-3">
                             <div class="status-badge-lg"
                                 style="background: <?= $p['status_berkas'] === 'lulus' ? '#d1e7dd' : ($p['status_berkas'] === 'gagal' ? '#f8d7da' : '#fff3cd') ?>; color: <?= $p['status_berkas'] === 'lulus' ? '#0f5132' : ($p['status_berkas'] === 'gagal' ? '#842029' : '#664d03') ?>">
-                                Berkas: <?= strtoupper($p['status_berkas'] ?? 'PENDING') ?>
+                                Berkas Online: <?= strtoupper($p['status_berkas'] ?? 'PENDING') ?>
+                            </div>
+                            <?php
+                            $verifFisik = $verification['status_verifikasi_fisik'] ?? 'pending';
+                            $verifColors = [
+                                'lengkap' => ['bg' => '#d1e7dd', 'color' => '#0f5132'],
+                                'tidak_lengkap' => ['bg' => '#f8d7da', 'color' => '#842029'],
+                                'pending' => ['bg' => '#e2e3e5', 'color' => '#41464b']
+                            ];
+                            $vBg = $verifColors[$verifFisik]['bg'] ?? $verifColors['pending']['bg'];
+                            $vColor = $verifColors[$verifFisik]['color'] ?? $verifColors['pending']['color'];
+                            $verifLabel = $verifFisik === 'lengkap' ? 'LENGKAP' : ($verifFisik === 'tidak_lengkap' ? 'TIDAK LENGKAP' : 'PENDING');
+                            ?>
+                            <div class="status-badge-lg" style="background: <?= $vBg ?>; color: <?= $vColor ?>">
+                                Verifikasi Fisik: <?= $verifLabel ?>
                             </div>
                             <div class="status-badge-lg"
                                 style="background: <?= $p['status_pembayaran'] ? '#cfe2ff' : '#e2e3e5' ?>; color: <?= $p['status_pembayaran'] ? '#084298' : '#41464b' ?>">

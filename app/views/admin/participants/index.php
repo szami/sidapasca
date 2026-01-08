@@ -101,7 +101,6 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Foto</th>
                             <?php if (!($hideExamNumber ?? false)): ?>
                                 <th>No Peserta</th>
                             <?php endif; ?>
@@ -145,24 +144,6 @@ $(function () {
         "order": [[0, "desc"]],
         "columns": [
             { "data": "id" },
-            { 
-                "data": "photo_filename",
-                "orderable": false,
-                "render": function(data, type, row) {
-                    if (data) {
-                        // Check if data already contains 'photos/' (new structure)
-                        let url = '';
-                        if (data.indexOf('photos/') !== -1) {
-                             url = '/storage/' + data;
-                        } else {
-                             // Legacy
-                             url = '/storage/photos/' + data;
-                        }
-                        return `<img src="${url}" alt="Foto" class="img-thumbnail" style="width: 40px; height: 50px; object-fit: cover;">`;
-                    }
-                    return '<i class="fas fa-user-circle fa-2x text-muted"></i>';
-                }
-            },
             <?php if (!($hideExamNumber ?? false)): ?>
             { 
                 "data": "nomor_peserta",

@@ -63,8 +63,19 @@ class ReportController
             SUM(CASE WHEN status_berkas = 'gagal' THEN 1 ELSE 0 END) as gagal,
             SUM(CASE WHEN status_pembayaran = 1 THEN 1 ELSE 0 END) as paid,
             SUM(CASE WHEN status_pembayaran = 0 AND status_berkas = 'lulus' THEN 1 ELSE 0 END) as unpaid
-            FROM participants 
-            $whereClause
+            FROM participants ";
+
+        // ROLE-BASED Restriction for Print
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $prodiId = \App\Utils\RoleHelper::getProdiId();
+            if ($semesterId === 'all') {
+                $whereClause = "WHERE kode_prodi = '$prodiId'";
+            } else {
+                $whereClause .= " AND kode_prodi = '$prodiId'";
+            }
+        }
+
+        $sqlProdi .= " $whereClause
             GROUP BY nama_prodi
             ORDER BY nama_prodi ASC";
 

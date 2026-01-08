@@ -112,30 +112,30 @@ class RoleHelper
     // ==========================================
 
     /**
-     * Check if user can edit participant biodata (update form)
-     * Allowed: Superadmin only
-     */
-    public static function canEditParticipant(): bool
-    {
-        return self::isSuperadmin();
-    }
-
-    /**
-     * Check if user can delete participant
-     * Allowed: Superadmin only
-     */
-    public static function canDeleteParticipant(): bool
-    {
-        return self::isSuperadmin();
-    }
-
-    /**
-     * Check if user can upload/delete participant documents
+     * Check if user can view enrollment/registration menu (Formulir Masuk)
      * Allowed: Superadmin, Admin
      */
-    public static function canUploadDocuments(): bool
+    public static function canViewRegistration(): bool
     {
         return self::isAdmin();
+    }
+
+    /**
+     * Check if user can view online verification menu
+     * Allowed: Superadmin, Admin
+     */
+    public static function canViewOnlineVerification(): bool
+    {
+        return self::isAdmin();
+    }
+
+    /**
+     * Check if user can view participant documents (Data Peserta Ujian)
+     * Allowed: Superadmin, Admin, UPKH, TU, Admin Prodi (own prodi)
+     */
+    public static function canViewParticipantData(): bool
+    {
+        return true; // All roles can see participant list, but data is filtered in controller
     }
 
     /**
@@ -311,79 +311,31 @@ class RoleHelper
             self::canManageUsers();
     }
 
-    // ==========================================
-    // MENU ACCESS
-    // ==========================================
-
     /**
-     * Get menu access array for current role
-     * Returns array of menu identifiers that can be accessed
+     * Check if user can edit participant biodata (update form)
+     * Allowed: Superadmin only
      */
-    public static function getMenuAccess(): array
+    public static function canEditParticipant(): bool
     {
-        $role = self::getRole();
-
-        $menuAccess = [
-            self::ROLE_SUPERADMIN => [
-                'dashboard',
-                'admisi',
-                'peserta',
-                'verification',
-                'tools',
-                'master',
-                'exam',
-                'email',
-                'settings',
-                'users',
-                'reports'
-            ],
-            self::ROLE_ADMIN => [
-                'dashboard',
-                'admisi',
-                'peserta',
-                'verification',
-                'tools',
-                'master',
-                'exam',
-                'email',
-                'settings',
-                'reports'
-            ],
-            self::ROLE_UPKH => [
-                'dashboard',
-                'peserta_view',
-                'verification',
-                'download',
-                'print_cards',
-                'reports_physical'
-            ],
-            self::ROLE_TU => [
-                'dashboard',
-                'peserta_view',
-                'master',
-                'exam',
-                'print_schedule',
-                'email',
-                'reports'
-            ],
-            self::ROLE_ADMIN_PRODI => [
-                'dashboard',
-                'admisi_view',
-                'peserta_view',
-                'download',
-                'reports'
-            ]
-        ];
-
-        return $menuAccess[$role] ?? [];
+        return self::isSuperadmin();
     }
 
     /**
-     * Check if user can access specific menu
+     * Check if user can delete participant
+     * Allowed: Superadmin only
      */
-    public static function canAccessMenu(string $menu): bool
+    public static function canDeleteParticipant(): bool
     {
-        return in_array($menu, self::getMenuAccess());
+        return self::isSuperadmin();
+    }
+
+    /**
+     * Check if user can upload/delete participant documents
+     * Allowed: Superadmin, Admin
+     */
+    public static function canUploadDocuments(): bool
+    {
+        return self::isAdmin();
     }
 
     // ==========================================

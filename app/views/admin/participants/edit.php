@@ -413,49 +413,6 @@ $transkripS2Url = $resolvePath($p['transkrip_s2_filename'], 'transkrip_s2');
                                     Pastikan status pembayaran sudah dikonfirmasi sebelum meluluskan berkas peserta.
                                 </small>
                             </div>
-
-                            <hr class="my-4">
-
-                            <!-- Verifikasi Berkas Fisik -->
-                            <div class="form-group mb-4">
-                                <label class="section-label">Verifikasi Berkas Fisik</label>
-                                <div class="form-group mb-2">
-                                    <select name="berkas_fisik_status" class="form-control form-control-premium">
-                                        <option value="belum_lengkap" <?= ($p['berkas_fisik_status'] ?? '') == 'belum_lengkap' ? 'selected' : '' ?>>⚠️ Belum Lengkap</option>
-                                        <option value="lengkap" <?= ($p['berkas_fisik_status'] ?? '') == 'lengkap' ? 'selected' : '' ?>>✅ Lengkap</option>
-                                        <option value="tidak_valid" <?= ($p['berkas_fisik_status'] ?? '') == 'tidak_valid' ? 'selected' : '' ?>>❌ Tidak Valid</option>
-                                    </select>
-                                </div>
-                                <div class="form-group mb-0">
-                                    <textarea name="berkas_fisik_note" class="form-control form-control-premium"
-                                        rows="2"
-                                        placeholder="Catatan Verifikasi Fisik..."><?= $p['berkas_fisik_note'] ?? '' ?></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Hasil Seleksi -->
-                            <div class="form-group mb-4">
-                                <label class="section-label">Hasil Seleksi</label>
-                                <div class="form-group mb-2">
-                                    <select name="hasil_seleksi" class="form-control form-control-premium">
-                                        <option value="belum_ada" <?= ($p['hasil_seleksi'] ?? '') == 'belum_ada' ? 'selected' : '' ?>>⏳ Belum Ada Hasil</option>
-                                        <option value="lulus" <?= ($p['hasil_seleksi'] ?? '') == 'lulus' ? 'selected' : '' ?>>🎉 LULUS</option>
-                                        <option value="tidak_lulus" <?= ($p['hasil_seleksi'] ?? '') == 'tidak_lulus' ? 'selected' : '' ?>>😢 TIDAK LULUS</option>
-                                        <option value="cadangan" <?= ($p['hasil_seleksi'] ?? '') == 'cadangan' ? 'selected' : '' ?>>⚠️ CADANGAN</option>
-                                    </select>
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label class="small text-muted mb-1">Tanggal Kelulusan</label>
-                                    <input type="date" name="hasil_seleksi_date"
-                                        class="form-control form-control-premium"
-                                        value="<?= $p['hasil_seleksi_date'] ?? '' ?>">
-                                </div>
-                                <div class="form-group mb-0">
-                                    <textarea name="hasil_seleksi_note" class="form-control form-control-premium"
-                                        rows="2"
-                                        placeholder="Catatan Hasil Seleksi..."><?= $p['hasil_seleksi_note'] ?? '' ?></textarea>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

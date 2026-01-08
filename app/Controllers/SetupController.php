@@ -200,11 +200,7 @@ class SetupController
                 'instansi_pekerjaan' => "TEXT NULL",
                 'alamat_pekerjaan' => "TEXT NULL",
                 'telpon_pekerjaan' => "TEXT NULL",
-                'alamat' => "TEXT NULL",
-                // S1
-                'asal_mk' => "VARCHAR(255) NULL",
-                's1_universitas' => "VARCHAR(255) NULL",
-                's1_tahun_lulus' => "VARCHAR(10) NULL",
+                // S1 (removed duplicates: asal_mk, s1_universitas, s1_tahun_lulus)
                 's1_tahun_masuk' => "TEXT NULL",
                 's1_tahun_tamat' => "TEXT NULL",
                 's1_perguruan_tinggi' => "TEXT NULL",
@@ -212,8 +208,7 @@ class SetupController
                 's1_prodi' => "TEXT NULL",
                 's1_ipk' => "TEXT NULL",
                 's1_gelar' => "TEXT NULL",
-                // S2
-                'asal_s2' => "VARCHAR(255) NULL",
+                // S2 (removed duplicate: asal_s2)
                 's2_perguruan_tinggi' => "TEXT NULL",
                 's2_fakultas' => "TEXT NULL",
                 's2_prodi' => "TEXT NULL",
