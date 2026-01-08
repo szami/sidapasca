@@ -41,7 +41,9 @@ function getDayName($dateStr)
 $hasSchedule = !empty($participant['ruang_ujian']) && !empty($participant['tanggal_ujian']) && !empty($participant['waktu_ujian']);
 // 4 Points Check: Nomor + Jadwal + Fisik + Setting
 $isDownloadOpen = \App\Models\Setting::get('allow_exam_card_download', '0') == '1';
-$canDownload = !empty($participant['nomor_peserta']) && $hasSchedule && ($participant['status_verifikasi_fisik'] == 'lengkap') && $isDownloadOpen;
+// Use $verification variable passed from Controller/Route (Source of Truth)
+$isVerified = isset($verification) && ($verification['status_verifikasi_fisik'] === 'lengkap' || !empty($verification['bypass_verification']));
+$canDownload = !empty($participant['nomor_peserta']) && $hasSchedule && $isVerified && $isDownloadOpen;
 
 // Photo URL
 $photoUrl = 'https://ui-avatars.com/api/?name=' . urlencode($participant['nama_lengkap']) . '&background=random';

@@ -43,9 +43,13 @@ class ExamCardController
             return;
         }
 
-        // NEW: Check Physical Verification Status (Consistency with Dashboard)
-        // Use the synced column in participants table to match Dashboard logic exactly.
-        if ($participant['status_verifikasi_fisik'] !== 'lengkap') {
+        // NEW: Check Physical Verification Status (Source of Truth)
+        // We query the document_verifications table directly because the participants table 
+        // sync column might be outdated or unsynced.
+        $verification = \App\Models\DocumentVerification::findByParticipant($participant['id']);
+        $isVerified = $verification && ($verification['status_verifikasi_fisik'] === 'lengkap' || !empty($verification['bypass_verification']));
+
+        if (!$isVerified) {
             echo "Maaf, Anda belum bisa mengunduh Kartu Ujian karena verifikasi berkas fisik belum lengkap. Silakan hubungi admin untuk verifikasi berkas.";
             return;
         }
