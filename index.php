@@ -248,9 +248,18 @@ $app->get('/admin/system/check-update-ajax', 'App\Controllers\SystemController@c
 $app->get('/admin/system/perform-update', 'App\Controllers\SystemController@performUpdate');
 
 // Hostinger Folder Sync Deployment
-$app->get('/admin/system/deploy-from-dev', 'App\Controllers\SystemController@deployFromDev');
-$app->post('/admin/system/deploy-from-dev/execute', 'App\Controllers\SystemController@performFolderSync');
-$app->get('/admin/system/sync-guide', 'App\Controllers\SystemController@syncGuide');
+$app->get('/admin/system/deploy-from-dev', 'App\\Controllers\\SystemController@deployFromDev');
+$app->post('/admin/system/deploy-from-dev/execute', 'App\\Controllers\\SystemController@performFolderSync');
+$app->get('/admin/system/sync-guide', 'App\\Controllers\\SystemController@syncGuide');
+
+// PAYMENT EXPORT TOOLS (Daftar Ulang)
+$app->get('/admin/payment-export', 'App\Controllers\PaymentExportController@index');
+$app->get('/admin/payment-export/api-data', 'App\Controllers\PaymentExportController@apiData');
+$app->post('/admin/payment-export/import-sirema', 'App\\Controllers\\PaymentExportController@importSirema');
+$app->get('/admin/payment-export/template-sirema', 'App\\Controllers\\PaymentExportController@downloadTemplateSirema');
+$app->post('/admin/payment-export/import-sia', 'App\\Controllers\\PaymentExportController@importSia');
+$app->get('/admin/payment-export/template-sia', 'App\\Controllers\\PaymentExportController@downloadTemplateSia');
+$app->post('/admin/payment-export/generate', 'App\\Controllers\\PaymentExportController@generatePayment');
 
 // MANAJEMEN UJIAN HUB
 $app->get('/admin/exam', function () {

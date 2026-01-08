@@ -51,6 +51,15 @@
     </a>
 </li>
 
+<!-- DAFTAR ULANG -->
+<li class="nav-header">DAFTAR ULANG (SIREMA)</li>
+<li class="nav-item">
+    <a href="/admin/payment-export" class="nav-link">
+        <i class="nav-icon fas fa-file-invoice-dollar"></i>
+        <p>Export Tagihan</p>
+    </a>
+</li>
+
 <!-- MANAJEMEN UJIAN -->
 <li class="nav-header">MANAJEMEN UJIAN</li>
 <li class="nav-item">

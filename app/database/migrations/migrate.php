@@ -450,6 +450,7 @@ try {
         echo "Added berkas_fisik_note to participants.\n";
     }
 
+
     // Selection Results
     if (!in_array('hasil_seleksi', $existingCols)) {
         $pdo->exec("ALTER TABLE participants ADD COLUMN hasil_seleksi TEXT DEFAULT 'belum_ada'");
@@ -463,6 +464,24 @@ try {
         $pdo->exec("ALTER TABLE participants ADD COLUMN hasil_seleksi_date DATETIME");
         echo "Added hasil_seleksi_date to participants.\n";
     }
+
+    // 18. Payment Export Tools (Daftar Ulang System)
+    // Standalone table for Sirema & SIA integration
+    $reregistrations = "CREATE TABLE IF NOT EXISTS reregistrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nomor_peserta VARCHAR(50) NOT NULL,
+        nim VARCHAR(50) NULL,
+        nama VARCHAR(255) NULL,
+        kode_prodi VARCHAR(50) NULL,
+        periode VARCHAR(20) NOT NULL, -- e.g. 20251
+        nominal DECIMAL(15,2) DEFAULT 0,
+        status_sia VARCHAR(50) DEFAULT 'unknown',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(nomor_peserta, periode)
+    )";
+    $pdo->exec($reregistrations);
+    echo "Reregistrations table migrated.\n";
 
 } catch (PDOException $e) {
     echo "Migration Error: " . $e->getMessage() . "\n";
