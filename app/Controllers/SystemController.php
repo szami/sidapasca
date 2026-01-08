@@ -155,9 +155,13 @@ class SystemController
      */
     public function performFolderSync()
     {
+        // Start buffer to capture ANY output (warnings, migration logs, echo)
+        ob_start();
+
         header('Content-Type: application/json');
 
         if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::isSuperadmin()) {
+            ob_end_clean(); // Clear buffer
             echo json_encode(['success' => false, 'message' => 'Unauthorized - Superadmin only']);
             return;
         }
@@ -165,6 +169,7 @@ class SystemController
         $devFolder = $this->getDevFolder();
 
         if (!$devFolder || !is_dir($devFolder)) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'message' => 'Dev folder not found. Expected: ../devsida/']);
             return;
         }
@@ -195,16 +200,18 @@ class SystemController
             // Perform sync
             $this->syncFoldersRecursive($devFolder, $targetFolder, $excludeList, $stats, $logs);
 
+            // Capture accumulated output so far (if any)
+            $syncOutput = ob_get_contents();
+            // We don't clean yet, we keep accumulating
+
             // Run migration
             $migrationFile = $targetFolder . 'app/database/migrations/migrate.php';
             $migrationStatus = 'Not found';
-            $migrationOutput = '';
 
             if (file_exists($migrationFile)) {
                 try {
-                    ob_start();
+                    // include will output to the current buffer (started at top of function)
                     include $migrationFile;
-                    $migrationOutput = ob_get_clean();
                     $migrationStatus = 'Success';
                 } catch (\Exception $e) {
                     $migrationStatus = 'Failed: ' . $e->getMessage();
@@ -216,19 +223,25 @@ class SystemController
             // Log deployment
             $this->logDeployment($stats, $migrationStatus, $duration);
 
+            // Get ALL output (sync warnings + migration output)
+            $fullOutput = ob_get_clean();
+
             echo json_encode([
                 'success' => true,
                 'message' => "Deployment completed in {$duration}s",
                 'stats' => $stats,
                 'migration' => $migrationStatus,
                 'duration' => $duration,
-                'errors' => $logs
+                'errors' => $logs,
+                'debug_output' => $fullOutput // Send captured output safely in JSON
             ]);
 
         } catch (\Exception $e) {
+            $errorOutput = ob_get_clean();
             echo json_encode([
                 'success' => false,
-                'message' => 'Deployment failed: ' . $e->getMessage()
+                'message' => 'Deployment failed: ' . $e->getMessage(),
+                'debug_output' => $errorOutput
             ]);
         }
     }
