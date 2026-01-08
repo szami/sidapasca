@@ -43,13 +43,9 @@ class ExamCardController
             return;
         }
 
-        // NEW: Check Physical Verification Status
-        // Uses DocumentVerification::canDownloadCard($id)
-        // Note: Default to ALLOW if no verification record exists YET, assuming they need to come to campus to verify?
-        // Wait, user requirement: "kalau verifikasi akhir belum lengkap, peserta tidak bisa download kartu"
-        // This implies strict checking.
-        $canDownload = \App\Models\DocumentVerification::canDownloadCard($participant['id']);
-        if (!$canDownload) {
+        // NEW: Check Physical Verification Status (Consistency with Dashboard)
+        // Use the synced column in participants table to match Dashboard logic exactly.
+        if ($participant['status_verifikasi_fisik'] !== 'lengkap') {
             echo "Maaf, Anda belum bisa mengunduh Kartu Ujian karena verifikasi berkas fisik belum lengkap. Silakan hubungi admin untuk verifikasi berkas.";
             return;
         }
