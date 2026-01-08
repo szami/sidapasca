@@ -30,13 +30,11 @@ class ExamCardController
         }
 
         // Validate Status (Only 'Lulus' and 'Paid')
-        // Agents.md: "Hanya aktif jika status berkas = 'Lulus' DAN ada di data 'Peserta Ujian TPA'"
-        // My logic for importer sets status_pembayaran=1 if in TPA file.
-        // So check both.
-        if ($participant['status_berkas'] !== 'lulus' || !$participant['status_pembayaran']) {
-            echo "Maaf, Kartu Ujian belum tersedia. Pastikan Anda Lulus Administrasi dan sudah melakukan Pembayaran/Verifikasi TPA.";
-            return;
-        }
+        // SIMPLIFIED: Replaced by strict 4-point check (Nomor, Jadwal, Fisik, Setting)
+        // if ($participant['status_berkas'] !== 'lulus' || !$participant['status_pembayaran']) {
+        //     echo "Maaf, Kartu Ujian belum tersedia. Pastikan Anda Lulus Administrasi dan sudah melakukan Pembayaran/Verifikasi TPA.";
+        //     return;
+        // }
 
         // Check Admin Setting
         $allowDownload = \App\Models\Setting::get('allow_exam_card_download', '0');

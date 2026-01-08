@@ -39,7 +39,9 @@ function getDayName($dateStr)
 }
 
 $hasSchedule = !empty($participant['ruang_ujian']) && !empty($participant['tanggal_ujian']) && !empty($participant['waktu_ujian']);
-$canDownload = $participant['status_berkas'] == 'lulus' && $participant['status_pembayaran'] == 1 && !empty($participant['nomor_peserta']) && $hasSchedule && ($participant['status_verifikasi_fisik'] == 'lengkap');
+// 4 Points Check: Nomor + Jadwal + Fisik + Setting
+$isDownloadOpen = \App\Models\Setting::get('allow_exam_card_download', '0') == '1';
+$canDownload = !empty($participant['nomor_peserta']) && $hasSchedule && ($participant['status_verifikasi_fisik'] == 'lengkap') && $isDownloadOpen;
 
 // Photo URL
 $photoUrl = 'https://ui-avatars.com/api/?name=' . urlencode($participant['nama_lengkap']) . '&background=random';
