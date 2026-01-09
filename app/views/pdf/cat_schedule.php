@@ -111,7 +111,7 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
         table.attendance th,
         table.attendance td {
             border: 1px solid #333;
-            padding: 4px 6px;
+            padding: 6px 8px;
             text-align: left;
             font-size: 11px;
         }
@@ -122,7 +122,8 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
             text-align: center;
         }
 
-        .center {
+        .center,
+        table.attendance td.center {
             text-align: center;
         }
 
@@ -223,23 +224,23 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
                     <?php endif; ?>
                 </div>
 
-                <table style="margin-bottom: 12px; font-size: 11px;">
+                <table class="info-table" style="margin-bottom: 15px; font-size: 12px; line-height: 1.6;">
                     <tr>
-                        <td width="80px">Semester</td>
-                        <td width="250px">: <strong><?php echo $semesterName ?? '-'; ?></strong></td>
-                        <td width="80px">Gedung</td>
+                        <td width="70px" style="font-weight: 600; color: #333;">Semester</td>
+                        <td width="220px">: <strong><?php echo $semesterName ?? '-'; ?></strong></td>
+                        <td width="70px" style="font-weight: 600; color: #333;">Gedung</td>
                         <td>: <strong><?php echo htmlspecialchars($group['gedung']); ?></strong></td>
                     </tr>
                     <tr>
-                        <td>Tanggal</td>
+                        <td style="font-weight: 600; color: #333;">Tanggal</td>
                         <td>: <strong><?php echo htmlspecialchars($group['tanggal']); ?></strong></td>
-                        <td>Ruang</td>
+                        <td style="font-weight: 600; color: #333;">Ruang</td>
                         <td>: <strong><?php echo htmlspecialchars($group['ruang']); ?></strong></td>
                     </tr>
                     <tr>
-                        <td>Waktu</td>
+                        <td style="font-weight: 600; color: #333;">Waktu</td>
                         <td>: <strong><?php echo htmlspecialchars($group['waktu']); ?></strong></td>
-                        <td>Sesi</td>
+                        <td style="font-weight: 600; color: #333;">Sesi</td>
                         <td>: <strong><?php echo htmlspecialchars($group['sesi']); ?></strong></td>
                     </tr>
                 </table>

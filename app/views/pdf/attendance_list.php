@@ -114,7 +114,7 @@
         table.attendance th,
         table.attendance td {
             border: 1px solid #333;
-            padding: 5px 8px;
+            padding: 7px 10px;
             text-align: left;
             font-size: 11px;
         }
@@ -125,8 +125,9 @@
             text-align: center;
         }
 
+        .center,
         table.attendance td.center {
-            text-align: center;
+            text-align: center !important;
         }
 
         .signature-area {
@@ -329,21 +330,24 @@
                         </tr>
                     <?php endif; ?>
                     <tr>
-                        <td align="center" style="font-size:14px; font-weight:normal; padding-top: 8px;">
-                            Semester: <?php echo $semesterName ?? '-'; ?>
+                        <td align="center" style="font-size:13px; font-weight:normal; padding-top: 10px; line-height: 1.6;">
+                            <span style="font-weight: 600; color: #333;">Semester:</span>
+                            <strong><?php echo $semesterName ?? '-'; ?></strong>
                         </td>
                     </tr>
                     <?php if (($filterSesi ?? 'all') !== 'all' || ($filterRuang ?? 'all') !== 'all'): ?>
                         <tr>
-                            <td align="center" style="font-size:12px; font-weight:normal; padding-top: 5px;">
+                            <td align="center" style="font-size:13px; font-weight:normal; padding-top: 5px; line-height: 1.6;">
                                 <?php if (($filterSesi ?? 'all') !== 'all'): ?>
-                                    <strong>Sesi:</strong> <?php echo htmlspecialchars($filterSesi); ?>
+                                    <span style="font-weight: 600; color: #333;">Sesi:</span>
+                                    <strong><?php echo htmlspecialchars($filterSesi); ?></strong>
                                 <?php endif; ?>
                                 <?php if (($filterSesi ?? 'all') !== 'all' && ($filterRuang ?? 'all') !== 'all'): ?>
-                                    |
+                                    &nbsp;|&nbsp;
                                 <?php endif; ?>
                                 <?php if (($filterRuang ?? 'all') !== 'all'): ?>
-                                    <strong>Ruang:</strong> <?php echo htmlspecialchars($filterRuang); ?>
+                                    <span style="font-weight: 600; color: #333;">Ruang:</span>
+                                    <strong><?php echo htmlspecialchars($filterRuang); ?></strong>
                                 <?php endif; ?>
                             </td>
                         </tr>
