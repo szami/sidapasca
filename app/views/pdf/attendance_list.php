@@ -224,7 +224,7 @@
         <!-- Filter Form -->
         <div class="filter-form">
             <h3>Filter Daftar Hadir</h3>
-            <form method="GET" action="/admin/attendance-list">
+            <form method="GET" action="/admin/attendance-print">
                 <div class="form-group">
                     <label>Sesi Ujian:</label>
                     <select name="sesi">
@@ -275,99 +275,118 @@
     </div>
 
     <?php
-    $globalNo = 0; // Global numbering across pages
-    foreach ($participantChunks as $pageIndex => $chunk):
-        $currentPage = $pageIndex + 1;
-        $isLastPage = ($currentPage === $totalPages);
+    // Group participants by Room and Session (same as CAT schedule)
+    $groups = [];
+    if (!empty($participants)) {
+        foreach ($participants as $p) {
+            $key = ($p['ruang_ujian'] ?? 'Semua') . ' - ' . ($p['sesi_ujian'] ?? 'Semua');
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'ruang' => $p['ruang_ujian'] ?? '-',
+                    'gedung' => $p['gedung'] ?? '-',
+                    'sesi' => $p['sesi_ujian'] ?? '-',
+                    'tanggal' => $p['tanggal_formatted'] ?? ($p['tanggal_ujian'] ?? '-'),
+                    'waktu' => $p['waktu_ujian'] ?? '-',
+                    'participants' => []
+                ];
+            }
+            $groups[$key]['participants'][] = $p;
+        }
+    }
+    ?>
+
+    <?php foreach ($groups as $key => $group): ?>
+        <?php
+        // Split participants into chunks of max rows per page
+        $participantChunks = array_chunk($group['participants'], $maxRowsPerPage);
+        $totalPages = count($participantChunks);
+        $totalParticipants = count($group['participants']);
+        $globalNo = 0; // Global numbering across pages for this group
         ?>
-        <page size="A4">
-            <!-- Page Indicator (if multiple pages) -->
-            <?php if ($totalPages > 1): ?>
-                <div class="page-indicator">
-                    Halaman <?php echo $currentPage; ?> dari <?php echo $totalPages; ?>
-                    (Total: <?php echo $totalParticipants; ?> peserta)
-                </div>
-            <?php endif; ?>
 
-            <!-- Letterhead (Dynamic from Settings) -->
-            <?php if (!empty($letterhead)): ?>
-                <?php echo $letterhead; ?>
-            <?php else: ?>
-                <!-- Default Letterhead if not set -->
-                <table class="header" width="100%">
-                    <tbody>
-                        <tr>
-                            <td width="100px" align="center">
-                                <img src="https://simari.ulm.ac.id/logo/ulm.png" alt="Logo ULM" width="80px">
-                            </td>
-                            <td align="center">
-                                <b style="font-size:16px;">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</b><br>
-                                <b style="font-size:18px;">UNIVERSITAS LAMBUNG MANGKURAT</b><br>
-                                <b style="font-size:22px;">ADMISI PASCASARJANA</b><br>
-                                <span style="font-size:10px;">Jl. Unlam No.12, Pangeran, Banjarmasin Utara, Kota Banjarmasin,
-                                    Kalimantan Selatan 70123</span><br>
-                                <span style="font-size:10px;">Telp. (0511) 33066003, 3304177, 3306694, 3305195, Kotak Pos
-                                    219</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-            <hr style="border: 1px solid #000; margin: 10px 0;">
+        <?php foreach ($participantChunks as $pageIndex => $chunk): ?>
+            <?php
+            $currentPage = $pageIndex + 1;
+            $isLastPage = ($currentPage === $totalPages);
+            ?>
+            <page size="A4">
+                <!-- Page Indicator (if multiple pages) -->
+                <?php if ($totalPages > 1): ?>
+                    <div class="page-indicator">
+                        Halaman <?php echo $currentPage; ?> dari <?php echo $totalPages; ?>
+                        (Total: <?php echo $totalParticipants; ?> peserta)
+                    </div>
+                <?php endif; ?>
 
-            <!-- Title (repeated on each page) -->
-            <table width="100%" style="font-weight:bold; margin-top: 10px;">
-                <tbody>
-                    <tr>
-                        <td align="center" style="font-size:16px;">DAFTAR HADIR PESERTA</td>
-                    </tr>
-                    <tr>
-                        <td align="center" style="font-size:16px;">TES UJIAN MASUK PASCASARJANA</td>
-                    </tr>
+                <!-- Letterhead (Dynamic from Settings) -->
+                <?php if (!empty($letterhead)): ?>
+                    <?php echo $letterhead; ?>
+                <?php else: ?>
+                    <!-- Default Letterhead if not set -->
+                    <table class="header" width="100%">
+                        <tbody>
+                            <tr>
+                                <td width="100px" align="center">
+                                    <img src="https://simari.ulm.ac.id/logo/ulm.png" alt="Logo ULM" width="80px">
+                                </td>
+                                <td align="center">
+                                    <b style="font-size:16px;">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</b><br>
+                                    <b style="font-size:18px;">UNIVERSITAS LAMBUNG MANGKURAT</b><br>
+                                    <b style="font-size:22px;">ADMISI PASCASARJANA</b><br>
+                                    <span style="font-size:10px;">Jl. Unlam No.12, Pangeran, Banjarmasin Utara, Kota Banjarmasin,
+                                        Kalimantan Selatan 70123</span><br>
+                                    <span style="font-size:10px;">Telp. (0511) 33066003, 3304177, 3306694, 3305195, Kotak Pos
+                                        219</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+                <hr style="border: 1px solid #000; margin: 10px 0;">
+
+                <!-- Title (repeated on each page) -->
+                <div align="center" style="font-weight:bold; margin-bottom: 10px;">
+                    <div style="font-size:15px;">DAFTAR HADIR PESERTA</div>
+                    <div style="font-size:15px;">TES UJIAN MASUK PASCASARJANA</div>
                     <?php if ($currentPage > 1): ?>
-                        <tr>
-                            <td align="center" class="continuation-note">(Lanjutan)</td>
-                        </tr>
+                        <div class="continuation-note">(Lanjutan)</div>
                     <?php endif; ?>
-                    <tr>
-                        <td align="center" style="font-size:13px; font-weight:normal; padding-top: 10px; line-height: 1.6;">
-                            <span style="font-weight: 600; color: #333;">Semester:</span>
-                            <strong><?php echo $semesterName ?? '-'; ?></strong>
-                        </td>
-                    </tr>
-                    <?php if (($filterSesi ?? 'all') !== 'all' || ($filterRuang ?? 'all') !== 'all'): ?>
-                        <tr>
-                            <td align="center" style="font-size:13px; font-weight:normal; padding-top: 5px; line-height: 1.6;">
-                                <?php if (($filterSesi ?? 'all') !== 'all'): ?>
-                                    <span style="font-weight: 600; color: #333;">Sesi:</span>
-                                    <strong><?php echo htmlspecialchars($filterSesi); ?></strong>
-                                <?php endif; ?>
-                                <?php if (($filterSesi ?? 'all') !== 'all' && ($filterRuang ?? 'all') !== 'all'): ?>
-                                    &nbsp;|&nbsp;
-                                <?php endif; ?>
-                                <?php if (($filterRuang ?? 'all') !== 'all'): ?>
-                                    <span style="font-weight: 600; color: #333;">Ruang:</span>
-                                    <strong><?php echo htmlspecialchars($filterRuang); ?></strong>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
 
-            <!-- Attendance Table -->
-            <table class="attendance">
-                <thead>
+                <!-- Info Table (same style as CAT schedule) -->
+                <table class="info-table" style="margin-bottom: 15px; font-size: 12px; line-height: 1.6;">
                     <tr>
-                        <th width="5%">NO.</th>
-                        <th width="15%">NOMOR PESERTA</th>
-                        <th width="30%">NAMA PESERTA</th>
-                        <th width="30%">PROGRAM STUDI</th>
-                        <th width="20%">TANDA TANGAN</th>
+                        <td width="70px" style="font-weight: 600; color: #333;">Semester</td>
+                        <td width="220px">: <strong><?php echo $semesterName ?? '-'; ?></strong></td>
+                        <td width="70px" style="font-weight: 600; color: #333;">Gedung</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['gedung']); ?></strong></td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($chunk)): ?>
+                    <tr>
+                        <td style="font-weight: 600; color: #333;">Tanggal</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['tanggal']); ?></strong></td>
+                        <td style="font-weight: 600; color: #333;">Ruang</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['ruang']); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 600; color: #333;">Waktu</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['waktu']); ?></strong></td>
+                        <td style="font-weight: 600; color: #333;">Sesi</td>
+                        <td>: <strong><?php echo htmlspecialchars($group['sesi']); ?></strong></td>
+                    </tr>
+                </table>
+
+                <!-- Attendance Table -->
+                <table class="attendance">
+                    <thead>
+                        <tr>
+                            <th width="5%">NO.</th>
+                            <th width="15%">NOMOR PESERTA</th>
+                            <th width="30%">NAMA PESERTA</th>
+                            <th width="30%">PROGRAM STUDI</th>
+                            <th width="20%">TANDA TANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <?php foreach ($chunk as $participant): ?>
                             <?php $globalNo++; ?>
                             <tr>
@@ -378,26 +397,31 @@
                                 <td></td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" class="center">Belum ada peserta</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
 
-            <!-- Signature (only on last page) -->
-            <?php if ($isLastPage): ?>
-                <div class="signature-area">
-                    <p style="margin-bottom: 5px;">Mengetahui,</p>
-                    <p style="margin-top: 0; margin-bottom: 80px;"><strong>Pengawas Ujian</strong></p>
-                    <div style="border-top: 1px solid #333; display: inline-block; width: 200px; padding-top: 5px;">
-                        ( ....................................... )
+                <!-- Signature (only on last page of each group) -->
+                <?php if ($isLastPage): ?>
+                    <div class="signature-area">
+                        <p style="margin-bottom: 5px;">Mengetahui,</p>
+                        <p style="margin-top: 0; margin-bottom: 80px;"><strong>Pengawas Ujian</strong></p>
+                        <div style="display: inline-block; width: 200px; padding-top: 5px;">
+                            ( ....................................... )
+                        </div>
                     </div>
-                </div>
-            <?php endif; ?>
-        </page>
+                <?php endif; ?>
+            </page>
+        <?php endforeach; ?>
     <?php endforeach; ?>
+
+    <?php if (empty($groups)): ?>
+        <page size="A4">
+            <div style="text-align: center; padding: 50px;">
+                <h3>Belum ada data peserta</h3>
+                <p>Silakan pilih filter yang sesuai</p>
+            </div>
+        </page>
+    <?php endif; ?>
 </body>
 
 </html>
