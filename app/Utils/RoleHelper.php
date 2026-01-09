@@ -165,6 +165,20 @@ class RoleHelper
     }
 
     /**
+     * Check if user can VIEW exam schedule
+     * Allowed: Superadmin, Admin, TU, Admin Prodi
+     */
+    public static function canViewSchedule(): bool
+    {
+        return in_array(self::getRole(), [
+            self::ROLE_SUPERADMIN,
+            self::ROLE_ADMIN,
+            self::ROLE_TU,
+            self::ROLE_ADMIN_PRODI
+        ]);
+    }
+
+    /**
      * Check if user can manage users
      * Allowed: Superadmin only
      */

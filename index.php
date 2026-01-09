@@ -374,4 +374,17 @@ $app->get('/admin/attendance-print', 'App\Controllers\ExamCardController@attenda
 $app->get('/admin/cat-schedule', 'App\Controllers\ExamCardController@catScheduleFilter');
 $app->get('/admin/cat-schedule-print', 'App\Controllers\ExamCardController@catSchedulePrint');
 
+// SKM / Survey Module
+$app->get('/admin/surveys', 'App\Controllers\SurveyController@index');
+$app->get('/admin/surveys/report/{id}', 'App\Controllers\SurveyController@report');
+$app->get('/admin/surveys/edit/{id}', 'App\Controllers\SurveyController@edit');
+$app->post('/admin/surveys/update/{id}', 'App\Controllers\SurveyController@update');
+$app->post('/admin/surveys/question/add/{id}', 'App\Controllers\SurveyController@storeQuestion');
+$app->post('/admin/surveys/question/update/{id}', 'App\Controllers\SurveyController@updateQuestion');
+$app->get('/admin/surveys/question/delete/{id}', 'App\Controllers\SurveyController@deleteQuestion');
+
+$app->get('/survey/thank-you', 'App\Controllers\SurveyController@thankYou');
+$app->get('/survey/{id}', 'App\Controllers\SurveyController@show');
+$app->post('/survey/submit/{id}', 'App\Controllers\SurveyController@submit');
+
 $app->run();

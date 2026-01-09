@@ -27,6 +27,12 @@
     </a>
 </li>
 <li class="nav-item">
+    <a href="/admin/scheduler" class="nav-link">
+        <i class="nav-icon fas fa-calendar-alt"></i>
+        <p>Jadwal TPA</p>
+    </a>
+</li>
+<li class="nav-item">
     <a href="/admin/documents/download" class="nav-link">
         <i class="nav-icon fas fa-file-archive"></i>
         <p>Download Berkas</p>

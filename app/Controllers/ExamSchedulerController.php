@@ -18,7 +18,8 @@ class ExamSchedulerController
         }
 
         // Only Superadmin, Admin, TU can manage schedules
-        if (!\App\Utils\RoleHelper::canManageSchedule()) {
+        // Admin Prodi can VIEW only
+        if (!\App\Utils\RoleHelper::canViewSchedule()) {
             header('Location: /admin?error=unauthorized');
             exit;
         }
@@ -59,11 +60,31 @@ class ExamSchedulerController
         // and DataTables on the client-side.
         // The view will now only receive sessions, filter status, filter prodi, and prodis.
 
+        // 3. Admin Prodi Restriction
+        $isReadOnly = !\App\Utils\RoleHelper::canManageSchedule();
+        $adminProdiId = \App\Utils\RoleHelper::isAdminProdi() ? \App\Utils\RoleHelper::getProdiId() : null;
+
+        // Force filter if Admin Prodi
+        // We will assume prodi list is still useful for context, but selection might be locked in View
+        // Actually, we should probably filter the "Prodis" dropdown to only show THEIR prodi if they are locked.
+
+        if ($adminProdiId) {
+            // Find Prodi Name from code (since apiData filters by name or code, we pass code to filterProdi)
+            // However, the view expects filterProdi to be the value in the Select. 
+            // apiData will handle the logic. 
+            // Let's pass the code as filterProdi if set.
+            if (empty($filterProdi)) {
+                $filterProdi = $adminProdiId;
+            }
+        }
+
         echo View::render('admin.scheduler.index', [
             'sessions' => $sessions,
             'filterStatus' => $filterStatus,
             'filterProdi' => $filterProdi,
-            'prodis' => $prodis
+            'prodis' => $prodis,
+            'isReadOnly' => $isReadOnly,
+            'adminProdiCode' => $adminProdiId
         ]);
     }
 
@@ -267,13 +288,29 @@ class ExamSchedulerController
         $orderColumnIndex = Request::get('order')[0]['column'] ?? 2;
         $orderDir = Request::get('order')[0]['dir'] ?? 'asc';
 
-        $columns = [
-            0 => 'p.id',
-            1 => 'p.nomor_peserta',
-            2 => 'p.nama_lengkap',
-            3 => 'p.nama_prodi',
-            4 => 'p.ruang_ujian',
-        ];
+        // Column Mapping
+        // If ReadOnly (Admin Prodi), Checkbox column (0) is removed in View.
+        // We need to shift indices or define different map.
+        $isReadOnly = !\App\Utils\RoleHelper::canManageSchedule();
+
+        if ($isReadOnly) {
+            // View Columns: 0=NoPeserta, 1=Nama, 2=Prodi, 3=Ruang
+            $columns = [
+                0 => 'p.nomor_peserta',
+                1 => 'p.nama_lengkap',
+                2 => 'p.nama_prodi',
+                3 => 'p.ruang_ujian',
+            ];
+        } else {
+            // View Columns: 0=Check/ID, 1=NoPeserta, 2=Nama, 3=Prodi, 4=Ruang
+            $columns = [
+                0 => 'p.id',
+                1 => 'p.nomor_peserta',
+                2 => 'p.nama_lengkap',
+                3 => 'p.nama_prodi',
+                4 => 'p.ruang_ujian',
+            ];
+        }
         $orderBy = $columns[$orderColumnIndex] ?? 'p.nama_prodi';
 
         // Filter Param
@@ -291,9 +328,22 @@ class ExamSchedulerController
         }
 
         // Prodi Filter
-        if (!empty($filterProdi)) {
-            $prodiEscaped = str_replace("'", "''", $filterProdi);
-            $whereClause .= " AND p.nama_prodi = '$prodiEscaped'";
+        // Prodi Filter
+        // If Admin Prodi, FORCE filter by their Prodi Code
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $myProdiCode = \App\Utils\RoleHelper::getProdiId();
+            if ($myProdiCode) {
+                $whereClause .= " AND p.kode_prodi = '$myProdiCode'";
+            }
+        } else {
+            // Normal filter for others (by Name usually, from Dropdown)
+            if (!empty($filterProdi)) {
+                // Check if filterProdi looks like a code (numeric) or name
+                // The dropdown usually has Names. 
+                // Let's handle Name match.
+                $prodiEscaped = str_replace("'", "''", $filterProdi);
+                $whereClause .= " AND p.nama_prodi = '$prodiEscaped'";
+            }
         }
 
         // Search
@@ -318,6 +368,10 @@ class ExamSchedulerController
                 LIMIT $length OFFSET $start";
         $data = $db->query($sql)->fetchAll();
 
+        // Ensure no stray output breaks JSON
+        if (ob_get_length())
+            ob_clean();
+
         response()->json([
             "draw" => $draw,
             "recordsTotal" => $totalRecords,
@@ -331,7 +385,8 @@ class ExamSchedulerController
      */
     public function exportCat()
     {
-        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canManageSchedule()) {
+        // Allow View capability (Admin Prodi included)
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::canViewSchedule()) {
             header('Location: /admin?error=unauthorized');
             exit;
         }
@@ -346,6 +401,7 @@ class ExamSchedulerController
             die("Semester tidak ditemukan.");
         }
 
+        // Base Query
         $sql = "SELECT 
                     p.nomor_peserta, 
                     p.nama_lengkap, 
@@ -357,8 +413,19 @@ class ExamSchedulerController
                 FROM participants p
                 WHERE p.semester_id = ? 
                 AND p.ruang_ujian IS NOT NULL 
-                AND p.ruang_ujian != ''
-                ORDER BY p.tanggal_ujian ASC, p.sesi_ujian ASC, p.nama_prodi ASC, p.nama_lengkap ASC";
+                AND p.ruang_ujian != ''";
+
+        // Admin Prodi Filter
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $myProdiCode = \App\Utils\RoleHelper::getProdiId();
+            if ($myProdiCode) {
+                // Determine if code is string or int, safely bind it?
+                // Or just append. Codes are usually safe if from session.
+                $sql .= " AND p.kode_prodi = '$myProdiCode'";
+            }
+        }
+
+        $sql .= " ORDER BY p.tanggal_ujian ASC, p.sesi_ujian ASC, p.nama_prodi ASC, p.nama_lengkap ASC";
 
         $participants = $db->query($sql)->bind($activeSemester['id'])->fetchAll();
 
@@ -387,7 +454,8 @@ class ExamSchedulerController
             $sheet->setCellValue('C' . $rowIdx, $p['nama_lengkap']);
             $sheet->setCellValue('D' . $rowIdx, $p['nama_prodi']);
             $sheet->setCellValue('E' . $rowIdx, $p['ruang_ujian']);
-            $sheet->setCellValue('F' . $rowIdx, $p['tanggal_ujian']);
+            $dateFormatted = $p['tanggal_ujian'] ? date('d-m-Y', strtotime($p['tanggal_ujian'])) : '';
+            $sheet->setCellValue('F' . $rowIdx, $dateFormatted);
             $sheet->setCellValue('G' . $rowIdx, $p['waktu_ujian']);
             $sheet->setCellValue('H' . $rowIdx, $p['sesi_ujian']);
             $rowIdx++;
@@ -399,7 +467,13 @@ class ExamSchedulerController
         }
 
         // Output file
-        $filename = "Jadwal_CAT_PASCA_" . str_replace(' ', '_', $activeSemester['nama']) . ".xlsx";
+        // Add prefix if Prodi
+        $filenamePrefix = "Jadwal_CAT_PASCA_";
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            $filenamePrefix .= "PRODI_";
+        }
+
+        $filename = $filenamePrefix . str_replace(' ', '_', $activeSemester['nama']) . ".xlsx";
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

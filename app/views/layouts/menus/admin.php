@@ -113,6 +113,17 @@
         <p>Panduan Sistem</p>
     </a>
 </li>
+</a>
+</li>
+
+<!-- EVALUASI & SURVEI -->
+<li class="nav-header">EVALUASI & SURVEI</li>
+<li class="nav-item">
+    <a href="/admin/surveys" class="nav-link">
+        <i class="nav-icon fas fa-poll"></i>
+        <p>Manajemen SKM</p>
+    </a>
+</li>
 
 <!-- SYSTEM TOOLS -->
 <li class="nav-item">
