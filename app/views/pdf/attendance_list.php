@@ -210,9 +210,9 @@
     $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for safety
     
     // Prepare data chunks
-    $participantChunks = !empty($participants) ? array_chunk($participants, $maxRowsPerPage) : [[]];
+    $participantChunks = (isset($participants) && is_array($participants) && !empty($participants)) ? array_chunk($participants, $maxRowsPerPage) : [[]];
     $totalPages = count($participantChunks);
-    $totalParticipants = count($participants ?? []);
+    $totalParticipants = (isset($participants) && is_array($participants)) ? count($participants) : 0;
 
     // Current perPage for form selection
     $currentPerPage = $maxRowsPerPage;

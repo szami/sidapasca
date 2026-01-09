@@ -43,7 +43,7 @@ $maxRowsPerPage = max(10, min(50, $maxRowsPerPage)); // Limit between 10-50 for 
 
             html,
             body {
-                width: 210mm;
+                width: 100%;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: white !important;
@@ -104,8 +104,9 @@ $maxRowsPerPage = max(10, min(50, $maxRowsPerPage)); // Limit between 10-50 for 
         }
 
         table {
-            width: 100%;
+            width: 99.8%;
             border-collapse: collapse;
+            margin: 0 auto;
         }
 
         table.attendance th,
@@ -162,7 +163,7 @@ $maxRowsPerPage = max(10, min(50, $maxRowsPerPage)); // Limit between 10-50 for 
     <?php
     // Group participants by Room and Session (same as CAT schedule)
     $groups = [];
-    if (!empty($participants)) {
+    if (isset($participants) && is_array($participants)) {
         foreach ($participants as $p) {
             $key = ($p['ruang_ujian'] ?? 'Semua') . ' - ' . ($p['sesi_ujian'] ?? 'Semua');
             if (!isset($groups[$key])) {

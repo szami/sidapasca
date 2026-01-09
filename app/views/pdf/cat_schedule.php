@@ -43,7 +43,7 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
 
             html,
             body {
-                width: 210mm;
+                width: 100%;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: white !important;
@@ -104,8 +104,9 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
         }
 
         table {
-            width: 100%;
+            width: 99.8%;
             border-collapse: collapse;
+            margin: 0 auto;
         }
 
         table.attendance th,
@@ -153,21 +154,22 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
     </div>
 
     <?php
-    // Group participants by Room and Session
     $groups = [];
-    foreach ($participants as $p) {
-        $key = $p['ruang_ujian'] . ' - ' . $p['sesi_ujian'];
-        if (!isset($groups[$key])) {
-            $groups[$key] = [
-                'ruang' => $p['ruang_ujian'],
-                'gedung' => $p['gedung'] ?? '-',
-                'sesi' => $p['sesi_ujian'],
-                'tanggal' => $p['tanggal_formatted'] ?? $p['tanggal_ujian'],
-                'waktu' => $p['waktu_ujian'],
-                'participants' => []
-            ];
+    if (isset($participants) && is_array($participants)) {
+        foreach ($participants as $p) {
+            $key = $p['ruang_ujian'] . ' - ' . $p['sesi_ujian'];
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'ruang' => $p['ruang_ujian'],
+                    'gedung' => $p['gedung'] ?? '-',
+                    'sesi' => $p['sesi_ujian'],
+                    'tanggal' => $p['tanggal_formatted'] ?? $p['tanggal_ujian'],
+                    'waktu' => $p['waktu_ujian'],
+                    'participants' => []
+                ];
+            }
+            $groups[$key]['participants'][] = $p;
         }
-        $groups[$key]['participants'][] = $p;
     }
     ?>
 
