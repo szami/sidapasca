@@ -1,0 +1,11 @@
+Checking Participant: 20252121062
+------------------------------------------------
+1. Nomor Peserta: [PASS] Value: 20252121062
+2. Schedule:      [PASS]
+   - Ruang: Labkom. DIGILIB 3
+   - Tanggal: 2026-01-10
+   - Waktu: 10:00 - 11:30 WITA
+3. Physic Verify: [FAIL] Value: pending
+4. Admin Setting: [PASS] Value: 1
+------------------------------------------------
+RESULT: [BLOCKED] CANNOT DOWNLOAD

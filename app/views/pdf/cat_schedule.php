@@ -1,5 +1,8 @@
 <?php
 // This view is for printing only - no filter form, just the schedule table
+// Maximum rows per page for precise A4 printing (from query param or default 20)
+$maxRowsPerPage = isset($_GET['perPage']) ? intval($_GET['perPage']) : 20;
+$maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for safety
 ?>
 <!DOCTYPE html>
 <html>
@@ -8,45 +11,62 @@
     <title>JADWAL TES POTENSI AKADEMIK (CAT) PASCASARJANA</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: "Roboto", Arial, sans-serif;
             font-size: 12px;
-            margin: 0;
-            padding: 0;
             background: #eee;
         }
 
+        /* A4 Page Simulation for Screen Preview */
         page[size="A4"] {
             background: white;
-            width: 21cm;
-            min-height: 29.7cm;
-            /* Changed from height to min-height */
+            width: 210mm;
+            min-height: 297mm;
             display: block;
-            margin: 0 auto;
-            padding: 2cm;
-            margin-bottom: 0.5cm;
-            box-shadow: 0 0 0.5cm rgba(0, 0, 0, 0.5);
-            box-sizing: border-box;
-            page-break-after: always;
-            /* Ensure next group starts on new page */
+            margin: 10px auto;
+            padding: 15mm 20mm;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
+        /* Print Styles - Critical for A4 Precision */
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 15mm 15mm 15mm 15mm;
+            }
+
+            html,
             body {
-                background: white;
+                width: 210mm;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
             }
 
             page[size="A4"] {
-                margin: 0;
-                box-shadow: none;
                 width: 100%;
+                min-height: auto;
+                height: auto;
+                margin: 0;
                 padding: 0;
+                border: none;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+
+            /* Page break before all pages except first */
+            page[size="A4"]~page[size="A4"] {
                 page-break-before: always;
-                /* Force new page for each group */
             }
 
             .no-print {
-                display: none;
+                display: none !important;
             }
         }
 
@@ -60,6 +80,29 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
+        .btn-print {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+
+        .btn-print:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -68,8 +111,9 @@
         table.attendance th,
         table.attendance td {
             border: 1px solid #333;
-            padding: 4px 8px;
+            padding: 4px 6px;
             text-align: left;
+            font-size: 11px;
         }
 
         table.attendance th {
@@ -82,9 +126,17 @@
             text-align: center;
         }
 
-        /* Ensure headers don't split from content */
-        .group-header {
-            page-break-after: avoid;
+        .page-indicator {
+            font-size: 10px;
+            color: #666;
+            text-align: right;
+            margin-bottom: 5px;
+        }
+
+        .continuation-note {
+            font-size: 10px;
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -116,18 +168,34 @@
         }
         $groups[$key]['participants'][] = $p;
     }
-    // Sort logic handled in query, but grouping maintains order.
     ?>
 
     <?php foreach ($groups as $key => $group): ?>
-        <page size="A4">
-            <div class="group-header">
+        <?php
+        // Split participants into chunks of max rows per page
+        $participantChunks = array_chunk($group['participants'], $maxRowsPerPage);
+        $totalPages = count($participantChunks);
+        $totalParticipants = count($group['participants']);
+        $globalNo = 0; // Global numbering across pages
+        ?>
+
+        <?php foreach ($participantChunks as $pageIndex => $chunk): ?>
+            <?php $currentPage = $pageIndex + 1; ?>
+            <page size="A4">
+                <!-- Page Indicator (if multiple pages) -->
+                <?php if ($totalPages > 1): ?>
+                    <div class="page-indicator">
+                        Halaman <?php echo $currentPage; ?> dari <?php echo $totalPages; ?>
+                        (Total: <?php echo $totalParticipants; ?> peserta)
+                    </div>
+                <?php endif; ?>
+
                 <!-- Letterhead (Dynamic from Settings) -->
                 <?php if (!empty($letterhead)): ?>
                     <?php echo $letterhead; ?>
                 <?php else: ?>
                     <!-- Default Letterhead if not set -->
-                    <table class="header">
+                    <table class="header" width="100%">
                         <tbody>
                             <tr>
                                 <td width="100px" align="center">
@@ -138,8 +206,7 @@
                                     <b style="font-size:18px;">UNIVERSITAS LAMBUNG MANGKURAT</b><br>
                                     <b style="font-size:22px;">ADMISI PASCASARJANA</b><br>
                                     <span style="font-size:10px;">Jl. Unlam No.12, Pangeran, Banjarmasin Utara, Kota
-                                        Banjarmasin,
-                                        70123</span>
+                                        Banjarmasin, 70123</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -147,10 +214,13 @@
                 <?php endif; ?>
                 <hr style="border: 1px solid #000; margin: 10px 0;">
 
-                <!-- Title & Info -->
-                <div align="center" style="font-weight:bold; margin-bottom: 15px;">
+                <!-- Title & Info (repeated on each page) -->
+                <div align="center" style="font-weight:bold; margin-bottom: 10px;">
                     <div style="font-size:15px;">JADWAL TES POTENSI AKADEMIK (CAT)</div>
                     <div style="font-size:15px;">PASCASARJANA</div>
+                    <?php if ($currentPage > 1): ?>
+                        <div class="continuation-note">(Lanjutan)</div>
+                    <?php endif; ?>
                 </div>
 
                 <table style="margin-bottom: 12px; font-size: 11px;">
@@ -173,34 +243,31 @@
                         <td>: <strong><?php echo htmlspecialchars($group['sesi']); ?></strong></td>
                     </tr>
                 </table>
-            </div>
 
-            <!-- Schedule Table -->
-            <table class="attendance">
-                <thead>
-                    <tr>
-                        <th width="30px" class="center">NO.</th>
-                        <th width="100px" class="center">NOMOR PESERTA</th>
-                        <th>NAMA PESERTA</th>
-                        <th width="200px">PROGRAM STUDI</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $no = 1;
-                    foreach ($group['participants'] as $p): ?>
+                <!-- Schedule Table -->
+                <table class="attendance">
+                    <thead>
                         <tr>
-                            <td class="center" align="center"><?php echo $no++; ?></td>
-                            <td class="center" align="center"><?php echo $p['nomor_peserta']; ?></td>
-                            <td><?php echo strtoupper($p['nama_lengkap']); ?></td>
-                            <td><?php echo strtoupper($p['nama_prodi']); ?></td>
+                            <th width="5%" class="center">NO.</th>
+                            <th width="18%" class="center">NOMOR PESERTA</th>
+                            <th width="38%">NAMA PESERTA</th>
+                            <th width="38%">PROGRAM STUDI</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-
-            <!-- Removed Signature Area -->
-
-        </page>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($chunk as $p): ?>
+                            <?php $globalNo++; ?>
+                            <tr>
+                                <td class="center" align="center"><?php echo $globalNo; ?></td>
+                                <td class="center" align="center"><?php echo $p['nomor_peserta']; ?></td>
+                                <td><?php echo strtoupper($p['nama_lengkap']); ?></td>
+                                <td><?php echo strtoupper($p['nama_prodi']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </page>
+        <?php endforeach; ?>
     <?php endforeach; ?>
 </body>
 
