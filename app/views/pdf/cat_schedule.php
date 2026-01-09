@@ -215,7 +215,7 @@ $maxRowsPerPage = max(10, min(35, $maxRowsPerPage)); // Limit between 10-35 for 
                         </tbody>
                     </table>
                 <?php endif; ?>
-                <hr style="border: 1px solid #000; margin: 10px 0;">
+
 
                 <!-- Title & Info (repeated on each page) -->
                 <div align="center" style="font-weight:bold; margin-bottom: 10px;">

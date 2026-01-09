@@ -117,7 +117,7 @@
         }
         echo $letterhead;
         ?>
-        <hr style="border: 1px solid #000; margin: 2px 0;">
+
 
         <table width="100%" style="font-weight:bold; margin-top: 5px; margin-bottom: 5px;">
             <tbody>

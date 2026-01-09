@@ -53,6 +53,55 @@ if (!function_exists('indoDateOnly')) {
         return $d['mday'] . ' ' . $months[$d['mon']] . ' ' . $d['year'];
     }
 }
+
+if (!function_exists('terbilang')) {
+    function terbilang($x)
+    {
+        $angka = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+        if ($x < 12)
+            return " " . $angka[$x];
+        elseif ($x < 20)
+            return terbilang($x - 10) . " belas";
+        elseif ($x < 100)
+            return terbilang($x / 10) . " puluh" . terbilang($x % 10);
+        elseif ($x < 200)
+            return " seratus" . terbilang($x - 100);
+        elseif ($x < 1000)
+            return terbilang($x / 100) . " ratus" . terbilang($x % 100);
+        elseif ($x < 2000)
+            return " seribu" . terbilang($x - 1000);
+        elseif ($x < 1000000)
+            return terbilang($x / 1000) . " ribu" . terbilang($x % 1000);
+        elseif ($x < 1000000000)
+            return terbilang($x / 1000000) . " juta" . terbilang($x % 1000000);
+    }
+}
+
+if (!function_exists('indoDateText')) {
+    function indoDateText($timestamp)
+    {
+        $months = [
+            1 => 'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember'
+        ];
+        $d = getdate($timestamp);
+        $tgl = trim(terbilang($d['mday']));
+        $bln = $months[$d['mon']];
+        $thn = trim(terbilang($d['year']));
+
+        return "tanggal $tgl bulan $bln tahun $thn";
+    }
+}
 ?>
 <!DOCTYPE html>
 <!DOCTYPE html>
@@ -287,9 +336,7 @@ if (!function_exists('indoDateOnly')) {
                 </table>
             <?php endif; ?>
 
-            <?php if (empty($letterhead)): ?>
-                <hr style="border: 1px solid #000; margin-top: -10px; margin-bottom: 20px;">
-            <?php endif; ?>
+
 
             <div class="title">
                 BERITA ACARA<br>
@@ -299,8 +346,8 @@ if (!function_exists('indoDateOnly')) {
             </div>
 
             <div class="content-text">
-                Pada hari ini <strong><?php echo indoDay($ts); ?></strong> tanggal
-                <strong><?php echo indoDateOnly($ts); ?></strong>, bertempat di
+                Pada hari ini <strong><?php echo indoDay($ts); ?></strong>
+                <strong><?php echo indoDateText($ts); ?></strong>, bertempat di
                 <strong><?php echo $data['gedung'] . ' - ' . $data['ruang']; ?></strong>, telah dilaksanakan Ujian Seleksi
                 Penerimaan Mahasiswa Baru Program Pascasarjana Universitas Lambung Mangkurat dengan rincian sebagai berikut:
             </div>
