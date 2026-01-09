@@ -83,6 +83,10 @@
                                                 class="btn btn-sm btn-primary px-3">
                                                 <i class="fas fa-edit mr-1"></i> Isi Presensi
                                             </a>
+                                            <a href="/admin/attendance/print-berita-acara?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
+                                                target="_blank" class="btn btn-sm btn-info px-3" title="Cetak Berita Acara">
+                                                <i class="fas fa-print"></i> BA
+                                            </a>
                                         <?php else: ?>
                                             <button class="btn btn-sm btn-secondary disabled" title="Belum ada peserta">
                                                 <i class="fas fa-edit mr-1"></i> Isi Presensi

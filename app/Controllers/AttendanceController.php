@@ -250,4 +250,99 @@ class AttendanceController
             "data" => $sessions
         ]);
     }
+
+    public function printBeritaAcara()
+    {
+        $this->checkAuth();
+
+        $filterSesi = $_GET['sesi'] ?? 'all';
+        $filterRuang = $_GET['ruang'] ?? 'all';
+        $forcedTanggal = $_GET['tanggal'] ?? null;
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+
+        // 1. Find all target (Ruang, Sesi, Tanggal) groups matching the filter
+        $sqlGroups = "SELECT DISTINCT ruang_ujian, sesi_ujian, tanggal_ujian 
+                      FROM participants 
+                      WHERE semester_id = ? 
+                      AND ruang_ujian IS NOT NULL 
+                      AND sesi_ujian IS NOT NULL 
+                      AND tanggal_ujian IS NOT NULL";
+
+        $params = [$activeSemester['id']];
+
+        if ($filterSesi !== 'all') {
+            $sqlGroups .= " AND sesi_ujian = ?";
+            $params[] = $filterSesi;
+        }
+        if ($filterRuang !== 'all') {
+            $sqlGroups .= " AND ruang_ujian = ?";
+            $params[] = $filterRuang;
+        }
+        if ($forcedTanggal) {
+            $sqlGroups .= " AND tanggal_ujian = ?";
+            $params[] = $forcedTanggal;
+        }
+
+        $sqlGroups .= " ORDER BY tanggal_ujian ASC, sesi_ujian ASC, ruang_ujian ASC";
+
+        $groups = $db->query($sqlGroups)->bind(...$params)->fetchAll();
+
+        if (empty($groups)) {
+            echo "<h1>Tidak ada data jadwal yang ditemukan untuk filter ini.</h1>";
+            return;
+        }
+
+        // 2. Prepare data for each group
+        $baData = [];
+        $letterhead = \App\Models\Setting::get('exam_card_letterhead', '');
+
+        foreach ($groups as $g) {
+            $room = $g['ruang_ujian'];
+            $sesi = $g['sesi_ujian'];
+            $tanggal = $g['tanggal_ujian'];
+
+            // Count Assigned
+            $sqlAssigned = "SELECT COUNT(*) as total FROM participants 
+                            WHERE sesi_ujian = ? AND ruang_ujian = ? AND tanggal_ujian = ? AND semester_id = ?";
+            $resAssigned = $db->query($sqlAssigned)->bind($sesi, $room, $tanggal, $activeSemester['id'])->fetchAssoc();
+            $total_assigned = $resAssigned['total'] ?? 0;
+
+            // Get Building Info
+            $sqlRoom = "SELECT fakultas FROM exam_rooms WHERE nama_ruang = ?";
+            $resRoom = $db->query($sqlRoom)->bind($room)->fetchAssoc();
+            $gedung = $resRoom['fakultas'] ?? '-';
+
+            // Get Time Info
+            $sqlSession = "SELECT waktu_mulai, waktu_selesai FROM exam_sessions 
+                           WHERE nama_sesi = ? AND tanggal = ? AND semester_id = ? AND is_active = 1 LIMIT 1";
+            $resSession = $db->query($sqlSession)->bind($sesi, $tanggal, $activeSemester['id'])->fetchAssoc();
+
+            $waktu = '00:00';
+            if ($resSession) {
+                // If invalid date format, handle gracefully
+                try {
+                    $waktu = date('H:i', strtotime($resSession['waktu_mulai'])) . ' - ' . date('H:i', strtotime($resSession['waktu_selesai']));
+                } catch (\Exception $e) {
+                    $waktu = $resSession['waktu_mulai'] . ' - ' . $resSession['waktu_selesai'];
+                }
+            }
+
+            $baData[] = [
+                'ruang' => $room,
+                'sesi' => $sesi,
+                'tanggal' => $tanggal,
+                'gedung' => $gedung,
+                'waktu' => $waktu,
+                'total_assigned' => $total_assigned
+            ];
+        }
+
+        echo View::render('admin.attendance.print_berita_acara', [
+            'activeSemester' => $activeSemester,
+            'baData' => $baData,
+            'letterhead' => $letterhead
+        ]);
+    }
 }

@@ -126,19 +126,20 @@ $selectedSemesterId = \Leaf\Http\Request::get('semester_id') ?: (\App\Models\Sem
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 col-6">
+        <div class="col-lg-3 col-md-6 col-12">
             <div class="small-box bg-gradient-purple shadow">
                 <div class="inner">
-                    <h4>Daftar Hadir</h4>
-                    <p>Cetak Form Absensi</p>
+                    <h4>Daftar Hadir & BA</h4>
+                    <p>Form Absensi & Berita Acara</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-list-alt"></i>
                 </div>
-                <a href="/admin/attendance-list" class="small-box-footer">Cetak Daftar Hadir <i
+                <a href="/admin/attendance-list" class="small-box-footer">Buka Menu Cetak <i
                         class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
+    </div>
     </div>
 <?php endif; ?>
 

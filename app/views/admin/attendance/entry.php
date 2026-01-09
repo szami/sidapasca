@@ -6,6 +6,10 @@
             <h1 class="m-0">Presensi Ujian</h1>
         </div>
         <div class="col-sm-6 text-right">
+            <a href="/admin/attendance/print-berita-acara?ruang=<?php echo urlencode($room); ?>&sesi=<?php echo urlencode($sesi); ?>&tanggal=<?php echo urlencode($tanggal); ?>" 
+               target="_blank" class="btn btn-info mr-2">
+                <i class="fas fa-print mr-1"></i> Cetak Berita Acara
+            </a>
             <a href="/admin/attendance" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali
             </a>

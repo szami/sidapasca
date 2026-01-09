@@ -116,6 +116,7 @@ $app->get('/admin/scheduler/export-cat', 'App\Controllers\ExamSchedulerControlle
 $app->get('/admin/attendance', 'App\Controllers\AttendanceController@index');
 $app->get('/admin/attendance/entry', 'App\Controllers\AttendanceController@entry');
 $app->post('/admin/attendance/save', 'App\Controllers\AttendanceController@save');
+$app->get('/admin/attendance/print-berita-acara', 'App\Controllers\AttendanceController@printBeritaAcara');
 
 // Pengaturan & System
 $app->get('/admin/settings', 'App\Controllers\SettingsController@index');
