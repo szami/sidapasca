@@ -483,6 +483,15 @@ try {
     $pdo->exec($reregistrations);
     echo "Reregistrations table migrated.\n";
 
+    // 19. SKM Module (Survey Kepuasan Masyarakat)
+    $skmMigration = __DIR__ . '/skm_migration.php';
+    if (file_exists($skmMigration)) {
+        echo "Running SKM Migration...\n";
+        include $skmMigration;
+    } else {
+        echo "SKM Migration file not found.\n";
+    }
+
 } catch (PDOException $e) {
     echo "Migration Error: " . $e->getMessage() . "\n";
     exit(1);
