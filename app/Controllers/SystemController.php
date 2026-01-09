@@ -303,7 +303,9 @@ class SystemController
                     $stats['files']++;
                 } else {
                     $stats['errors']++;
-                    $logs[] = "Failed: $relativePath";
+                    $error = error_get_last();
+                    $reason = $error ? $error['message'] : 'Unknown error';
+                    $logs[] = "Failed: $relativePath ($reason)";
                 }
             }
         }
