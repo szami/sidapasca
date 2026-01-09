@@ -494,6 +494,7 @@ try {
 
 } catch (PDOException $e) {
     echo "Migration Error: " . $e->getMessage() . "\n";
-    exit(1);
+    // Do not exit, just return
+    return;
 }
 

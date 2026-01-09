@@ -10,7 +10,8 @@ echo "Target DB: $dbPath\n";
 
 if (!file_exists($dbPath)) {
     echo "Database file not found. Run migrate.php first.\n";
-    exit(1);
+    // Do not exit
+    return;
 }
 
 try {
@@ -189,5 +190,6 @@ try {
 
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage() . "\n";
-    exit(1);
+    // Do not exit, just return so the parent script can handle it
+    return;
 }
