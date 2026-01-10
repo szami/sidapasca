@@ -54,6 +54,20 @@ if (!empty($participant['photo_filename'])) {
 ob_start();
 ?>
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'survey_completed'): ?>
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700 font-medium">
+                        Terima kasih! Anda telah menyelesaikan kuisioner dan sekarang dapat mengakses Dashboard kembali.
+                    </p>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Profile Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">

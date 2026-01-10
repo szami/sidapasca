@@ -798,42 +798,6 @@ class ParticipantController
             }
 
             // Format TTL (Tempat Tanggal Lahir)
-            $ttl = '-';
-            if (!empty($p['tgl_lahir'])) {
-                $date = new \DateTime($p['tgl_lahir']);
-                $day = $date->format('d');
-                $month = $months_id[(int) $date->format('n')];
-                $year = $date->format('Y');
-                $ttl = ($p['tempat_lahir'] ? strtoupper($p['tempat_lahir']) . ', ' : '') . "$day $month $year";
-            }
-
-            // Format Tanggal Pelaksanaan
-            $tanggal_pelaksanaan = '-';
-            if (!empty($p['tanggal_ujian'])) {
-                $date = new \DateTime($p['tanggal_ujian']);
-                $day = $date->format('d');
-                $month = $months_id[(int) $date->format('n')];
-                $year = $date->format('Y');
-                $tanggal_pelaksanaan = "$day $month $year";
-            }
-
-            // Password = Tanggal Lahir (Format: YYYY-MM-DD, tanpa hash)
-            $password = $p['tgl_lahir'] ?? '-';
-
-            // Data sesuai kolom yang diminta
-            $sheet->setCellValue('A' . $rowNum, $rowNum - 1);                                                   // NO (Urut)
-            $sheet->setCellValue('B' . $rowNum, $p['fakultas'] ?? 'Gedung Pascasarjana ULM');                  // GEDUNG
-            $sheet->setCellValue('C' . $rowNum, $p['ruang_ujian']);                                            // RUANG
-            $sheet->setCellValue('D' . $rowNum, $tanggal_pelaksanaan);                                         // TANGGAL_PELAKSANAAN
-            $sheet->setCellValue('E' . $rowNum, $p['sesi_ujian']);                                             // SESI
-            $sheet->setCellValue('F' . $rowNum, $p['waktu_ujian']);                                            // WAKTU
-            $sheet->setCellValue('G' . $rowNum, $roomCounter[$room]);                                          // NO URUT
-            $sheet->setCellValue('H' . $rowNum, $p['nomor_peserta']);                                          // NO_PESERTA
-            $sheet->setCellValue('I' . $rowNum, $password);                                                    // PASSWORD (tgl lahir)
-            $sheet->setCellValue('J' . $rowNum, strtoupper($p['nama_lengkap']));                               // NAMA_PESERTA
-            $sheet->setCellValue('K' . $rowNum, $ttl);                                                         // TTL
-            $sheet->setCellValue('L' . $rowNum, $p['jenis_kelamin'] ?? '-');                                   // JK
-            $sheet->setCellValue('M' . $rowNum, $p['nama_prodi']);                                             // PRODI PILIHAN
             $sheet->setCellValue('N' . $rowNum, strtolower($p['email']));                                      // EMAIL
             $sheet->setCellValue('O' . $rowNum, $p['no_hp'] ?? '-');                                           // NO HP
 
@@ -1544,5 +1508,154 @@ class ParticipantController
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+    public function dashboard()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+
+        $userId = $_SESSION['user'];
+        $db = \App\Utils\Database::connection();
+
+        // 1. Check Attendance (Hadir or Hadir Susulan)
+        // We need Active Semester
+        $activeSemester = \App\Models\Semester::getActive();
+        $activeSemesterId = $activeSemester['id'] ?? null;
+
+        // Check if participant is present in exam_attendances
+        // is_present = 1 means Hadir (including susulan if marked as present)
+        $attendance = $db->query("SELECT * FROM exam_attendances 
+            WHERE participant_id = ? AND semester_id = ? AND is_present = 1")
+            ->bind($userId, $activeSemesterId)
+            ->first();
+
+        // If present, check questionnaire
+        if ($attendance) {
+            // Check if submitted ACTIVE 'participant' survey
+            $survey = $db->query("SELECT * FROM surveys WHERE target_role = 'participant' AND is_active = 1 LIMIT 1")->fetchAssoc();
+
+            if ($survey) {
+                $response = $db->query("SELECT * FROM survey_responses WHERE survey_id = ? AND user_id = ?")
+                    ->bind($survey['id'], $userId)
+                    ->first();
+
+                // If NOT submitted, redirect to mandatory survey
+                if (!$response) {
+                    header('Location: /participant/mandatory-survey');
+                    exit;
+                }
+            }
+        }
+
+        // ... Standard Dashboard Logic ...
+        $participant = \App\Models\Participant::find($userId);
+        $verification = \App\Models\DocumentVerification::findByParticipant($userId);
+
+        $examRoom = null;
+        if (!empty($participant['ruang_ujian'])) {
+            $examRoom = $db->query("SELECT * FROM exam_rooms WHERE nama_ruang = ?")->bind($participant['ruang_ujian'])->fetchAssoc();
+        }
+
+        echo \App\Utils\View::render('participant.dashboard', [
+            'participant' => $participant,
+            'verification' => $verification,
+            'examRoom' => $examRoom
+        ]);
+    }
+
+    public function mandatorySurvey()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+
+        $userId = $_SESSION['user'];
+        $db = \App\Utils\Database::connection();
+
+        // Find Active Survey
+        $survey = $db->query("SELECT * FROM surveys WHERE target_role = 'participant' AND is_active = 1 LIMIT 1")->fetchAssoc();
+
+        if (!$survey) {
+            // No survey, so no mandatory block.
+            header('Location: /dashboard');
+            exit;
+        }
+
+        // Check if already done
+        $response = $db->query("SELECT * FROM survey_responses WHERE survey_id = ? AND user_id = ?")
+            ->bind($survey['id'], $userId)
+            ->first();
+
+        if ($response) {
+            header('Location: /dashboard');
+            exit;
+        }
+
+        // Get Participant Info for display
+        $participant = \App\Models\Participant::find($userId);
+
+        // Get Questions
+        $questions = $db->query("SELECT * FROM survey_questions WHERE survey_id = ? ORDER BY order_num ASC")->bind($survey['id'])->fetchAll();
+
+        // Group Questions
+        $groupedQuestions = [];
+        $hasCategories = false;
+        foreach ($questions as $q) {
+            $cat = $q['category'] ?? 'General';
+            if (!empty($q['category']))
+                $hasCategories = true;
+            $groupedQuestions[$cat][] = $q;
+        }
+
+        echo \App\Utils\View::render('survey.form', [
+            'survey' => $survey,
+            'questions' => $questions,
+            'groupedQuestions' => $groupedQuestions,
+            'hasCategories' => $hasCategories,
+            'participant' => $participant, // Pass participant info
+            'isMandatory' => true // Flag for UI
+        ]);
+    }
+
+    public function resetSurvey($id)
+    {
+        if (!isset($_SESSION['admin']) || !\App\Utils\RoleHelper::isSuperadmin()) {
+            header('Location: /admin');
+            exit;
+        }
+
+        $db = \App\Utils\Database::connection();
+
+        // Check active survey for participants to ensure targeted reset or reset ALL for this user
+        // We will reset all participant survey responses for this user to be safe
+        // First, get survey IDs that are for 'participant'
+        $surveys = $db->query("SELECT id FROM surveys WHERE target_role = 'participant'")->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (!empty($surveys)) {
+            $placeholders = str_repeat('?,', count($surveys) - 1) . '?';
+            // 1. Find Response IDs to delete answers
+            $sqlResp = "SELECT id FROM survey_responses WHERE user_id = ? AND survey_id IN ($placeholders)";
+            $params = array_merge([$id], $surveys); // ID first, then survey IDs
+
+            // Leaf Query might not support array fetch column easily on raw, using fetchAll
+            // Let's do a loop or subquery delete approach for safety with basic PDO
+
+            // Get responses
+            $responses = $db->query("SELECT id FROM survey_responses WHERE user_id = '$id' AND survey_id IN (" . implode(',', $surveys) . ")")->fetchAll();
+
+            foreach ($responses as $r) {
+                // Delete Answers
+                $db->query("DELETE FROM survey_answers WHERE response_id = ?", [$r['id']])->execute();
+                // Delete Response
+                $db->query("DELETE FROM survey_responses WHERE id = ?", [$r['id']])->execute();
+            }
+        }
+
+        // Redirect back
+        header('Location: /admin/participants/view/' . $id . '?msg=survey_reset');
+        exit;
     }
 }

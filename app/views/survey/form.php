@@ -128,6 +128,16 @@
                 <a href="/" class="navbar-brand">
                     <span class="brand-text font-weight-light">PMB Pascasarjana ULM</span>
                 </a>
+
+                <?php if (isset($participant)): ?>
+                    <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
+                        <li class="nav-item">
+                            <a href="/logout" class="nav-link text-danger font-weight-bold">
+                                <i class="fas fa-sign-out-alt mr-1"></i> Keluar
+                            </a>
+                        </li>
+                    </ul>
+                <?php endif; ?>
             </div>
         </nav>
 
@@ -136,11 +146,44 @@
                 <div class="container">
                     <div class="row justify-content-center">
                         <div class="col-lg-8 col-md-10">
+                            <?php if (isset($participant)): ?>
+                                <div class="card mb-4 border-0 shadow-sm"
+                                    style="border-radius: 15px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white;">
+                                    <div class="card-body p-4">
+                                        <h5 class="font-weight-bold mb-3"><i class="fas fa-user-circle mr-2"></i> Informasi
+                                            Peserta</h5>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <small class="d-block text-white-50">Nomor Peserta</small>
+                                                <span class="font-weight-bold"
+                                                    style="font-size: 1.1em;"><?php echo htmlspecialchars($participant['nomor_peserta']); ?></span>
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <small class="d-block text-white-50">Nama Lengkap</small>
+                                                <span class="font-weight-bold"
+                                                    style="font-size: 1.1em;"><?php echo htmlspecialchars($participant['nama_lengkap']); ?></span>
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <small class="d-block text-white-50">Program Studi Pilihan</small>
+                                                <span class="font-weight-bold"
+                                                    style="font-size: 1.1em;"><?php echo htmlspecialchars($participant['nama_prodi']); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 pt-3 border-top"
+                                            style="border-color: rgba(255,255,255,0.2) !important;">
+                                            <i class="fas fa-info-circle mr-1"></i> <small>Mohon isi kuisioner berikut untuk
+                                                melanjutkan ke Dashboard.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="text-center mb-4">
                                 <h2 class="font-weight-bold text-dark"><?php echo htmlspecialchars($survey['title']); ?>
                                 </h2>
                                 <p class="text-muted" style="font-size: 1.1em;">
-                                    <?php echo htmlspecialchars($survey['description']); ?></p>
+                                    <?php echo htmlspecialchars($survey['description']); ?>
+                                </p>
                             </div>
 
                             <form action="/survey/submit/<?php echo $survey['id']; ?>" method="POST">

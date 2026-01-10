@@ -320,6 +320,7 @@ $app->get('/admin/participants/view/{id}', 'App\Controllers\ParticipantControlle
 $app->get('/admin/participants/documents/{id}', 'App\Controllers\ParticipantController@documents'); // Document management
 $app->get('/admin/participants/edit/{id}', 'App\Controllers\ParticipantController@edit');
 $app->get('/admin/participants/export', 'App\Controllers\ParticipantController@exportExcel');
+$app->post('/admin/participants/reset-survey/{id}', 'App\Controllers\ParticipantController@resetSurvey'); // Reset Survey Routeo');
 $app->post('/admin/participants/update/{id}', 'App\Controllers\ParticipantController@update');
 $app->get('/admin/participants/delete/{id}', 'App\Controllers\ParticipantController@destroy');
 $app->post('/admin/participants/{id}/upload-photo', 'App\Controllers\ParticipantController@uploadPhoto');
@@ -340,31 +341,9 @@ $app->get('/admin/participants/form/{id}', 'App\Controllers\ExamCardController@a
 // We need a GET /dashboard for the Participant Dashboard view.
 // And a GET /download-card
 
-$app->get('/dashboard', function () {
-    if (!isset($_SESSION['user'])) {
-        response()->redirect('/');
-        return;
-    }
-    // Load Participant Data
-    $participant = \App\Models\Participant::find($_SESSION['user']);
+$app->get('/dashboard', 'App\Controllers\ParticipantController@dashboard');
+$app->get('/participant/mandatory-survey', 'App\Controllers\ParticipantController@mandatorySurvey');
 
-    // Fetch Physical Verification Info
-    $verification = \App\Models\DocumentVerification::findByParticipant($_SESSION['user']);
-
-    // Fetch Exam Room Info if assigned
-    $examRoom = null;
-    if (!empty($participant['ruang_ujian'])) {
-        // Query manually since we don't have a direct relationship method yet
-        $db = \App\Utils\Database::connection();
-        $examRoom = $db->query("SELECT * FROM exam_rooms WHERE nama_ruang = ?")->bind($participant['ruang_ujian'])->fetchAssoc();
-    }
-
-    echo \App\Utils\View::render('participant.dashboard', [
-        'participant' => $participant,
-        'verification' => $verification,
-        'examRoom' => $examRoom
-    ]);
-});
 // Exam Card
 $app->get('/participant/exam-card', 'App\Controllers\ExamCardController@download');
 $app->get('/participant/formulir', 'App\Controllers\ExamCardController@downloadFormulir'); // NEW
@@ -388,6 +367,9 @@ $app->post('/admin/surveys/update/{id}', 'App\Controllers\SurveyController@updat
 $app->post('/admin/surveys/question/add/{id}', 'App\Controllers\SurveyController@storeQuestion');
 $app->post('/admin/surveys/question/update/{id}', 'App\Controllers\SurveyController@updateQuestion');
 $app->get('/admin/surveys/question/delete/{id}', 'App\Controllers\SurveyController@deleteQuestion');
+$app->get('/admin/surveys/respondents/{id}', 'App\Controllers\SurveyController@respondents'); // NEW: List Respondents
+$app->get('/admin/surveys/response/{id}', 'App\Controllers\SurveyController@responseDetail'); // NEW: Detail Response
+$app->post('/admin/surveys/response/delete/{id}', 'App\Controllers\SurveyController@deleteResponse'); // NEW: Delete Response
 
 $app->get('/survey/thank-you', 'App\Controllers\SurveyController@thankYou');
 $app->get('/survey/{id}', 'App\Controllers\SurveyController@show');

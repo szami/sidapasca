@@ -55,6 +55,10 @@
                                     <a href="/admin/surveys/report/<?php echo $s['id']; ?>" class="btn btn-sm btn-success">
                                         <i class="fas fa-chart-bar"></i> Laporan
                                     </a>
+                                    <a href="/admin/surveys/respondents/<?php echo $s['id']; ?>"
+                                        class="btn btn-sm btn-warning text-white">
+                                        <i class="fas fa-users"></i> Responden
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -97,11 +97,22 @@ class SurveyController
             $identifier = $_SESSION['admin'] ?? 'ADMIN';
         }
 
+        // Check for existing submission for participants
+        if ($respondentType === 'participant' && $userId) {
+            $existing = $db->query("SELECT id FROM survey_responses WHERE survey_id = ? AND user_id = ?")
+                ->bind($id, $userId)
+                ->first();
+            if ($existing) {
+                header("Location: /dashboard?msg=survey_completed");
+                exit;
+            }
+        }
+
         // 2. Insert Response
         // Using direct SQL for insert to be safe
         $db->query(
             "INSERT INTO survey_responses (survey_id, user_id, respondent_identifier, respondent_type, suggestion) VALUES (?, ?, ?, ?, ?)"
-        )->bind([$id, $userId, $identifier, $respondentType, $_POST['suggestion'] ?? ''])
+        )->bind($id, $userId, $identifier, $respondentType, $_POST['suggestion'] ?? '')
             ->execute();
 
         // Get last insert ID - assuming SQLite
@@ -116,13 +127,19 @@ class SurveyController
             if ($scoreInt >= 1 && $scoreInt <= 4) {
                 $db->query(
                     "INSERT INTO survey_answers (response_id, question_id, score) VALUES (?, ?, ?)"
-                )->bind([$responseId, $qId, $scoreInt])
+                )->bind($responseId, $qId, $scoreInt)
                     ->execute();
             }
         }
 
-        // Redirect to success page
-        header("Location: /survey/thank-you");
+        // Redirect based on user role
+        if (isset($_SESSION['user'])) {
+            // If participant, go back to dashboard
+            header("Location: /dashboard?msg=survey_completed");
+        } else {
+            // Public or Admin
+            header("Location: /survey/thank-you");
+        }
     }
 
     public function thankYou()
@@ -215,6 +232,109 @@ class SurveyController
         ]);
     }
 
+    // ADMIN: List Respondents
+    public function respondents($id)
+    {
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /');
+            exit;
+        }
+
+        $db = Database::connection();
+
+        // Fetch Survey
+        $survey = $db->query("SELECT * FROM surveys WHERE id = ?")->bind($id)->first();
+        if (!$survey) {
+            echo "Survey tidak ditemukan.";
+            return;
+        }
+
+        // Fetch Responses with Participant Name if available
+        // We join participants table on user_id if respondent_type is participant
+        // Using LEFT JOIN to safely handle anonymous or other types
+        $sql = "SELECT r.*, p.nama_lengkap, p.nomor_peserta 
+                FROM survey_responses r 
+                LEFT JOIN participants p ON r.user_id = p.id AND r.respondent_type = 'participant'
+                WHERE r.survey_id = ? 
+                ORDER BY r.submitted_at DESC";
+
+        $responses = $db->query($sql)->bind($id)->fetchAll();
+
+        echo View::render('admin.survey.respondents', [
+            'survey' => $survey,
+            'responses' => $responses
+        ]);
+    }
+
+
+    // ADMIN: Detail Response
+    public function responseDetail($id)
+    {
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /');
+            exit;
+        }
+
+        $db = Database::connection();
+
+        // Fetch Response
+        $response = $db->query(
+            "SELECT r.*, s.title as survey_title, s.description as survey_desc, 
+                    p.nama_lengkap, p.nomor_peserta 
+             FROM survey_responses r 
+             JOIN surveys s ON r.survey_id = s.id
+             LEFT JOIN participants p ON r.user_id = p.id AND r.respondent_type = 'participant'
+             WHERE r.id = ?"
+        )->bind($id)->first();
+
+        if (!$response) {
+            echo "Data respon tidak ditemukan.";
+            return;
+        }
+
+        // Fetch Answers with Question Text
+        $answers = $db->query(
+            "SELECT a.*, q.question_text, q.category, q.code, q.order_num 
+             FROM survey_answers a 
+             JOIN survey_questions q ON a.question_id = q.id 
+             WHERE a.response_id = ? 
+             ORDER BY q.order_num ASC"
+        )->bind($id)->fetchAll();
+
+        echo View::render('admin.survey.response_detail', [
+            'response' => $response,
+            'answers' => $answers
+        ]);
+    }
+
+    // ADMIN: Delete Response
+    public function deleteResponse($id)
+    {
+        if (!isset($_SESSION['admin'])) {
+            header('Location: /');
+            exit;
+        }
+
+        $db = Database::connection();
+
+        // 1. Get Survey ID for redirect
+        $response = $db->query("SELECT survey_id FROM survey_responses WHERE id = ?")->bind($id)->first();
+        $surveyId = $response['survey_id'] ?? null;
+
+        if ($surveyId) {
+            // 2. Delete Answers
+            $db->query("DELETE FROM survey_answers WHERE response_id = ?")->bind($id)->execute();
+
+            // 3. Delete Response
+            $db->query("DELETE FROM survey_responses WHERE id = ?")->bind($id)->execute();
+
+            header("Location: /admin/surveys/respondents/$surveyId?msg=deleted");
+        } else {
+            // Fallback
+            header("Location: /admin/surveys?msg=error");
+        }
+        exit;
+    }
 
     // ADMIN: Form Edit Survey & Manage Questions
     public function edit($id)

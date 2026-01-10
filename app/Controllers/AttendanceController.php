@@ -125,40 +125,50 @@ class AttendanceController
 
         $db = Database::connection();
         $activeSemester = Semester::getActive();
-        $data = Request::body();
 
-        $room = $data['room'] ?? null;
-        $sesi = $data['sesi'] ?? null;
-        $tanggal = $data['tanggal'] ?? null;
-        $presentIds = $data['present'] ?? []; // Array of participant IDs who are present
+        // Use $_POST directly for HTML Form submission reliability
+        $room = $_POST['room'] ?? null;
+        $sesi = $_POST['sesi'] ?? null;
+        $tanggal = $_POST['tanggal'] ?? null;
+        $presentIds = $_POST['present'] ?? []; // Array of participant IDs who are present
+
+        // Validate Inputs
+        if (!$room || !$sesi || !$tanggal) {
+            // Redirect back with error if params missing
+            header('Location: /admin/attendance?msg=error_params');
+            exit;
+        }
 
         // Get all participants for this session to handle those UNCHECKED
+        // Explicitly ensuring no encoding issues by using parameterized query directly
         $sqlAll = "SELECT id FROM participants 
                    WHERE ruang_ujian = ? AND sesi_ujian = ? AND tanggal_ujian = ? AND semester_id = ?";
+
         $allInSession = $db->query($sqlAll)->bind($room, $sesi, $tanggal, $activeSemester['id'])->fetchAll();
+
+        // Debug Log if no participants found (Admin should know if save failed logic)
+        if (empty($allInSession)) {
+            // Fallback: Check without time? Or check if data format mismatch
+            // For now, just exit or log. 
+            // In production you might want to flash a message.
+        }
 
         foreach ($allInSession as $p) {
             $pid = $p['id'];
             $isPresent = in_array($pid, $presentIds) ? 1 : 0;
 
             // Check if record exists
-            $existing = $db->select('exam_attendances')
-                ->where('participant_id', $pid)
-                ->where('semester_id', $activeSemester['id'])
+            $existing = $db->query("SELECT id FROM exam_attendances WHERE participant_id = ? AND semester_id = ?")
+                ->bind($pid, $activeSemester['id'])
                 ->first();
 
             if ($existing) {
-                $db->update('exam_attendances')
-                    ->params(['is_present' => $isPresent, 'updated_at' => date('Y-m-d H:i:s')])
-                    ->where('id', $existing['id'])
+                $db->query("UPDATE exam_attendances SET is_present = ?, updated_at = ? WHERE id = ?")
+                    ->bind($isPresent, date('Y-m-d H:i:s'), $existing['id'])
                     ->execute();
             } else {
-                $db->insert('exam_attendances')
-                    ->params([
-                        'participant_id' => $pid,
-                        'semester_id' => $activeSemester['id'],
-                        'is_present' => $isPresent
-                    ])
+                $db->query("INSERT INTO exam_attendances (participant_id, semester_id, is_present) VALUES (?, ?, ?)")
+                    ->bind($pid, $activeSemester['id'], $isPresent)
                     ->execute();
             }
         }

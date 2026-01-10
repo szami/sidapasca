@@ -322,9 +322,16 @@ if (!empty($photoVal)) {
                         <?php if (\App\Utils\RoleHelper::isSuperadmin()): ?>
                             <hr>
                             <a href="/admin/participants/edit/<?= $p['id'] ?>"
-                                class="btn btn-primary btn-block rounded-pill">
+                                class="btn btn-primary btn-block rounded-pill mb-2">
                                 <i class="fas fa-edit mr-2"></i> Edit Data
                             </a>
+
+                            <form action="/admin/participants/reset-survey/<?= $p['id'] ?>" method="POST"
+                                onsubmit="return confirm('Apakah Anda yakin ingin mereset kuisioner peserta ini? Data jawaban akan dihapus permanen.');">
+                                <button type="submit" class="btn btn-warning btn-block rounded-pill">
+                                    <i class="fas fa-undo mr-2"></i> Reset Kuisioner
+                                </button>
+                            </form>
                         <?php endif; ?>
 
                         <a href="/admin/participants" class="btn btn-outline-secondary btn-block rounded-pill mt-2">
