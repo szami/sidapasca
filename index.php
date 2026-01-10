@@ -248,6 +248,10 @@ $app->get('/admin/system/update', 'App\Controllers\SystemController@update');
 $app->get('/admin/system/check-update-ajax', 'App\Controllers\SystemController@checkUpdate');
 $app->get('/admin/system/perform-update', 'App\Controllers\SystemController@performUpdate');
 
+// DATABASE MIGRATION TOOL (NEW)
+$app->get('/admin/tools/migration', 'App\Controllers\MigrationController@index');
+$app->post('/admin/tools/migration/sync', 'App\Controllers\MigrationController@sync');
+
 // Hostinger Folder Sync Deployment
 $app->get('/admin/system/deploy-from-dev', 'App\\Controllers\\SystemController@deployFromDev');
 $app->post('/admin/system/deploy-from-dev/execute', 'App\\Controllers\\SystemController@performFolderSync');
