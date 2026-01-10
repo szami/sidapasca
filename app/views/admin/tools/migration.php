@@ -27,7 +27,11 @@
                                     <?= $table ?>
                                 </td>
                                 <td>
-                                    <?php if ($state === 'EXISTS'): ?>
+                                    <?php if ($state === 'OK'): ?>
+                                        <span class="badge badge-success">OK</span>
+                                    <?php elseif ($state === 'DATA_MISMATCH'): ?>
+                                        <span class="badge badge-warning">DATA MISMATCH</span>
+                                    <?php elseif ($state === 'EXISTS'): ?>
                                         <span class="badge badge-success">EXISTS</span>
                                     <?php else: ?>
                                         <span class="badge badge-danger">MISSING</span>
@@ -36,10 +40,14 @@
                                 <td>
                                     <?php if ($state === 'MISSING'): ?>
                                         <button class="btn btn-sm btn-primary btn-sync" data-table="<?= $table ?>">
-                                            <i class="fas fa-sync"></i> Sync (Create Table)
+                                            <i class="fas fa-sync"></i> Create & Seed
+                                        </button>
+                                    <?php elseif ($state === 'DATA_MISMATCH'): ?>
+                                        <button class="btn btn-sm btn-warning btn-sync" data-table="<?= $table ?>">
+                                            <i class="fas fa-database"></i> Update Data
                                         </button>
                                     <?php else: ?>
-                                        <span class="text-muted"><i class="fas fa-check"></i> OK</span>
+                                        <span class="text-muted"><i class="fas fa-check"></i> Latest</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

@@ -34,7 +34,12 @@ class MigrationController
 
         foreach ($expected as $table => $def) {
             if (in_array($table, $existing_tables)) {
-                $status[$table] = 'EXISTS';
+                // Table exists, check data
+                if (SchemaDefinition::hasDataMismatch($table, $db)) {
+                    $status[$table] = 'DATA_MISMATCH';
+                } else {
+                    $status[$table] = 'OK';
+                }
             } else {
                 $status[$table] = 'MISSING';
             }
@@ -63,11 +68,37 @@ class MigrationController
         }
 
         $sql = $expected[$table]['create_sql'];
+        $msg = "";
 
         try {
             $db = Database::connection();
-            $db->query($sql)->execute();
-            response()->json(['success' => true, 'message' => "Table $table synced successfully."]);
+
+            // Check if table exists
+            $exists = false;
+            try {
+                $check = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='$table'")->fetchAssoc();
+                if ($check)
+                    $exists = true;
+            } catch (\Exception $e) {
+            }
+
+            if (!$exists) {
+                // Create Table
+                $db->query($sql)->execute();
+                $msg .= "Table $table created. ";
+            }
+
+            // Run Seeder if available
+            $seeder = SchemaDefinition::getSeeder($table);
+            if ($seeder) {
+                // Execute Closure
+                $seedMsg = $seeder($db);
+                $msg .= $seedMsg;
+            } else {
+                $msg .= "No seeder defined.";
+            }
+
+            response()->json(['success' => true, 'message' => $msg]);
         } catch (\Exception $e) {
             response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
