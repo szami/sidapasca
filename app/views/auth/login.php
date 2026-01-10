@@ -86,23 +86,24 @@
                             class="w-full pl-10 pr-14 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none bg-white"
                             placeholder="dd-mm-yyyy" pattern="\d{2}-\d{2}-\d{4}" inputmode="numeric" required autocomplete="off">
 
-                        <!-- Calendar Trigger Button -->
+                        <!-- Calendar Trigger & Date Picker (Overlay Method for iOS) -->
                         <div class="absolute inset-y-0 right-0 flex items-center pr-1">
-                            <button type="button" id="calendarBtn"
-                                class="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                title="Pilih Tanggal via Kalender">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </button>
+                            <div class="relative">
+                                <!-- Visual Icon -->
+                                <button type="button" class="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                                
+                                <!-- Actual Date Input (Invisible Overlay) -->
+                                <!-- This allows direct interaction on iOS/Android without JS hacks -->
+                                <input type="date" id="dobPicker" 
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    title="Pilih Tanggal" tabindex="-1">
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Hidden Date Picker -->
-                    <input type="date" id="dobPicker" class="absolute opacity-0 w-0 h-0 bottom-0 right-0 -z-50"
-                        tabindex="-1">
 
                     <p class="text-xs text-gray-400 mt-2 ml-1">
                         * Format: Hari-Bulan-Tahun (Contoh: 31-01-2000). <br>
@@ -115,17 +116,6 @@
                         (function () {
                             const dobInput = document.getElementById('dobInput');
                             const dobPicker = document.getElementById('dobPicker');
-                            const calendarBtn = document.getElementById('calendarBtn');
-
-                            // Open Picker
-                            calendarBtn.addEventListener('click', function () {
-                                try {
-                                    dobPicker.showPicker();
-                                } catch (e) {
-                                    dobPicker.focus();
-                                    dobPicker.click();
-                                }
-                            });
 
                             // Sync Picker -> Input (YYYY-MM-DD to DD-MM-YYYY)
                             dobPicker.addEventListener('change', function () {
