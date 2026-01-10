@@ -117,6 +117,7 @@ $app->get('/admin/attendance', 'App\Controllers\AttendanceController@index');
 $app->get('/admin/attendance/entry', 'App\Controllers\AttendanceController@entry');
 $app->post('/admin/attendance/save', 'App\Controllers\AttendanceController@save');
 $app->get('/admin/attendance/print-berita-acara', 'App\Controllers\AttendanceController@printBeritaAcara');
+$app->get('/admin/attendance/print-list', 'App\Controllers\AttendanceController@printAttendanceList');
 
 // Pengaturan & System
 $app->get('/admin/settings', 'App\Controllers\SettingsController@index');

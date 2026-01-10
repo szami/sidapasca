@@ -42,7 +42,7 @@ $hasSchedule = !empty($participant['ruang_ujian']) && !empty($participant['tangg
 // 4 Points Check: Nomor + Jadwal + Fisik + Setting
 $isDownloadOpen = \App\Models\Setting::get('allow_exam_card_download', '0') == '1';
 // Use $verification variable passed from Controller/Route (Source of Truth)
-$isVerified = isset($verification) && ($verification['status_verifikasi_fisik'] === 'lengkap' || !empty($verification['bypass_verification']));
+$isVerified = !empty($verification) && ($verification['status_verifikasi_fisik'] === 'lengkap' || !empty($verification['bypass_verification']));
 $canDownload = !empty($participant['nomor_peserta']) && $hasSchedule && $isVerified && $isDownloadOpen;
 
 // Photo URL
@@ -234,7 +234,7 @@ ob_start();
             <div x-show="activeTab === 'berkas'" style="display: none;">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
                     <?php
-                    $statusFisik = $verification['status_verifikasi_fisik'] ?? 'pending';
+                    $statusFisik = !empty($verification) ? ($verification['status_verifikasi_fisik'] ?? 'pending') : 'pending';
                     $icon = 'fa-hourglass-half';
                     $color = 'text-yellow-500';
                     $bg = 'bg-yellow-50';
@@ -264,7 +264,7 @@ ob_start();
                         <?php echo $subtext; ?>
                     </p>
 
-                    <?php if (!empty($verification['catatan_admin'])): ?>
+                    <?php if (!empty($verification) && !empty($verification['catatan_admin'])): ?>
                         <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-2xl mx-auto text-left">
                             <h4 class="font-bold text-gray-800 mb-1"><i
                                     class="fas fa-sticky-note mr-2 text-gray-400"></i>Catatan Verifikator:</h4>

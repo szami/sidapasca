@@ -79,14 +79,25 @@
                                     </td>
                                     <td class="text-center">
                                         <?php if ($s['assigned_count'] > 0): ?>
-                                            <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/attendance/entry?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
-                                                class="btn btn-sm btn-primary px-3">
-                                                <i class="fas fa-edit mr-1"></i> Isi Presensi
-                                            </a>
-                                            <a href="/admin/attendance/print-berita-acara?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
-                                                target="_blank" class="btn btn-sm btn-info px-3" title="Cetak Berita Acara">
-                                                <i class="fas fa-print"></i> BA
-                                            </a>
+                                            <div class="btn-group">
+                                                <a href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>/admin/attendance/entry?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
+                                                    class="btn btn-sm btn-primary" title="Isi Presensi">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="/admin/attendance/print-berita-acara?ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
+                                                    target="_blank" class="btn btn-sm btn-info" title="Cetak Berita Acara">
+                                                    <i class="fas fa-file-alt"></i> BA
+                                                </a>
+                                                <a href="/admin/attendance/print-list?type=present&ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
+                                                    target="_blank" class="btn btn-sm btn-success" title="Cetak Daftar Hadir">
+                                                    <i class="fas fa-user-check"></i> Hadir
+                                                </a>
+                                                <a href="/admin/attendance/print-list?type=absent&ruang=<?php echo urlencode($s['nama_ruang']); ?>&sesi=<?php echo urlencode($s['nama_sesi']); ?>&tanggal=<?php echo urlencode($s['tanggal']); ?>"
+                                                    target="_blank" class="btn btn-sm btn-warning"
+                                                    title="Cetak Daftar Tidak Hadir">
+                                                    <i class="fas fa-user-times"></i> Alpha
+                                                </a>
+                                            </div>
                                         <?php else: ?>
                                             <button class="btn btn-sm btn-secondary disabled" title="Belum ada peserta">
                                                 <i class="fas fa-edit mr-1"></i> Isi Presensi

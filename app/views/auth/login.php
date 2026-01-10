@@ -80,11 +80,59 @@
                                     clip-rule="evenodd" />
                             </svg>
                         </span>
-                        <input type="date" name="password"
-                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none bg-white"
-                            required>
+
+                        <!-- Manual Input -->
+                        <input type="text" name="password" id="dobInput"
+                            class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none bg-white"
+                            placeholder="dd-mm-yyyy" pattern="\d{2}-\d{2}-\d{4}" required autocomplete="off">
+
+                        <!-- Calendar Trigger Button -->
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-blue-600 transition-colors"
+                            onclick="try{document.getElementById('dobPicker').showPicker()}catch(e){document.getElementById('dobPicker').focus()}"
+                            title="Pilih dari Kalender">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
                     </div>
-                    <p class="text-xs text-gray-400 mt-2 ml-1">* Format password sesuai tanggal lahir di sistem</p>
+
+                    <!-- Hidden Date Picker -->
+                    <input type="date" id="dobPicker" class="absolute opacity-0 w-0 h-0 bottom-0 left-0 -z-50"
+                        tabindex="-1">
+
+                    <p class="text-xs text-gray-400 mt-2 ml-1">
+                        * Format: Hari-Bulan-Tahun (Contoh: 31-01-2000). <br>
+                        <span class="text-blue-500">Tips:</span> Klik ikon kalender di sebelah kanan untuk memilih
+                        tanggal otomatis.
+                    </p>
+
+                    <script>
+                        // Logic for Date Picker Synchronization
+                        (function () {
+                            const dobInput = document.getElementById('dobInput');
+                            const dobPicker = document.getElementById('dobPicker');
+
+                            // Sync Picker -> Input (YYYY-MM-DD to DD-MM-YYYY)
+                            dobPicker.addEventListener('change', function () {
+                                if (this.value) {
+                                    const [y, m, d] = this.value.split('-');
+                                    dobInput.value = `${d}-${m}-${y}`;
+                                }
+                            });
+
+                            // Optional: Auto-add dashes when typing
+                            dobInput.addEventListener('input', function (e) {
+                                let v = this.value.replace(/\D/g, ''); // Remove non-digits
+                                if (v.match(/^\d{2}$/) !== null) {
+                                    this.value = v + '-';
+                                } else if (v.match(/^\d{2}\d{2}$/) !== null) {
+                                    this.value = v.slice(0, 2) + '-' + v.slice(2) + '-';
+                                }
+                            });
+                        })();
+                    </script>
                 </div>
 
                 <!-- Captcha Field -->

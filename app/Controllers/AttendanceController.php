@@ -345,4 +345,116 @@ class AttendanceController
             'letterhead' => $letterhead
         ]);
     }
+    public function printAttendanceList()
+    {
+        $this->checkAuth();
+
+        $type = $_GET['type'] ?? 'present'; // present | absent
+        $filterSesi = $_GET['sesi'] ?? 'all';
+        $filterRuang = $_GET['ruang'] ?? 'all';
+        $forcedTanggal = $_GET['tanggal'] ?? null;
+
+        $db = Database::connection();
+        $activeSemester = Semester::getActive();
+
+        // 1. Find all target (Ruang, Sesi, Tanggal) groups matching the filter
+        $sqlGroups = "SELECT DISTINCT ruang_ujian, sesi_ujian, tanggal_ujian 
+                      FROM participants 
+                      WHERE semester_id = ? 
+                      AND ruang_ujian IS NOT NULL 
+                      AND sesi_ujian IS NOT NULL 
+                      AND tanggal_ujian IS NOT NULL";
+
+        $params = [$activeSemester['id']];
+
+        if ($filterSesi !== 'all') {
+            $sqlGroups .= " AND sesi_ujian = ?";
+            $params[] = $filterSesi;
+        }
+        if ($filterRuang !== 'all') {
+            $sqlGroups .= " AND ruang_ujian = ?";
+            $params[] = $filterRuang;
+        }
+        if ($forcedTanggal) {
+            $sqlGroups .= " AND tanggal_ujian = ?";
+            $params[] = $forcedTanggal;
+        }
+
+        $sqlGroups .= " ORDER BY tanggal_ujian ASC, sesi_ujian ASC, ruang_ujian ASC";
+        $groups = $db->query($sqlGroups)->bind(...$params)->fetchAll();
+
+        if (empty($groups)) {
+            echo "<h1>Tidak ada data jadwal yang ditemukan.</h1>";
+            return;
+        }
+
+        $listData = [];
+        $letterhead = \App\Models\Setting::get('exam_card_letterhead', '');
+
+        foreach ($groups as $g) {
+            $room = $g['ruang_ujian'];
+            $sesi = $g['sesi_ujian'];
+            $tanggal = $g['tanggal_ujian'];
+
+            // Get Participants based on Type
+            // Join exam_attendances to check presence
+            $sqlParts = "SELECT p.*, a.is_present 
+                         FROM participants p
+                         LEFT JOIN exam_attendances a ON p.id = a.participant_id AND a.semester_id = p.semester_id
+                         WHERE p.semester_id = ? 
+                         AND p.ruang_ujian = ? 
+                         AND p.sesi_ujian = ? 
+                         AND p.tanggal_ujian = ?";
+
+            if ($type === 'present') {
+                $sqlParts .= " AND a.is_present = 1";
+            } else {
+                // Absent means is_present is specificially 0 or NULL (record doesn't exist)
+                // However, usually we create records only when saving. 
+                // If we want 'absent' to include those not yet marked, use IS NULL OR 0.
+                // But strictly 'Absent' implies we marked them as absent or they didn't show up.
+                // Any participant without is_present=1 is effectively absent from the 'Present' list.
+                $sqlParts .= " AND (a.is_present = 0 OR a.is_present IS NULL)";
+            }
+
+            $sqlParts .= " ORDER BY p.nama_lengkap ASC";
+
+            $participants = $db->query($sqlParts)->bind($activeSemester['id'], $room, $sesi, $tanggal)->fetchAll();
+
+            // Get Building Info
+            $sqlRoom = "SELECT fakultas FROM exam_rooms WHERE nama_ruang = ?";
+            $resRoom = $db->query($sqlRoom)->bind($room)->fetchAssoc();
+            $gedung = $resRoom['fakultas'] ?? '-';
+
+            // Get Time Info
+            $sqlSession = "SELECT waktu_mulai, waktu_selesai FROM exam_sessions 
+                           WHERE nama_sesi = ? AND tanggal = ? AND semester_id = ? AND is_active = 1 LIMIT 1";
+            $resSession = $db->query($sqlSession)->bind($sesi, $tanggal, $activeSemester['id'])->fetchAssoc();
+
+            $waktu = '00:00';
+            if ($resSession) {
+                try {
+                    $waktu = date('H:i', strtotime($resSession['waktu_mulai'])) . ' - ' . date('H:i', strtotime($resSession['waktu_selesai']));
+                } catch (\Exception $e) {
+                    $waktu = $resSession['waktu_mulai'] . ' - ' . $resSession['waktu_selesai'];
+                }
+            }
+
+            $listData[] = [
+                'ruang' => $room,
+                'sesi' => $sesi,
+                'tanggal' => $tanggal,
+                'gedung' => $gedung,
+                'waktu' => $waktu,
+                'participants' => $participants
+            ];
+        }
+
+        echo View::render('admin.attendance.print_attendance_list', [
+            'activeSemester' => $activeSemester,
+            'listData' => $listData,
+            'type' => $type,
+            'letterhead' => $letterhead
+        ]);
+    }
 }

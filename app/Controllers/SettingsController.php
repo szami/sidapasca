@@ -107,8 +107,26 @@ class SettingsController
             exit;
         }
 
-        // Delete all participants for this semester
+        // Delete all participants for this semester AND related data
         $db = \App\Utils\Database::connection();
+
+        // 1. Survey Data
+        $db->query("DELETE FROM survey_answers WHERE response_id IN (SELECT id FROM survey_responses WHERE respondent_type = 'participant' AND user_id IN (SELECT id FROM participants WHERE semester_id = ?))")->bind($semesterId)->execute();
+        $db->query("DELETE FROM survey_responses WHERE respondent_type = 'participant' AND user_id IN (SELECT id FROM participants WHERE semester_id = ?)")->bind($semesterId)->execute();
+
+        // 2. Document Verifications
+        $db->query("DELETE FROM document_verifications WHERE participant_id IN (SELECT id FROM participants WHERE semester_id = ?)")->bind($semesterId)->execute();
+
+        // 3. Exam Attendances
+        $db->query("DELETE FROM exam_attendances WHERE participant_id IN (SELECT id FROM participants WHERE semester_id = ?)")->bind($semesterId)->execute();
+
+        // 4. Assessment Scores
+        $db->query("DELETE FROM assessment_scores WHERE participant_id IN (SELECT id FROM participants WHERE semester_id = ?)")->bind($semesterId)->execute();
+
+        // 5. Email Logs
+        $db->query("DELETE FROM email_logs WHERE participant_id IN (SELECT id FROM participants WHERE semester_id = ?)")->bind($semesterId)->execute();
+
+        // 6. Finally, Participants
         $db->query("DELETE FROM participants WHERE semester_id = ?")
             ->bind($semesterId)
             ->execute();
