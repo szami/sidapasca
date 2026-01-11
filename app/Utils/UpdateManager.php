@@ -21,13 +21,13 @@ class UpdateManager
     }
 
     /**
-     * Get current version from version.json
+     * Get current version from VERSION file
      */
     public static function getCurrentVersion(): array
     {
-        $file = self::getVersionFile();
+        $versionFile = realpath(__DIR__ . '/../../') . '/VERSION';
 
-        if (!file_exists($file)) {
+        if (!file_exists($versionFile)) {
             return [
                 'version' => '1.0.0',
                 'updated_at' => date('Y-m-d H:i:s'),
@@ -37,8 +37,14 @@ class UpdateManager
             ];
         }
 
-        $data = json_decode(file_get_contents($file), true);
-        return $data ?? [];
+        $version = trim(file_get_contents($versionFile));
+        return [
+            'version' => $version,
+            'updated_at' => date('Y-m-d H:i:s', filemtime($versionFile)),
+            'git_commit' => GitHelper::getCurrentCommit(),
+            'git_branch' => GitHelper::getCurrentBranch() ?? 'main',
+            'history' => []
+        ];
     }
 
     /**
