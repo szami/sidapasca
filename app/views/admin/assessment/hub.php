@@ -66,6 +66,22 @@ $canManageAssessmentBidang = \App\Utils\RoleHelper::canManageAssessmentBidang();
                 </div>
             </div>
         <?php endif; ?>
+
+        <?php if ($isSuperadmin || $isAdmin): ?>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-teal">
+                    <div class="inner">
+                        <h3>Nilai TPA</h3>
+                        <p>Input Nilai TPA Peserta</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <a href="/admin/assessment/tpa" class="small-box-footer">Kelola TPA <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 

@@ -54,9 +54,12 @@
 <!-- DAFTAR ULANG -->
 <li class="nav-header">DAFTAR ULANG (SIREMA)</li>
 <li class="nav-item">
-    <a href="/admin/payment-export" class="nav-link">
+    <a href="/admin/registration" class="nav-link">
         <i class="nav-icon fas fa-file-invoice-dollar"></i>
-        <p>Export Tagihan</p>
+        <p>
+            Registrasi / Daftar Ulang
+            <span class="right badge badge-info">Hub</span>
+        </p>
     </a>
 </li>
 
@@ -72,14 +75,8 @@
     </a>
 </li>
 
-<!-- ASSESSMENT & KELULUSAN -->
+<!-- PENILAIAN & KELULUSAN -->
 <li class="nav-header">PENILAIAN & KELULUSAN</li>
-<li class="nav-item">
-    <a href="/admin/assessment/tpa" class="nav-link">
-        <i class="nav-icon fas fa-chart-line"></i>
-        <p>Input Nilai TPA</p>
-    </a>
-</li>
 <li class="nav-item">
     <a href="/admin/assessment" class="nav-link">
         <i class="nav-icon fas fa-graduation-cap"></i>
@@ -93,21 +90,12 @@
 <!-- MASTER DATA -->
 <li class="nav-header">MASTER DATA</li>
 <li class="nav-item">
-    <a href="/admin/semesters" class="nav-link">
-        <i class="nav-icon fas fa-layer-group"></i>
-        <p>Semester</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="/admin/master/rooms" class="nav-link">
-        <i class="nav-icon fas fa-door-open"></i>
-        <p>Ruang Ujian</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="/admin/master/sessions" class="nav-link">
-        <i class="nav-icon fas fa-clock"></i>
-        <p>Sesi Ujian</p>
+    <a href="/admin/master" class="nav-link">
+        <i class="nav-icon fas fa-database"></i>
+        <p>
+            Master Data
+            <span class="right badge badge-info">Hub</span>
+        </p>
     </a>
 </li>
 

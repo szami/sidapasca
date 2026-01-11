@@ -17,6 +17,7 @@
         </p>
     </a>
 </li>
+<!-- TPA is view-only for Admin Prodi, kept as direct link for convenience -->
 <li class="nav-item">
     <a href="/admin/assessment/tpa" class="nav-link">
         <i class="nav-icon fas fa-chart-bar"></i>

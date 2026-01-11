@@ -27,15 +27,12 @@
 <!-- MASTER DATA -->
 <li class="nav-header">MASTER DATA</li>
 <li class="nav-item">
-    <a href="/admin/master/rooms" class="nav-link">
-        <i class="nav-icon fas fa-door-open"></i>
-        <p>Ruang Ujian</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="/admin/master/sessions" class="nav-link">
-        <i class="nav-icon fas fa-clock"></i>
-        <p>Sesi Ujian</p>
+    <a href="/admin/master" class="nav-link">
+        <i class="nav-icon fas fa-database"></i>
+        <p>
+            Master Data
+            <span class="right badge badge-info">Hub</span>
+        </p>
     </a>
 </li>
 

@@ -20,6 +20,12 @@ class AssessmentController
         }
     }
 
+    public function hub()
+    {
+        $this->checkAuth();
+        echo View::render('admin.assessment.hub');
+    }
+
     // --- Component Management ---
 
     public function components()

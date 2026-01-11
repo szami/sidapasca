@@ -207,7 +207,16 @@ $app->post('/admin/system/perform-update', 'App\Controllers\SystemController@per
 $app->get('/admin/system/check-update', 'App\Controllers\SystemController@checkUpdate');
 $app->get('/admin/sync-guide', 'App\Controllers\SystemController@syncGuide');
 
-// Assessment Module
+// REGISTRATION / DAFTAR ULANG HUB
+$app->get('/admin/registration', 'App\Controllers\RegistrationController@hub');
+
+// MASTER DATA HUB
+$app->get('/admin/master', 'App\Controllers\MasterDataController@hub');
+
+// ASSESSMENT HUB
+$app->get('/admin/assessment', 'App\Controllers\AssessmentController@hub');
+
+// Assessment Detailse
 $app->get('/admin/assessment/components', 'App\Controllers\AssessmentController@components');
 $app->post('/admin/assessment/components/store', 'App\Controllers\AssessmentController@storeComponent');
 $app->get('/admin/assessment/components/delete/{id}', 'App\Controllers\AssessmentController@deleteComponent');
