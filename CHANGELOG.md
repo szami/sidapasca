@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Applied automated fix to realign orphan answers to current active questions.
   - Added `busy_timeout` and **WAL Mode** to migration script to prevent `database is locked` errors on production.
   - Implemented **Retry Mechanism** (5 attempts) to handle persistent locks gracefully.
+  - Refactored script to **reuse existing PDO connection** (Singleton) to avoid multiple-writer conflicts.
 - **TPA System Fixes**:
   - **Import Button**: Fixed JavaScript race condition preventing the "Import TPA" modal from opening.
   - **Redirect Logic**: Fixed `saveTpaThreshold` redirecting to the wrong page. Removed duplicate code block.

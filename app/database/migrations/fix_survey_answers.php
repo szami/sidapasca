@@ -14,13 +14,30 @@ if (!file_exists($dbPath)) {
 }
 
 try {
-    $pdo = new PDO("sqlite:$dbPath");
+    // Attempt to reuse existing application connection to avoid locks
+    if (class_exists('App\Utils\Database')) {
+        // Leaf DB return instance, we need underlying PDO for some ops or just use Leaf DB methods
+        // Database::connection() returns Leaf\Db instance
+        $leafDb = \App\Utils\Database::connection();
+        if ($leafDb) {
+            // Leaf DB -> pdo() returns PDO
+            $pdo = $leafDb->pdo();
+            echo "Using existing application database connection.\n";
+        } else {
+            $pdo = new PDO("sqlite:$dbPath");
+            echo "Created new PDO connection (Leaf DB not active).\n";
+        }
+    } else {
+        $pdo = new PDO("sqlite:$dbPath");
+        echo "Created new PDO connection.\n";
+    }
+
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_TIMEOUT, 10); // PHP Timeout
+    $pdo->setAttribute(PDO::ATTR_TIMEOUT, 20);
 
     // Fix "database is locked" errors
-    $pdo->exec("PRAGMA busy_timeout = 10000;"); // SQLite Wait up to 10s
-    // Enable WAL for better concurrency
+    $pdo->exec("PRAGMA busy_timeout = 20000;"); // Increase to 20s
+    // WAL Mode
     $pdo->exec("PRAGMA journal_mode = WAL;");
     $pdo->exec("PRAGMA synchronous = NORMAL;");
 
