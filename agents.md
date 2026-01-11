@@ -785,6 +785,8 @@ chmod 666 storage/database.sqlite
 - **v1.1** (2026-01-05) - RBAC Implementation
 - **v1.2** (2026-01-06) - Assessment & Graduation System
 - **v1.3** (2026-01-07) - Email enhancements, Dashboard redesign, and unified A4 layouts
+- **v1.4** (2026-01-08) - System Deployment Tools, Physical Verification Badge
+- **v1.5** (2026-01-11) - Dashboard Tabs, TPA Fixes, Google Maps Integration
 
 ### Contact
 Untuk pertanyaan atau issue, hubungi:

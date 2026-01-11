@@ -13,6 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 
+## [1.5.0] - 2026-01-11
+
+### 🎉 Added - Dashboard & TPA Enhancements
+- **Participant Dashboard Revamp**:
+  - Refactored dashboard into a tabbed interface (Biodata & Jadwal, Berkas Fisik, Berita & Informasi, Hasil Seleksi) for better UX.
+  - Added visual "Jadwal Ujian" card with Google Maps button.
+  - Reorganized "Unduhan" section position for better visibility.
+  - Implemented Alpine.js for smooth tab switching.
+
+### 🔧 Fixed & Improved
+- **Google Maps Link Persistence**:
+  - updated `exam_rooms` table schema to include `google_map_link` column.
+  - Refactored `ExamRoomController` to use raw SQL for robust data saving, bypassing schema cache issues.
+- **TPA System Fixes**:
+  - **Import Button**: Fixed JavaScript race condition preventing the "Import TPA" modal from opening.
+  - **Redirect Logic**: Fixed `saveTpaThreshold` redirecting to the wrong page. Removed duplicate code block.
+  - **Provider Logic**: Differentiated logic for Internal (PPKPP ULM) vs External (Bappenas) providers.
+  - **Security**: Added checks to prevent Admin Prodi from modifying TPA scores if provider is External.
+
+### 🧹 Maintenance
+- **Files**: Removed temporary debug scripts (`check_rooms_schema.php`, `debug_maps.log`, etc).
+
+---
+
 ## [1.4.0] - 2026-01-08
 
 ### 🚀 Added - System Deployment Tools
