@@ -25,7 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breadcrumb & Navigation Improvements**:
   - **Hierarchical Bread crumbs**: All hub sub-pages now show proper hierarchy (Home > Hub > Current Page)
   - **Back Buttons**: Added "Kembali ke Hub" buttons below page titles for easier navigation (Option A style)
-  - **Assessment Module**: Updated TPA, Components, Scores, and Bidang pages with new navigation
+  - **Assessment Module**: Updated TPA, Components, Scores, and Bidang pages
+  - **Master Data Module**: Updated Rooms and Sessions pages
+  - **System Tools Module**: Updated Migration page
+  - **Registration Module**: Updated Payment Export page
+  - Total: 8 pages with improved navigation hierarchy
   - Improves user orientation and reduces clicks needed to navigate back to hub pages
 
 ## [1.5.0] - 2026-01-11

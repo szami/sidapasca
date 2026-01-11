@@ -1,9 +1,28 @@
 <?php ob_start(); ?>
 <div class="row">
+    <div class="col-12 col-md-6 order-md-1 order-last">
+        <h3>Sesi Ujian</h3>
+        <p class="text-subtitle text-muted">Kelola Waktu Pelaksanaan Ujian</p>
+        <a href="/admin/master" class="btn btn-sm btn-outline-secondary mt-1">
+            <i class="fas fa-arrow-left mr-1"></i> Kembali ke Master Data
+        </a>
+    </div>
+    <div class="col-12 col-md-6 order-md-2 order-first">
+        <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/admin/master">Master Data</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sesi Ujian</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Data Master Sesi Ujian</h3>
+                <h4 class="card-title">Data Sesi Ujian</h4>
                 <div class="card-tools">
                     <a href="/admin/master/sessions/create" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>
                         Tambah Sesi</a>

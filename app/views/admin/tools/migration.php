@@ -1,5 +1,25 @@
 <?php ob_start(); ?>
 
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Database Migration</h1>
+                <a href="/admin/tools" class="btn btn-sm btn-outline-secondary mt-2">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke System Tools
+                </a>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/admin/tools">System Tools</a></li>
+                    <li class="breadcrumb-item active">Migration</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
