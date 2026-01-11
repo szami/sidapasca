@@ -20,30 +20,61 @@ try {
 
     // Fix "database is locked" errors
     $pdo->exec("PRAGMA busy_timeout = 10000;"); // SQLite Wait up to 10s
-    // Optional: Enable WAL mode for better concurrency if not already
-    // $pdo->exec("PRAGMA journal_mode = WAL;"); 
+    // Enable WAL for better concurrency
+    $pdo->exec("PRAGMA journal_mode = WAL;");
+    $pdo->exec("PRAGMA synchronous = NORMAL;");
 
     echo "Running IKM Data Fix...\n";
 
-    // Check if we have orphans before updating
+    // Retry Logic for Update
+    $max_retries = 5;
+    $attempt = 0;
+    $success = false;
+    $count = 0;
+
     $checkSql = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 86 AND 94";
-    $countBefore = $pdo->query($checkSql)->fetchColumn();
 
-    if ($countBefore == 0) {
-        echo "No data to fix (0 rows with old Question IDs found).\n";
-        return;
+    while ($attempt < $max_retries && !$success) {
+        try {
+            // Re-check count inside loop (optional but safer)
+            $countBefore = $pdo->query($checkSql)->fetchColumn();
+
+            if ($countBefore == 0) {
+                echo "No data to fix (0 rows).\n";
+                $success = true;
+                break;
+            }
+
+            echo "Attempt " . ($attempt + 1) . ": Found $countBefore rows to fix.\n";
+
+            $pdo->beginTransaction();
+
+            $sql = "UPDATE survey_answers 
+                    SET question_id = question_id + 51 
+                    WHERE question_id BETWEEN 86 AND 94";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+
+            $pdo->commit();
+            $success = true;
+            echo "Successfully updated $count rows in survey_answers.\n";
+
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $attempt++;
+            echo "Lock detected (Attempt $attempt/$max_retries). Retrying in 2s...\n";
+            sleep(2);
+
+            if ($attempt >= $max_retries) {
+                throw $e; // Throw final error
+            }
+        }
     }
-
-    echo "Found $countBefore rows to fix.\n";
-
-    // Update orphans: Add 51 to ID to shift from 86-94 to 137-145
-    $sql = "UPDATE survey_answers 
-            SET question_id = question_id + 51 
-            WHERE question_id BETWEEN 86 AND 94";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute();
-    $count = $stmt->rowCount();
 
     echo "Successfully updated $count rows in survey_answers.\n";
 

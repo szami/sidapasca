@@ -29,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Survey Data Fix**:
   - Corrected IKM calculation mismatch (Zero Score) caused by discrepancies between restored survey answer IDs (86-94) and current question IDs (137-145).
   - Applied automated fix to realign orphan answers to current active questions.
-  - Added `busy_timeout` to migration script to prevent `database is locked` errors on production.
+  - Added `busy_timeout` and **WAL Mode** to migration script to prevent `database is locked` errors on production.
+  - Implemented **Retry Mechanism** (5 attempts) to handle persistent locks gracefully.
 - **TPA System Fixes**:
   - **Import Button**: Fixed JavaScript race condition preventing the "Import TPA" modal from opening.
   - **Redirect Logic**: Fixed `saveTpaThreshold` redirecting to the wrong page. Removed duplicate code block.
