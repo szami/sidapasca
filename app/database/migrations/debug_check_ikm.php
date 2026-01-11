@@ -1,9 +1,10 @@
 <?php
 // debug_check_after_fix.php
 
-require __DIR__ . '/vendor/autoload.php';
+// Autoload is usually already handled if run via MigrationController
+// require __DIR__ . '/vendor/autoload.php';
 
-$baseDir = __DIR__;
+$baseDir = dirname(__DIR__, 3);
 $dbPath = $baseDir . '/storage/database.sqlite';
 
 if (!file_exists($dbPath)) {
