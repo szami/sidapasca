@@ -79,8 +79,8 @@ ob_start();
                     <p class="text-muted small mb-0">Kelola dan pantau skor TPA peserta ujian.</p>
                 </div>
                 <?php if (!$isAdminProdi): ?>
-                    <button type="button" class="btn btn-success rounded-pill px-4 shadow-sm" data-bs-toggle="modal"
-                        data-bs-target="#importTPAModal">
+                    <button type="button" class="btn btn-success rounded-pill px-4 shadow-sm" data-toggle="modal"
+                        data-target="#importTPAModal">
                         <i class="fas fa-file-excel me-2"></i> Import TPA (Excel)
                     </button>
                 <?php endif; ?>
@@ -162,7 +162,9 @@ ob_start();
                 <div class="alert alert-success alert-dismissible fade show m-4 rounded-3 shadow-sm border-0 bg-success-subtle text-success-emphasis"
                     role="alert">
                     <i class="bi bi-check-circle-fill me-2"></i> Data berhasil disimpan.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -211,7 +213,9 @@ ob_start();
             <form id="scoreForm" method="POST" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">Input Nilai TPA</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="participant_id" name="participant_id">
@@ -263,7 +267,7 @@ ob_start();
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
                     <button type="submit" class="btn btn-primary">Simpan Nilai</button>
                 </div>
             </form>
@@ -278,7 +282,9 @@ ob_start();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Import Nilai TPA (Excel)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
@@ -307,9 +313,7 @@ ob_start();
     var importTPAModal;
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Initialize Bootstrap 5 Modals
-        scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'), {});
-        importTPAModal = new bootstrap.Modal(document.getElementById('importTPAModal'), {});
+        // Bootstrap 4 Modals do not need manual initialization with 'new'
     });
 
     // Data TPA Components from PHP
@@ -424,8 +428,8 @@ ob_start();
     }
 
     function openScoreModal(id, name, prodiName) {
-        // Show Modal (BS5)
-        scoreModal.show();
+        // Show Modal (BS4)
+        $('#scoreModal').modal('show');
 
         // Set Header
         document.getElementById('modal_nama').value = name;

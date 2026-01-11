@@ -114,6 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Significantly improved Google Apps Script (GAS) Email Driver with input validation and plain-text fallback.
   - Enhanced GAS robustness for high-volume delivery.
   
+- **Fix:** Perbaikan tombol "Import Nilai TPA" yang tidak berfungsi (Fixed Bootstrap 5 vs 4 conflict).
+- **Refactor:** Update `tpa.php` view to use Bootstrap 4 syntax consistent with AdminLTE.
 - **Participant Dashboard UI/UX**:
   - Completely redesigned participant dashboard with a "premium" mobile-responsive aesthetic.
   - Added profile photo display.
