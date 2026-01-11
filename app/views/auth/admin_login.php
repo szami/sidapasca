@@ -250,7 +250,7 @@
                     © <?= date('Y') ?> Program Pascasarjana ULM
                 </p>
                 <p class="text-white/30 text-xs mt-1">
-                    SIDA Pasca v1.1.0
+                    SIDA Pasca <?= \App\Utils\Version::getWithPrefix() ?>
                 </p>
             </div>
         </div>
