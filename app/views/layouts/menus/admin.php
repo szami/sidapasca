@@ -45,9 +45,12 @@
     </a>
 </li>
 <li class="nav-item">
-    <a href="/admin/documents/download" class="nav-link">
-        <i class="nav-icon fas fa-file-archive"></i>
-        <p>Download Berkas</p>
+    <a href="/admin/data" class="nav-link">
+        <i class="nav-icon fas fa-database"></i>
+        <p>
+            Data Management
+            <span class="right badge badge-info">Hub</span>
+        </p>
     </a>
 </li>
 
@@ -111,12 +114,6 @@
     <a href="/admin/guides" class="nav-link">
         <i class="nav-icon fas fa-book"></i>
         <p>Panduan Sistem</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="/admin/document-helper" class="nav-link">
-        <i class="nav-icon fas fa-folder-open"></i>
-        <p>Download Dokumen</p>
     </a>
 </li>
 

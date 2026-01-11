@@ -207,11 +207,15 @@ $app->post('/admin/system/perform-update', 'App\Controllers\SystemController@per
 $app->get('/admin/system/check-update', 'App\Controllers\SystemController@checkUpdate');
 $app->get('/admin/sync-guide', 'App\Controllers\SystemController@syncGuide');
 
-// REGISTRATION / DAFTAR ULANG HUB
+// REGISTRATION 
+// REGISTRATION HUB
 $app->get('/admin/registration', 'App\Controllers\RegistrationController@hub');
 
 // MASTER DATA HUB
 $app->get('/admin/master', 'App\Controllers\MasterDataController@hub');
+
+// DATA MANAGEMENT HUB
+$app->get('/admin/data', 'App\Controllers\DataManagementController@hub');
 
 // ASSESSMENT HUB
 $app->get('/admin/assessment', 'App\Controllers\AssessmentController@hub');
