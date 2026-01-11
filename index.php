@@ -251,12 +251,7 @@ $app->get('/admin/graduation/quotas', 'App\Controllers\GraduationController@quot
 $app->post('/admin/graduation/quotas/save', 'App\Controllers\GraduationController@saveQuotas');
 
 // SYSTEM TOOLS HUB
-$app->get('/admin/tools', function () {
-    if (!\App\Utils\RoleHelper::canAccessToolsHub()) {
-        response()->redirect('/admin?error=unauthorized');
-    }
-    echo \App\Utils\View::render('admin.tools.index');
-});
+$app->get('/admin/tools', 'App\Controllers\ToolsController@hub');
 
 // SYSTEM UPDATE & SYNC
 $app->get('/admin/system/update', 'App\Controllers\SystemController@update');

@@ -163,25 +163,6 @@
 
                             <!-- PROCESS TAB -->
                             <div class="tab-pane fade" id="tab-generate" role="tabpanel">
-                                <div class="container-fluid">
-                                    <div class="row mb-2">
-                                        <div class="col-sm-6">
-                                            <h1 class="m-0">Export Tagihan SIREMA</h1>
-                                            <a href="/admin/registration" class="btn btn-sm btn-outline-secondary mt-2">
-                                                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Registrasi / Daftar
-                                                Ulang
-                                            </a>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <ol class="breadcrumb float-sm-right">
-                                                <li class="breadcrumb-item"><a href="/admin">Home</a></li>
-                                                <li class="breadcrumb-item"><a href="/admin/registration">Registrasi /
-                                                        Daftar Ulang</a></li>
-                                                <li class="breadcrumb-item active">Export Tagihan</li>
-                                            </ol>
-                                        </div>
-                                    </div>
-                                </div>
                                 <div class="row justify-content-center">
                                     <div class="col-md-8">
                                         <div class="card card-success">
