@@ -342,13 +342,9 @@ class SystemController
      */
     private function getVersionFromFolder($folder)
     {
-        $versionFile = rtrim($folder, '/\\') . '/VERSION';
+        $versionFile = rtrim($folder, '/\\') . '/version.json';
         if (file_exists($versionFile)) {
-            $version = trim(file_get_contents($versionFile));
-            return [
-                'version' => $version,
-                'updated_at' => date('Y-m-d H:i:s', filemtime($versionFile))
-            ];
+            return json_decode(file_get_contents($versionFile), true);
         }
 
         // Fallback

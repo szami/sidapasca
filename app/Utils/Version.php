@@ -13,9 +13,10 @@ class Version
     public static function get(): string
     {
         if (self::$version === null) {
-            $versionFile = __DIR__ . '/../../VERSION';
+            $versionFile = __DIR__ . '/../../version.json';
             if (file_exists($versionFile)) {
-                self::$version = trim(file_get_contents($versionFile));
+                $data = json_decode(file_get_contents($versionFile), true);
+                self::$version = $data['version'] ?? 'Unknown';
             } else {
                 self::$version = 'Unknown';
             }
