@@ -93,7 +93,8 @@ class ExamRoomController
         $insertData = [
             'fakultas' => $data['fakultas'],
             'nama_ruang' => $data['nama_ruang'],
-            'kapasitas' => $data['kapasitas']
+            'kapasitas' => $data['kapasitas'],
+            'google_map_link' => $data['google_map_link'] ?? null
         ];
 
         Database::connection()->insert('exam_rooms')->params($insertData)->execute();
