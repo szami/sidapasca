@@ -120,7 +120,8 @@ class ExamRoomController
         $updateData = [
             'fakultas' => $data['fakultas'],
             'nama_ruang' => $data['nama_ruang'],
-            'kapasitas' => $data['kapasitas']
+            'kapasitas' => $data['kapasitas'],
+            'google_map_link' => $data['google_map_link'] ?? null
         ];
 
         Database::connection()->update('exam_rooms')->params($updateData)->where('id', $id)->execute();
