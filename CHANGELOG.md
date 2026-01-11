@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Refactored `ExamRoomController` to use raw SQL for robust data saving, bypassing schema cache issues.
 - **Survey Data Fix**:
   - Corrected IKM calculation mismatch (Zero Score) caused by discrepancies between restored survey answer IDs (86-94) and current question IDs.
-  - **Correction:** Updated migration script to target correct question ID range (290-298). It now handles all historical legacy ranges (86-94, 137-145, 273-281) to ensure full convergence.
+  - **Correction:** Implemented **Dynamic ID Mapping**. The script now detects valid questions in real-time and maps orphan answers 1-to-1 based on sort order, making it robust against any future ID shifts (e.g., 290, 307, etc.).
   - Added `busy_timeout` and **WAL Mode** to migration script to prevent `database is locked` errors on production.
   - Implemented **Retry Mechanism** (5 attempts) to handle persistent locks gracefully.
   - Refactored script to **reuse existing Leaf DB connection** to avoid multiple-writer conflicts on SQLite.

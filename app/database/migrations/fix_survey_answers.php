@@ -67,66 +67,98 @@ try {
 
     echo "Running IKM Data Fix...\n";
 
+    // --- DYNAMIC FIX STRATEGY ---
+    // Instead of hardcoded offsets, we:
+    // 1. Get list of VALID Question IDs for Survey 1 (ordered ASC)
+    // 2. Get list of ORPHAN Question IDs in survey_answers (ordered ASC)
+    // 3. Map them 1-to-1 (assuming order is preserved, which is true for auto-increment)
+
+    // 1. Get Valid IDs
+    $validIds = [];
+    $sqlValid = "SELECT id FROM survey_questions WHERE survey_id = 1 ORDER BY id ASC";
+    if ($dbType === 'leaf') {
+        $res = $db->query($sqlValid)->fetchAll();
+        $validIds = array_column($res, 'id');
+    } else {
+        $validIds = $db->query($sqlValid)->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    echo "Valid Question IDs (Target): " . implode(', ', $validIds) . "\n";
+
+    if (count($validIds) !== 9) {
+        // Safety check: IKM usually has 9 questions. If not, auto-mapping might be risky.
+        // But maybe the user changed questions. Let's just warn.
+        echo "Warning: Found " . count($validIds) . " valid questions (Expected 9).\n";
+    }
+
+    // 2. Get Orphan IDs
+    // Get all distinct question_ids in answers that are NOT in valid set
+    $validList = empty($validIds) ? '0' : implode(',', $validIds);
+    $sqlOrphans = "SELECT DISTINCT question_id FROM survey_answers WHERE question_id NOT IN ($validList) ORDER BY question_id ASC";
+
+    $orphanIds = [];
+    if ($dbType === 'leaf') {
+        $res = $db->query($sqlOrphans)->fetchAll();
+        $orphanIds = array_column($res, 'question_id');
+    } else {
+        $orphanIds = $db->query($sqlOrphans)->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    if (empty($orphanIds)) {
+        echo "No orphan answers found. Data is already correct/synced.\n";
+        $success = true;
+        return;
+    }
+
+    echo "Found " . count($orphanIds) . " orphan ID groups: " . implode(', ', $orphanIds) . "\n";
+
+    if (count($orphanIds) !== count($validIds)) {
+        echo "Critical Warning: Mismatch between Orphan Groups (" . count($orphanIds) . ") and Valid Questions (" . count($validIds) . ").\n";
+        echo "Cannot reliably auto-map. Please fetch fresh restore.\n";
+        // Try to map up to the count we have? No, safe abort.
+        return;
+    }
+
+    // 3. Execute Mapping
+    echo "Mapping orphans to valid IDs...\n";
+
     // Retry Logic
     $max_retries = 5;
     $attempt = 0;
     $success = false;
     $count = 0;
 
-    // We need to handle three cases now to be absolutely sure:
-    // 1. Original Restored Data: IDs 86-94 -> Target 290-298 (+204)
-    // 2. Fix v1 Data: IDs 137-145 -> Target 290-298 (+153)
-    // 3. Fix v2 Data: IDs 273-281 -> Target 290-298 (+17)
-
-    $checkSqlA = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 86 AND 94";
-    $updateSqlA = "UPDATE survey_answers SET question_id = question_id + 204 WHERE question_id BETWEEN 86 AND 94";
-
-    $checkSqlB = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 137 AND 145";
-    $updateSqlB = "UPDATE survey_answers SET question_id = question_id + 153 WHERE question_id BETWEEN 137 AND 145";
-
-    $checkSqlC = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 273 AND 281";
-    $updateSqlC = "UPDATE survey_answers SET question_id = question_id + 17 WHERE question_id BETWEEN 273 AND 281";
-
     while ($attempt < $max_retries && !$success) {
         try {
-            $countA = fetchOne($dbType, $db, $checkSqlA);
-            $countB = fetchOne($dbType, $db, $checkSqlB);
-            $countC = fetchOne($dbType, $db, $checkSqlC);
-
-            if ($countA == 0 && $countB == 0 && $countC == 0) {
-                echo "No data to fix (0 rows in old ranges).\n";
-                $success = true;
-                break;
-            }
-
-            echo "Attempt " . ($attempt + 1) . ":\n";
-            echo " - Found $countA rows in range 86-94 (Original)\n";
-            echo " - Found $countB rows in range 137-145 (Fix v1)\n";
-            echo " - Found $countC rows in range 273-281 (Fix v2)\n";
-
             // BEGIN
             if ($dbType === 'leaf') {
                 $db->query("BEGIN IMMEDIATE")->execute();
-                if ($countA > 0)
-                    $db->query($updateSqlA)->execute();
-                if ($countB > 0)
-                    $db->query($updateSqlB)->execute();
-                if ($countC > 0)
-                    $db->query($updateSqlC)->execute();
+
+                foreach ($orphanIds as $idx => $oldId) {
+                    if (!isset($validIds[$idx]))
+                        continue;
+                    $newId = $validIds[$idx];
+                    $db->query("UPDATE survey_answers SET question_id = $newId WHERE question_id = $oldId")->execute();
+                    echo " - Remapped $oldId -> $newId\n";
+                }
+
                 $db->query("COMMIT")->execute();
             } else {
                 $db->beginTransaction();
-                if ($countA > 0)
-                    $db->exec($updateSqlA);
-                if ($countB > 0)
-                    $db->exec($updateSqlB);
-                if ($countC > 0)
-                    $db->exec($updateSqlC);
+
+                foreach ($orphanIds as $idx => $oldId) {
+                    if (!isset($validIds[$idx]))
+                        continue;
+                    $newId = $validIds[$idx];
+                    $db->exec("UPDATE survey_answers SET question_id = $newId WHERE question_id = $oldId");
+                    echo " - Remapped $oldId -> $newId\n";
+                }
+
                 $db->commit();
             }
 
             $success = true;
-            echo "Successfully updated rows to target range 290-298.\n";
+            echo "Successfully remapped all orphans.\n";
 
         } catch (Exception $e) {
             // Rollback
