@@ -492,6 +492,31 @@ try {
         echo "SKM Migration file not found.\n";
     }
 
+    // 20. TPA Provider & Exam Room Map (Added 2026-01-11)
+    echo "Checking TPA & Map Columns...\n";
+
+    // Participants: TPA Provider & Certificate
+    $cols = $pdo->query("PRAGMA table_info(participants)")->fetchAll(PDO::FETCH_ASSOC);
+    $existingCols = array_column($cols, 'name');
+
+    if (!in_array('tpa_provider', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN tpa_provider VARCHAR(100) DEFAULT 'PPKPP ULM'");
+        echo "Added tpa_provider to participants.\n";
+    }
+    if (!in_array('tpa_certificate_url', $existingCols)) {
+        $pdo->exec("ALTER TABLE participants ADD COLUMN tpa_certificate_url VARCHAR(255) NULL");
+        echo "Added tpa_certificate_url to participants.\n";
+    }
+
+    // Exam Rooms: Google Map Link
+    $colsRooms = $pdo->query("PRAGMA table_info(exam_rooms)")->fetchAll(PDO::FETCH_ASSOC);
+    $existingRoomCols = array_column($colsRooms, 'name');
+
+    if (!in_array('google_map_link', $existingRoomCols)) {
+        $pdo->exec("ALTER TABLE exam_rooms ADD COLUMN google_map_link TEXT NULL");
+        echo "Added google_map_link to exam_rooms.\n";
+    }
+
 } catch (PDOException $e) {
     echo "Migration Error: " . $e->getMessage() . "\n";
     // Do not exit, just return
