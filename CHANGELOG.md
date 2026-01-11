@@ -1,34 +1,31 @@
 # Changelog
 
-All notable changes to the SIDA Pasca ULM project will be documented in this file.
+All notable changes to SINTESA (Sistem Informasi Terintegrasi Seleksi Akademik) will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
+## [1.6.0] - 2026-01-11
 
----
-
----
----
-
-
-## [Upcoming / Unreleased]
-- **Menu Reorganization (Hybrid Hub Structure)**:
-  - **New Hubs**: Created "Registrasi / Daftar Ulang" and "Master Data" hubs for better organization
-  - **Assessment Hub**: Moved "Input Nilai TPA" into Assessment Hub (no longer in sidebar)
-  - **Master Data Hub**: Consolidated Semester, Ruang Ujian, and Sesi Ujian
-  - **Registrasi Hub**: Exported Tagihan now under dedicated Registration hub
-  - **Consistency**: All major modules now use Hub pattern (Ujian, Assessment, Registrasi, Master Data, Tools)
-  - **Routes**: Added `/admin/registration`, `/admin/master`, `/admin/assessment` hub routes
-  - Sidebar is now cleaner with consistent navigation UX
+### Added
+- **Menu Reorganization**: Implemented hybrid hub-based navigation structure
+  - **New Hubs**:
+    - Registrasi / Daftar Ulang Hub (`/admin/registration`) - Houses Export Tagihan and future registration tools
+    - Master Data Hub (`/admin/master`) - Centralizes Semester, Ruang Ujian, and Sesi Ujian management
+    - System Tools Hub (`/admin/tools`) - Consolidates Migration, Settings, and User Management
+  - **Expanded Hubs**:
+    - Assessment Hub - Added Input Nilai TPA (moved from direct sidebar access)
+  - **Controllers**: Created `RegistrationController`, `MasterDataController`, and `ToolsController`
+  - **Routes**: Added `/admin/registration`, `/admin/master`, `/admin/assessment`, `/admin/tools` hub routes
+  - Sidebar is now cleaner with consistent navigation UX across all user roles
 - **Breadcrumb & Navigation Improvements**:
-  - **Hierarchical Bread crumbs**: All hub sub-pages now show proper hierarchy (Home > Hub > Current Page)
-  - **Back Buttons**: Added "Kembali ke Hub" buttons below page titles for easier navigation (Option A style)
-  - **Assessment Module**: Updated TPA, Components, Scores, and Bidang pages
-  - **Master Data Module**: Updated Rooms and Sessions pages
-  - **System Tools Module**: Updated Migration page
-  - **Registration Module**: Updated Payment Export page
+  - **Hierarchical Breadcrumbs**: All hub sub-pages now show proper hierarchy (Home > Hub > Current Page)
+  - **Back Buttons**: Added "Kembali ke Hub" buttons below page titles for easier navigation
+  - **Modules Updated**:
+    - Assessment Module: TPA, Components, Scores, and Bidang pages (4 pages)
+    - Master Data Module: Rooms and Sessions pages (2 pages)
+    - System Tools Module: Migration page (1 page)
+    - Registration Module: Payment Export page (1 page)
   - Total: 8 pages with improved navigation hierarchy
   - Improves user orientation and reduces clicks needed to navigate back to hub pages
 

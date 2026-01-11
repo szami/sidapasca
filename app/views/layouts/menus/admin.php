@@ -113,7 +113,11 @@
         <p>Panduan Sistem</p>
     </a>
 </li>
-</a>
+<li class="nav-item">
+    <a href="/admin/document-helper" class="nav-link">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>Download Dokumen</p>
+    </a>
 </li>
 
 <!-- EVALUASI & SURVEI -->

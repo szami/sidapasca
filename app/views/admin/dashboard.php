@@ -621,7 +621,7 @@ $infoClass = $isProdi ? 'col-lg-4' : 'col-12';
                                 </div>
                                 <div class="d-flex justify-content-between py-2">
                                     <span class="text-muted">Versi</span>
-                                    <span class="font-weight-semibold">v1.1.0</span>
+                                    <span class="font-weight-semibold"><?= \App\Utils\Version::getWithPrefix() ?></span>
                                 </div>
                             </div>
                         </div>
