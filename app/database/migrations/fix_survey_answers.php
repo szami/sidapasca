@@ -16,6 +16,12 @@ if (!file_exists($dbPath)) {
 try {
     $pdo = new PDO("sqlite:$dbPath");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_TIMEOUT, 10); // PHP Timeout
+
+    // Fix "database is locked" errors
+    $pdo->exec("PRAGMA busy_timeout = 10000;"); // SQLite Wait up to 10s
+    // Optional: Enable WAL mode for better concurrency if not already
+    // $pdo->exec("PRAGMA journal_mode = WAL;"); 
 
     echo "Running IKM Data Fix...\n";
 
