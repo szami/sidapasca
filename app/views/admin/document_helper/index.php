@@ -166,11 +166,12 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">Document Download Helper</h1>
+                <h1 class="m-0">Document Helper</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/admin/data">Data Management</a></li>
                     <li class="breadcrumb-item active">Document Helper</li>
                 </ol>
             </div>
@@ -180,6 +181,9 @@
 
 <div class="content">
     <div class="container-fluid">
+        <a href="/admin/data" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left mr-1"></i> Kembali ke Data Management
+        </a>
 
         <!-- STATISTICS CARDS -->
         <?php if (isset($stats)): ?>

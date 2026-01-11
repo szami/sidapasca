@@ -46,7 +46,7 @@
 </li>
 <li class="nav-item">
     <a href="/admin/data" class="nav-link">
-        <i class="nav-icon fas fa-database"></i>
+        <i class="nav-icon fas fa-folder-open"></i>
         <p>
             Data Management
             <span class="right badge badge-info">Hub</span>

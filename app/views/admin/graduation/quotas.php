@@ -9,12 +9,16 @@ ob_start();
             <div class="col-12 col-md-6 order-md-1 order-last">
                 <h3>Daya Tampung Prodi</h3>
                 <p class="text-subtitle text-muted">Input kuota penerimaan untuk semester aktif</p>
+                <a href="/admin/master" class="btn btn-sm btn-outline-secondary mt-1">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Master Data
+                </a>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Kelulusan</li>
+                        <li class="breadcrumb-item"><a href="/admin/master">Master Data</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Daya Tampung</li>
                     </ol>
                 </nav>
             </div>

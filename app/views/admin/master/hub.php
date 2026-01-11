@@ -64,6 +64,20 @@ $isTU = \App\Utils\RoleHelper::isTU();
             </div>
         </div>
     <?php endif; ?>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>Daya Tampung</h3>
+                <p>Kuota Prodi per Semester</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-users-cog"></i>
+            </div>
+            <a href="/admin/graduation/quotas" class="small-box-footer">Kelola Kuota <i
+                    class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
 </div>
 
 <!-- Quick Stats -->

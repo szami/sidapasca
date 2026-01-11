@@ -45,9 +45,12 @@
     </a>
 </li>
 <li class="nav-item">
-    <a href="/admin/documents/download" class="nav-link">
-        <i class="nav-icon fas fa-file-archive"></i>
-        <p>Download Berkas</p>
+    <a href="/admin/data" class="nav-link">
+        <i class="nav-icon fas fa-folder-open"></i>
+        <p>
+            Data Management
+            <span class="right badge badge-info">Hub</span>
+        </p>
     </a>
 </li>
 
@@ -113,8 +116,6 @@
         <p>Panduan Sistem</p>
     </a>
 </li>
-</a>
-</li>
 
 <!-- EVALUASI & SURVEI -->
 <li class="nav-header">EVALUASI & SURVEI</li>
@@ -135,19 +136,7 @@
         </p>
     </a>
 </li>
-<li class="nav-item">
-    <a href="/admin/system/deploy-from-dev" class="nav-link">
-        <i class="nav-icon fas fa-rocket"></i>
-        <p>Deploy from Dev</p>
-    </a>
-</li>
 
-<li class="nav-item">
-    <a href="/admin/users" class="nav-link">
-        <i class="nav-icon fas fa-users-cog"></i>
-        <p>Manajemen User</p>
-    </a>
-</li>
 
 <!-- AKUN -->
 <li class="nav-header">AKUN</li>

@@ -18,22 +18,8 @@
 <section class="content">
     <div class="container-fluid">
         <?php if (\App\Utils\RoleHelper::canImportExport()): ?>
-            <h5 class="mt-4 mb-2"><i class="fas fa-database mr-1"></i> Data Management</h5>
+            <h5 class="mt-4 mb-2"><i class="fas fa-database mr-1"></i> Database Tools</h5>
             <div class="row">
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-info">
-                        <div class="inner">
-                            <h3>Import</h3>
-                            <p>Import Data Peserta</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-file-import"></i>
-                        </div>
-                        <a href="/admin/import" class="small-box-footer">Go to Import <i
-                                class="fas fa-arrow-circle-right"></i></a>
-                    </div>
-                </div>
-
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-success">
                         <div class="inner">
@@ -49,6 +35,7 @@
                 </div>
             </div>
         <?php endif; ?>
+
 
         <?php if (\App\Utils\RoleHelper::canManageSettings()): ?>
             <h5 class="mt-4 mb-2"><i class="fas fa-cogs mr-1"></i> System Configuration</h5>
