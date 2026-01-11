@@ -7,14 +7,18 @@ ob_start();
     <div class="page-title">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Input Nilai Assessment</h3>
-                <p class="text-subtitle text-muted">Input nilai TPA dan Tes Bidang</p>
+                <h3>Proses Nilai & Kelulusan</h3>
+                <p class="text-subtitle text-muted">Input Nilai dan Keputusan Akhir</p>
+                <a href="/admin/assessment" class="btn btn-sm btn-outline-secondary mt-1">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Penilaian & Kelulusan
+                </a>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Nilai</li>
+                        <li class="breadcrumb-item"><a href="/admin/assessment">Penilaian & Kelulusan</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Proses Nilai</li>
                     </ol>
                 </nav>
             </div>
@@ -404,13 +408,13 @@ ob_start();
                             else if (status === 'TL') selectClass = 'bg-danger';
                             else if (status === 'T') selectClass = 'bg-warning text-dark';
                             return `
-                                                    <select name="decision[${row.id}]" id="sel_${row.id}" onchange="updateDecisionColor(this)" class="custom-select custom-select-sm shadow-sm font-weight-bold text-white ${selectClass}" style="min-width:80px">
-                                                        <option value="" class="bg-secondary text-white" ${!status ? 'selected' : ''}>-</option>
-                                                        <option value="L" class="bg-success text-white" ${status === 'L' ? 'selected' : ''}>L (Lulus)</option>
-                                                        <option value="TL" class="bg-danger text-white" ${status === 'TL' ? 'selected' : ''}>TL (Tidak Lulus)</option>
-                                                        <option value="T" class="bg-warning text-dark" ${status === 'T' ? 'selected' : ''}>T (Tertunda)</option>
-                                                    </select>
-                                                `;
+                                                        <select name="decision[${row.id}]" id="sel_${row.id}" onchange="updateDecisionColor(this)" class="custom-select custom-select-sm shadow-sm font-weight-bold text-white ${selectClass}" style="min-width:80px">
+                                                            <option value="" class="bg-secondary text-white" ${!status ? 'selected' : ''}>-</option>
+                                                            <option value="L" class="bg-success text-white" ${status === 'L' ? 'selected' : ''}>L (Lulus)</option>
+                                                            <option value="TL" class="bg-danger text-white" ${status === 'TL' ? 'selected' : ''}>TL (Tidak Lulus)</option>
+                                                            <option value="T" class="bg-warning text-dark" ${status === 'T' ? 'selected' : ''}>T (Tertunda)</option>
+                                                        </select>
+                                                    `;
                         }
                     }
                 ]

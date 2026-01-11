@@ -13,6 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 
+## [Upcoming / Unreleased]
+- **Menu Reorganization (Hybrid Hub Structure)**:
+  - **New Hubs**: Created "Registrasi / Daftar Ulang" and "Master Data" hubs for better organization
+  - **Assessment Hub**: Moved "Input Nilai TPA" into Assessment Hub (no longer in sidebar)
+  - **Master Data Hub**: Consolidated Semester, Ruang Ujian, and Sesi Ujian
+  - **Registrasi Hub**: Exported Tagihan now under dedicated Registration hub
+  - **Consistency**: All major modules now use Hub pattern (Ujian, Assessment, Registrasi, Master Data, Tools)
+  - **Routes**: Added `/admin/registration`, `/admin/master`, `/admin/assessment` hub routes
+  - Sidebar is now cleaner with consistent navigation UX
+- **Breadcrumb & Navigation Improvements**:
+  - **Hierarchical Bread crumbs**: All hub sub-pages now show proper hierarchy (Home > Hub > Current Page)
+  - **Back Buttons**: Added "Kembali ke Hub" buttons below page titles for easier navigation (Option A style)
+  - **Assessment Module**: Updated TPA, Components, Scores, and Bidang pages with new navigation
+  - Improves user orientation and reduces clicks needed to navigate back to hub pages
+
 ## [1.5.0] - 2026-01-11
 
 ### 🎉 Added - Dashboard & TPA Enhancements

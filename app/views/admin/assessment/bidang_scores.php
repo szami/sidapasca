@@ -7,13 +7,17 @@ ob_start();
     <div class="page-title">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Penilaian Tes Bidang</h3>
-                <p class="text-subtitle text-muted">Input nilai Tes Tertulis Bidang dan Status Rekomendasi</p>
+                <h3>Penilaian Bidang</h3>
+                <p class="text-subtitle text-muted">Input Nilai Bidang per Prodi</p>
+                <a href="/admin/assessment" class="btn btn-sm btn-outline-secondary mt-1">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Penilaian & Kelulusan
+                </a>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="/admin/assessment">Penilaian & Kelulusan</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Penilaian Bidang</li>
                     </ol>
                 </nav>
