@@ -59,6 +59,52 @@
     </div>
 </div>
 
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h3 class="card-title text-dark"><i class="fas fa-wrench" style="margin-right: 8px;"></i> Available
+                    Patches / Fixes</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Script Name</th>
+                            <th>Path</th>
+                            <th style="width: 150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($patches)): ?>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No patches available.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($patches as $patch): ?>
+                                <tr>
+                                    <td class="font-weight-bold">
+                                        <?= htmlspecialchars($patch['filename']) ?>
+                                    </td>
+                                    <td class="text-muted small">
+                                        <?= htmlspecialchars($patch['path']) ?>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-dark btn-run-patch"
+                                            data-filename="<?= htmlspecialchars($patch['filename']) ?>">
+                                            <i class="fas fa-play"></i> Run Patch
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     $(document).on('click', '.btn-sync', function () {
         let btn = $(this);
@@ -76,6 +122,39 @@
                 alert('Error: ' + res.message);
                 btn.prop('disabled', false).html('<i class="fas fa-sync"></i> Sync (Create Table)');
             }
+        });
+    });
+
+    $(document).on('click', '.btn-run-patch', function () {
+        let btn = $(this);
+        let filename = btn.data('filename');
+
+        if (!confirm('Run patch script: ' + filename + '?\nThis action cannot be undone.')) return;
+
+        let originalContent = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Running...');
+
+        $.post('/admin/tools/migration/patch', { filename: filename }, function (res) {
+            btn.prop('disabled', false).html(originalContent);
+
+            if (res.success) {
+                // Show output in a nice modal or alert, here just alert for simplicity as requested
+                Swal.fire({
+                    title: 'Patch Executed',
+                    text: res.message, // Output from script
+                    icon: 'success',
+                    width: '600px'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: res.message,
+                    icon: 'error'
+                });
+            }
+        }).fail(function () {
+            btn.prop('disabled', false).html(originalContent);
+            Swal.fire('Error', 'Network error occurred.', 'error');
         });
     });
 </script>

@@ -45,7 +45,77 @@ class MigrationController
             }
         }
 
-        echo View::render('admin.tools.migration', ['status' => $status]);
+        echo View::render('admin.tools.migration', [
+            'status' => $status,
+            'patches' => $this->getPatches()
+        ]);
+    }
+
+    private function getPatches()
+    {
+        $baseDir = dirname(__DIR__, 2); // app -> Controllers -> (root) -> app? No.
+        // __DIR__ is app/Controllers. dirname is app. dirname 2 is root?
+        // Let's assume root is correct based on other usage. e.g. dirname(__DIR__, 2) from Controller usually lands in app/.. -> root?
+        // Wait, standard structure: e:\laragon\www\pmb-pps-ulm\app\Controllers
+        // dirname(.., 1) = app
+        // dirname(.., 2) = pmb-pps-ulm (Root)
+
+        $migrationDir = dirname(__DIR__, 2) . '/app/database/migrations';
+        $files = glob($migrationDir . '/*.php');
+        $patches = [];
+
+        foreach ($files as $file) {
+            $name = basename($file);
+            // Exclude core migration files
+            $excludes = ['migrate.php', 'seed.php', 'skm_migration.php', 'remove_redundant_fields.php'];
+
+            if (!in_array($name, $excludes)) {
+                $patches[] = [
+                    'filename' => $name,
+                    'path' => $file,
+                    'is_php' => true
+                ];
+            }
+        }
+
+        // Also check manual sql files if needed, but for now just PHP scripts that do logic
+        return $patches;
+    }
+
+    public function runPatch()
+    {
+        if (!RoleHelper::isSuperadmin()) {
+            response()->json(['success' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $filename = $_POST['filename'] ?? null;
+        if (!$filename) {
+            response()->json(['success' => false, 'message' => 'No file specified']);
+            return;
+        }
+
+        // Security: Prevent Directory Traversal
+        $filename = basename($filename);
+        $baseDir = dirname(__DIR__, 2);
+        $filePath = $baseDir . '/app/database/migrations/' . $filename;
+
+        if (!file_exists($filePath)) {
+            response()->json(['success' => false, 'message' => 'File not found']);
+            return;
+        }
+
+        // Capture Output
+        ob_start();
+        try {
+            // Include closure to isolate scope slightly, but mostly just include
+            include $filePath;
+            $output = ob_get_clean();
+            response()->json(['success' => true, 'message' => $output]);
+        } catch (\Throwable $e) {
+            $output = ob_get_clean();
+            response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage() . "\nOutput: " . $output]);
+        }
     }
 
     public function sync()

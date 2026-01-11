@@ -257,6 +257,7 @@ $app->get('/admin/system/perform-update', 'App\Controllers\SystemController@perf
 // DATABASE MIGRATION TOOL (NEW)
 $app->get('/admin/tools/migration', 'App\Controllers\MigrationController@index');
 $app->post('/admin/tools/migration/sync', 'App\Controllers\MigrationController@sync');
+$app->post('/admin/tools/migration/patch', 'App\Controllers\MigrationController@runPatch');
 
 // Hostinger Folder Sync Deployment
 $app->get('/admin/system/deploy-from-dev', 'App\\Controllers\\SystemController@deployFromDev');

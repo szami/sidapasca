@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Google Maps Link Persistence**:
   - updated `exam_rooms` table schema to include `google_map_link` column.
   - Refactored `ExamRoomController` to use raw SQL for robust data saving, bypassing schema cache issues.
+- **Survey Data Fix**:
+  - Corrected IKM calculation mismatch (Zero Score) caused by discrepancies between restored survey answer IDs (86-94) and current question IDs (137-145).
+  - Applied automated fix to realign orphan answers to current active questions.
 - **TPA System Fixes**:
   - **Import Button**: Fixed JavaScript race condition preventing the "Import TPA" modal from opening.
   - **Redirect Logic**: Fixed `saveTpaThreshold` redirecting to the wrong page. Removed duplicate code block.
@@ -124,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 - **Admin & Tools**:
   - Added "Edit Action" for transcript documents in the participant download section to allow manual fixes for failed imports.
+  - **Migration Patch Tool**: Added a "Patches / Fixes" section in the Migration menu (`/admin/tools/migration`) allowing admins to run maintenance scripts (like `fix_survey_answers.php`) directly from the dashboard.
   - Unified PDF layouts for Exam Cards and Registration Forms for consistent A4 paper aesthetic.
   - Updated `.gitignore` to support dynamic year/semester storage subdirectories (e.g., `storage/20252-0/`).
 
