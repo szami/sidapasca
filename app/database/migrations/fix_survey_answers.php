@@ -73,34 +73,50 @@ try {
     $success = false;
     $count = 0;
 
-    $checkSql = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 86 AND 94";
-    $updateSql = "UPDATE survey_answers SET question_id = question_id + 51 WHERE question_id BETWEEN 86 AND 94";
+    // We need to handle two cases:
+    // 1. Original Restored Data: IDs 86-94 -> Target 273-281 (+187)
+    // 2. Intermediate Fix Data: IDs 137-145 -> Target 273-281 (+136)
+
+    $checkSqlA = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 86 AND 94";
+    $updateSqlA = "UPDATE survey_answers SET question_id = question_id + 187 WHERE question_id BETWEEN 86 AND 94";
+
+    $checkSqlB = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 137 AND 145";
+    $updateSqlB = "UPDATE survey_answers SET question_id = question_id + 136 WHERE question_id BETWEEN 137 AND 145";
 
     while ($attempt < $max_retries && !$success) {
         try {
-            $countBefore = fetchOne($dbType, $db, $checkSql);
+            $countA = fetchOne($dbType, $db, $checkSqlA);
+            $countB = fetchOne($dbType, $db, $checkSqlB);
 
-            if ($countBefore == 0) {
-                echo "No data to fix (0 rows).\n";
+            if ($countA == 0 && $countB == 0) {
+                echo "No data to fix (0 rows in old ranges).\n";
                 $success = true;
                 break;
             }
 
-            echo "Attempt " . ($attempt + 1) . ": Found $countBefore rows to fix.\n";
+            echo "Attempt " . ($attempt + 1) . ":\n";
+            echo " - Found $countA rows in range 86-94 (Original)\n";
+            echo " - Found $countB rows in range 137-145 (Intermediate)\n";
 
             // BEGIN
             if ($dbType === 'leaf') {
                 $db->query("BEGIN IMMEDIATE")->execute();
-                $db->query($updateSql)->execute();
+                if ($countA > 0)
+                    $db->query($updateSqlA)->execute();
+                if ($countB > 0)
+                    $db->query($updateSqlB)->execute();
                 $db->query("COMMIT")->execute();
             } else {
                 $db->beginTransaction();
-                $db->exec($updateSql);
+                if ($countA > 0)
+                    $db->exec($updateSqlA);
+                if ($countB > 0)
+                    $db->exec($updateSqlB);
                 $db->commit();
             }
 
             $success = true;
-            echo "Successfully updated rows (Count verification skipped for lock safety).\n";
+            echo "Successfully updated rows to target range 273-281.\n";
 
         } catch (Exception $e) {
             // Rollback
