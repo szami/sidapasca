@@ -160,13 +160,29 @@ ob_start();
                                         class="font-medium text-gray-900 text-right"><?php echo getDayName($participant['tanggal_ujian']) . ', ' . formatDateIndo($participant['tanggal_ujian']); ?></span>
                                 </div>
                                 <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Waktu</span>
-                                    <span
-                                        class="font-medium text-gray-900 text-right"><?php echo $participant['waktu_ujian']; ?>
-                                        WITA (Sesi <?php echo $participant['sesi_ujian']; ?>)</span>
+                                    <span class="font-medium text-gray-900 text-right">
+                                        <?php
+                                        $waktu = $participant['waktu_ujian'];
+                                        // Remove hardcoded WITA if likely present, or just display as is?
+                                        // User report: "10:00 - 11:30 WITA WITA" -> DB likely has "10:00 - 11:30 WITA".
+                                        // Safe bet: Display raw, let admin control format. Or strict trim.
+                                        echo str_replace(' WITA', '', $waktu) . ' WITA';
+                                        ?>
+                                        (<?php
+                                        // Fix "Sesi Sesi": Remove 'Sesi ' prefix if exists in DB value, then re-add, or just display DB value?
+                                        // User report: "Sesi Sesi 1". DB likely "Sesi 1".
+                                        $sesi = $participant['sesi_ujian'];
+                                        echo (stripos($sesi, 'Sesi') === false) ? 'Sesi ' . $sesi : $sesi;
+                                        ?>)
+                                    </span>
                                 </div>
-                                class="font-medium text-gray-900
-                                text-right"><?php echo isset($examRoom['fakultas']) ? $examRoom['fakultas'] : 'Pascasarjana ULM'; ?><br>Ruang
-                                <?php echo $participant['ruang_ujian']; ?></span>
+                                <div class="flex justify-between pt-2">
+                                    <span class="text-gray-500">Lokasi</span>
+                                    <span class="font-medium text-gray-900 text-right">
+                                        <?php echo isset($examRoom['fakultas']) ? $examRoom['fakultas'] : 'Pascasarjana ULM'; ?><br>
+                                        Ruang <?php echo $participant['ruang_ujian']; ?>
+                                    </span>
+                                </div>
                             </div>
                             <?php if (!empty($examRoom['google_map_link'])): ?>
                                 <div class="mt-3 text-right">
