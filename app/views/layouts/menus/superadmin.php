@@ -75,6 +75,12 @@
 <!-- ASSESSMENT & KELULUSAN -->
 <li class="nav-header">PENILAIAN & KELULUSAN</li>
 <li class="nav-item">
+    <a href="/admin/assessment/tpa" class="nav-link">
+        <i class="nav-icon fas fa-chart-line"></i>
+        <p>Input Nilai TPA</p>
+    </a>
+</li>
+<li class="nav-item">
     <a href="/admin/assessment" class="nav-link">
         <i class="nav-icon fas fa-graduation-cap"></i>
         <p>

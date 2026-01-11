@@ -21,6 +21,11 @@
                         <label>Kapasitas (Orang)</label>
                         <input type="number" name="kapasitas" class="form-control" placeholder="Contoh: 30" required>
                     </div>
+                    <div class="form-group">
+                        <label>Link Google Maps (Opsional)</label>
+                        <input type="text" name="google_map_link" class="form-control"
+                            placeholder="https://maps.google.com/...">
+                    </div>
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">Simpan</button>

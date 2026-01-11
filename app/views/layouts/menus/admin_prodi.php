@@ -17,6 +17,12 @@
         </p>
     </a>
 </li>
+<li class="nav-item">
+    <a href="/admin/assessment/tpa" class="nav-link">
+        <i class="nav-icon fas fa-chart-bar"></i>
+        <p>Nilai TPA</p>
+    </a>
+</li>
 
 <!-- DATA PESERTA -->
 <li class="nav-header">DATA PESERTA</li>

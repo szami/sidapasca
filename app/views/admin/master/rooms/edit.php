@@ -22,6 +22,12 @@
                         <input type="number" name="kapasitas" class="form-control"
                             value="<?php echo htmlspecialchars($room['kapasitas']); ?>" required>
                     </div>
+                    <div class="form-group">
+                        <label>Link Google Maps (Opsional)</label>
+                        <input type="text" name="google_map_link" class="form-control"
+                            value="<?php echo htmlspecialchars($room['google_map_link'] ?? ''); ?>"
+                            placeholder="https://maps.google.com/...">
+                    </div>
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">Simpan Perubahan</button>

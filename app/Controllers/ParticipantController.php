@@ -797,7 +797,26 @@ class ParticipantController
                 $roomCounter[$room]++;
             }
 
-            // Format TTL (Tempat Tanggal Lahir)
+
+            $date = date_create($p['tanggal_ujian']);
+            $tanggal = $date ? date_format($date, 'd-m-Y') : '-';
+
+            $tglLahir = date_create($p['tgl_lahir']);
+            $pwd = $tglLahir ? date_format($tglLahir, 'd-m-Y') : $p['tgl_lahir']; // Password logic (usually DOB)
+
+            $sheet->setCellValue('A' . $rowNum, $rowNum - 1);                                                  // NO
+            $sheet->setCellValue('B' . $rowNum, $p['fakultas'] ?? 'Pascasarjana');                             // GEDUNG
+            $sheet->setCellValue('C' . $rowNum, $p['ruang_ujian']);                                            // RUANG
+            $sheet->setCellValue('D' . $rowNum, $tanggal);                                                     // TANGGAL
+            $sheet->setCellValue('E' . $rowNum, $p['sesi_ujian']);                                             // SESI
+            $sheet->setCellValue('F' . $rowNum, $p['waktu_ujian']);                                            // WAKTU
+            $sheet->setCellValue('G' . $rowNum, $roomCounter[$room]);                                          // NO URUT (Per Ruangan)
+            $sheet->setCellValue('H' . $rowNum, $p['nomor_peserta']);                                          // NO_PESERTA
+            $sheet->setCellValue('I' . $rowNum, $p['tgl_lahir']);     // PASSWORD (Raw YYYY-MM-DD for consistency or d-m-Y?) - Login uses Y-m-d check. Let's use Raw to be safe, or d-m-Y if requested. User said "Email dan No HP" filled, implying mostly empty. Let's put Raw first. Actually login msg says "dd-mm-yyyy". Let's put $pwd (d-m-Y).
+            $sheet->setCellValue('J' . $rowNum, strtoupper($p['nama_lengkap']));                               // NAMA_PESERTA
+            $sheet->setCellValue('K' . $rowNum, $p['tempat_lahir'] . ', ' . $pwd);                             // TTL
+            $sheet->setCellValue('L' . $rowNum, $p['jenis_kelamin']);                                          // JK
+            $sheet->setCellValue('M' . $rowNum, $p['nama_prodi']);                                             // PRODI PILIHAN
             $sheet->setCellValue('N' . $rowNum, strtolower($p['email']));                                      // EMAIL
             $sheet->setCellValue('O' . $rowNum, $p['no_hp'] ?? '-');                                           // NO HP
 

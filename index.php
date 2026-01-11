@@ -212,11 +212,16 @@ $app->get('/admin/assessment/components', 'App\Controllers\AssessmentController@
 $app->post('/admin/assessment/components/store', 'App\Controllers\AssessmentController@storeComponent');
 $app->get('/admin/assessment/components/delete/{id}', 'App\Controllers\AssessmentController@deleteComponent');
 
+$app->get('/admin/assessment/components/delete/{id}', 'App\Controllers\AssessmentController@deleteComponent');
+
 $app->get('/api/assessment/scores', 'App\Controllers\AssessmentController@apiData');
+$app->get('/admin/assessment/tpa', 'App\Controllers\AssessmentController@tpaScores'); // NEW TPA Page
+$app->get('/admin/assessment/tpa/certificate/{id}', 'App\Controllers\AssessmentController@tpaCertificate'); // Secure Certificate View
 $app->get('/admin/assessment/scores', 'App\Controllers\AssessmentController@scores');
 $app->get('/admin/assessment/scores/get/{id}', 'App\Controllers\AssessmentController@getScores');
 $app->post('/admin/assessment/scores/save/{id}', 'App\Controllers\AssessmentController@saveScore');
 $app->get('/admin/assessment/scores/export', 'App\Controllers\AssessmentController@exportTemplate');
+$app->get('/admin/assessment/tpa/template', 'App\Controllers\AssessmentController@exportTPATemplate'); // NEW Template
 $app->get('/admin/assessment/scores/export-final', 'App\Controllers\AssessmentController@exportFinal');
 $app->post('/admin/assessment/scores/import', 'App\Controllers\AssessmentController@importScores');
 $app->post('/admin/assessment/scores/import-tpa', 'App\Controllers\AssessmentController@importTPA');

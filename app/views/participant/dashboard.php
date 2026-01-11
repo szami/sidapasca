@@ -164,223 +164,232 @@ ob_start();
                                         class="font-medium text-gray-900 text-right"><?php echo $participant['waktu_ujian']; ?>
                                         WITA (Sesi <?php echo $participant['sesi_ujian']; ?>)</span>
                                 </div>
-                                <div class="flex justify-between"><span class="text-gray-500">Lokasi</span> <span
-                                        class="font-medium text-gray-900 text-right"><?php echo isset($examRoom['fakultas']) ? $examRoom['fakultas'] : 'Pascasarjana ULM'; ?><br>Ruang
-                                        <?php echo $participant['ruang_ujian']; ?></span></div>
+                                class="font-medium text-gray-900
+                                text-right"><?php echo isset($examRoom['fakultas']) ? $examRoom['fakultas'] : 'Pascasarjana ULM'; ?><br>Ruang
+                                <?php echo $participant['ruang_ujian']; ?></span>
                             </div>
-                        <?php else: ?>
-                            <div class="flex-grow flex items-center justify-center text-center p-4">
-                                <p class="text-gray-500">Jadwal ujian belum tersedia.</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Downloads -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
-                        <div class="flex items-center mb-4">
-                            <div
-                                class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600 mr-3">
-                                <i class="fas fa-download text-lg"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900">Unduhan</h3>
-                        </div>
-                        <div class="space-y-3 flex-grow">
-                            <a href="/participant/formulir" target="_blank"
-                                class="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                                <i class="fas fa-file-alt text-gray-400 mr-3"></i> <span
-                                    class="font-medium text-gray-700">Formulir Pendaftaran</span>
-                            </a>
-                            <?php if ($canDownload): ?>
-                                <a href="/participant/exam-card" target="_blank"
-                                    class="flex items-center p-3 border-l-4 border-l-blue-500 border rounded-lg hover:bg-gray-50 transition-colors bg-blue-50 border-gray-100">
-                                    <i class="fas fa-id-card text-blue-500 mr-3"></i> <span
-                                        class="font-bold text-blue-700">Kartu Tanda Peserta</span>
-                                </a>
-                            <?php else: ?>
-                                <div
-                                    class="flex items-center p-3 border border-gray-200 rounded-lg bg-gray-50 opacity-60 cursor-not-allowed">
-                                    <i class="fas fa-lock text-gray-400 mr-3"></i> <span
-                                        class="font-medium text-gray-500">Kartu Ujian Belum Tersedia</span>
+                            <?php if (!empty($examRoom['google_map_link'])): ?>
+                                <div class="mt-3 text-right">
+                                    <a href="<?php echo htmlspecialchars($examRoom['google_map_link']); ?>" target="_blank"
+                                        class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500">
+                                        <i class="fas fa-map-marker-alt mr-1"></i> Lihat Lokasi (Google Maps)
+                                    </a>
                                 </div>
-                                <p class="text-xs text-red-500 mt-1">*Kartu dapat diunduh jika jadwal sudah diterbitkan dan
-                                    berkas fisik telah diserahkan ke Petugas Admisi Pascasarjana - Gedung Pascasarjana ULM
-                                    Banjarmasin.</p>
                             <?php endif; ?>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Personal Info -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-6">Data Pribadi</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500">Tempat, Tanggal Lahir</label>
-                            <p class="mt-1 text-gray-900 font-medium">
-                                <?php echo htmlspecialchars($participant['tempat_lahir']); ?>,
-                                <?php echo formatDateIndo($participant['tgl_lahir']); ?>
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500">Nomor HP / WhatsApp</label>
-                            <p class="mt-1 text-gray-900 font-medium">
-                                <?php echo htmlspecialchars($participant['no_hp']); ?>
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500">Alamat</label>
-                            <p class="mt-1 text-gray-900 font-medium">
-                                <?php echo htmlspecialchars($participant['alamat_ktp']); ?>
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500">Asal Perguruan Tinggi (S1)</label>
-                            <p class="mt-1 text-gray-900 font-medium">
-                                <?php echo htmlspecialchars($participant['s1_perguruan_tinggi']); ?>
-                                (<?php echo htmlspecialchars($participant['s1_prodi']); ?>)
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Berkas Fisik -->
-            <div x-show="activeTab === 'berkas'" style="display: none;">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                    <?php
-                    $statusFisik = !empty($verification) ? ($verification['status_verifikasi_fisik'] ?? 'pending') : 'pending';
-                    $icon = 'fa-hourglass-half';
-                    $color = 'text-yellow-500';
-                    $bg = 'bg-yellow-50';
-                    $label = 'Belum Diverifikasi';
-                    $subtext = 'Berkas fisik Anda belum diserahkan atau masih dalam antrean verifikasi petugas.';
-
-                    if ($statusFisik === 'lengkap') {
-                        $icon = 'fa-check-circle';
-                        $color = 'text-green-500';
-                        $bg = 'bg-green-50';
-                        $label = 'Lengkap / Terverifikasi';
-                        $subtext = 'Semua berkas fisik Anda telah diverifikasi dan dinyatakan lengkap.';
-                    } elseif ($statusFisik === 'tidak_lengkap') {
-                        $icon = 'fa-times-circle';
-                        $color = 'text-red-500';
-                        $bg = 'bg-red-50';
-                        $label = 'Tidak Lengkap / Perlu Perbaikan';
-                        $subtext = 'Terdapat berkas yang belum lengkap atau perlu diperbaiki. Silakan cek catatan di bawah.';
-                    }
-                    ?>
-
-                    <div class="inline-flex items-center justify-center h-24 w-24 rounded-full <?php echo $bg; ?> mb-6">
-                        <i class="fas <?php echo $icon; ?> <?php echo $color; ?> text-4xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2"><?php echo $label; ?></h2>
-                    <p class="text-gray-500 max-w-lg mx-auto">
-                        <?php echo $subtext; ?>
-                    </p>
-
-                    <?php if (!empty($verification) && !empty($verification['catatan_admin'])): ?>
-                        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-2xl mx-auto text-left">
-                            <h4 class="font-bold text-gray-800 mb-1"><i
-                                    class="fas fa-sticky-note mr-2 text-gray-400"></i>Catatan Verifikator:</h4>
-                            <p class="text-gray-700">
-                                <?php echo nl2br(htmlspecialchars($verification['catatan_admin'])); ?>
-                            </p>
+                    <?php else: ?>
+                        <div class="flex-grow flex items-center justify-center text-center p-4">
+                            <p class="text-gray-500">Jadwal ujian belum tersedia.</p>
                         </div>
                     <?php endif; ?>
                 </div>
-            </div>
 
-            <!-- Tab: Berita -->
-            <div x-show="activeTab === 'berita'" style="display: none;">
-                <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Loaded via AJAX -->
-                    <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 text-gray-500">
-                        <i class="fas fa-spinner fa-spin mr-2"></i> Memuat Berita...
+                <!-- Downloads -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+                    <div class="flex items-center mb-4">
+                        <div
+                            class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600 mr-3">
+                            <i class="fas fa-download text-lg"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Unduhan</h3>
+                    </div>
+                    <div class="space-y-3 flex-grow">
+                        <a href="/participant/formulir" target="_blank"
+                            class="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-file-alt text-gray-400 mr-3"></i> <span
+                                class="font-medium text-gray-700">Formulir Pendaftaran</span>
+                        </a>
+                        <?php if ($canDownload): ?>
+                            <a href="/participant/exam-card" target="_blank"
+                                class="flex items-center p-3 border-l-4 border-l-blue-500 border rounded-lg hover:bg-gray-50 transition-colors bg-blue-50 border-gray-100">
+                                <i class="fas fa-id-card text-blue-500 mr-3"></i> <span
+                                    class="font-bold text-blue-700">Kartu Tanda Peserta</span>
+                            </a>
+                        <?php else: ?>
+                            <div
+                                class="flex items-center p-3 border border-gray-200 rounded-lg bg-gray-50 opacity-60 cursor-not-allowed">
+                                <i class="fas fa-lock text-gray-400 mr-3"></i> <span class="font-medium text-gray-500">Kartu
+                                    Ujian Belum Tersedia</span>
+                            </div>
+                            <p class="text-xs text-red-500 mt-1">*Kartu dapat diunduh jika jadwal sudah diterbitkan dan
+                                berkas fisik telah diserahkan ke Petugas Admisi Pascasarjana - Gedung Pascasarjana ULM
+                                Banjarmasin.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Hasil Seleksi -->
-            <div x-show="activeTab === 'hasil'" style="display: none;">
-                <?php
-                $hasil = $participant['hasil_seleksi'] ?? 'belum_ada';
-                if ($hasil == 'belum_ada'):
-                    ?>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                        <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gray-100 mb-6">
-                            <i class="fas fa-clock text-gray-400 text-3xl"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-gray-900 mb-2">Belum Ada Pengumuman</h2>
-                        <p class="text-gray-500">Hasil seleksi belum dimumumkan. Silakan cek secara berkala.</p>
+            <!-- Personal Info -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-6">Data Pribadi</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Tempat, Tanggal Lahir</label>
+                        <p class="mt-1 text-gray-900 font-medium">
+                            <?php echo htmlspecialchars($participant['tempat_lahir']); ?>,
+                            <?php echo formatDateIndo($participant['tgl_lahir']); ?>
+                        </p>
                     </div>
-                <?php else:
-                    $hColor = 'text-gray-800';
-                    $hBg = 'bg-gray-100';
-                    $hIcon = 'fa-info-circle';
-                    $hText = 'Belum Ada';
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Nomor HP / WhatsApp</label>
+                        <p class="mt-1 text-gray-900 font-medium">
+                            <?php echo htmlspecialchars($participant['no_hp']); ?>
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Alamat</label>
+                        <p class="mt-1 text-gray-900 font-medium">
+                            <?php echo htmlspecialchars($participant['alamat_ktp']); ?>
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Asal Perguruan Tinggi (S1)</label>
+                        <p class="mt-1 text-gray-900 font-medium">
+                            <?php echo htmlspecialchars($participant['s1_perguruan_tinggi']); ?>
+                            (<?php echo htmlspecialchars($participant['s1_prodi']); ?>)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    if ($hasil == 'lulus') {
-                        $hColor = 'text-green-600';
-                        $hBg = 'bg-green-50';
-                        $hIcon = 'fa-graduation-cap';
-                        $hText = 'LULUS SELEKSI';
-                    } elseif ($hasil == 'tidak_lulus') {
-                        $hColor = 'text-red-600';
-                        $hBg = 'bg-red-50';
-                        $hIcon = 'fa-times-circle';
-                        $hText = 'TIDAK LULUS';
-                    } elseif ($hasil == 'cadangan') {
-                        $hColor = 'text-yellow-600';
-                        $hBg = 'bg-yellow-50';
-                        $hIcon = 'fa-exclamation-circle';
-                        $hText = 'CADANGAN';
-                    }
-                    ?>
-                    <div
-                        class="bg-white rounded-xl shadow-lg border-2 <?php echo ($hasil == 'lulus' ? 'border-green-500' : ($hasil == 'tidak_lulus' ? 'border-red-500' : 'border-yellow-500')); ?> overflow-hidden">
-                        <div
-                            class="<?php echo $hBg; ?> p-8 text-center border-b <?php echo ($hasil == 'lulus' ? 'border-green-100' : ($hasil == 'tidak_lulus' ? 'border-red-100' : 'border-yellow-100')); ?>">
-                            <i class="fas <?php echo $hIcon; ?> <?php echo $hColor; ?> text-6xl mb-4"></i>
-                            <h2 class="text-3xl font-extrabold <?php echo $hColor; ?> tracking-tight"><?php echo $hText; ?>
-                            </h2>
-                            <p
-                                class="mt-2 text-<?php echo ($hasil == 'lulus' ? 'green' : ($hasil == 'tidak_lulus' ? 'red' : 'yellow')); ?>-800 font-medium">
-                                Program Studi <?php echo htmlspecialchars($participant['nama_prodi']); ?>
-                            </p>
-                        </div>
-                        <div class="p-8">
-                            <?php if (!empty($participant['hasil_seleksi_date'])): ?>
-                                <p class="text-center text-gray-500 text-sm mb-6">Ditetapkan pada:
-                                    <?php echo formatDateIndo($participant['hasil_seleksi_date']); ?>
-                                </p>
-                            <?php endif; ?>
+        <!-- Tab: Berkas Fisik -->
+        <div x-show="activeTab === 'berkas'" style="display: none;">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <?php
+                $statusFisik = !empty($verification) ? ($verification['status_verifikasi_fisik'] ?? 'pending') : 'pending';
+                $icon = 'fa-hourglass-half';
+                $color = 'text-yellow-500';
+                $bg = 'bg-yellow-50';
+                $label = 'Belum Diverifikasi';
+                $subtext = 'Berkas fisik Anda belum diserahkan atau masih dalam antrean verifikasi petugas.';
 
-                            <?php if (!empty($participant['hasil_seleksi_note'])): ?>
-                                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                                    <h4 class="font-bold text-gray-900 mb-2">Keterangan / Keputusan:</h4>
-                                    <p class="text-gray-700 leading-relaxed">
-                                        <?php echo nl2br(htmlspecialchars($participant['hasil_seleksi_note'])); ?>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
+                if ($statusFisik === 'lengkap') {
+                    $icon = 'fa-check-circle';
+                    $color = 'text-green-500';
+                    $bg = 'bg-green-50';
+                    $label = 'Lengkap / Terverifikasi';
+                    $subtext = 'Semua berkas fisik Anda telah diverifikasi dan dinyatakan lengkap.';
+                } elseif ($statusFisik === 'tidak_lengkap') {
+                    $icon = 'fa-times-circle';
+                    $color = 'text-red-500';
+                    $bg = 'bg-red-50';
+                    $label = 'Tidak Lengkap / Perlu Perbaikan';
+                    $subtext = 'Terdapat berkas yang belum lengkap atau perlu diperbaiki. Silakan cek catatan di bawah.';
+                }
+                ?>
 
-                            <?php if ($hasil == 'lulus'): ?>
-                                <div class="mt-8 text-center">
-                                    <p class="mb-4 text-gray-600">Silakan lakukan daftar ulang sesuai instruksi di bawah ini.
-                                    </p>
-                                    <button onclick="openGuideModal()"
-                                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                                        <i class="fas fa-book mr-2"></i> Lihat Panduan Daftar Ulang
-                                    </button>
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                <div class="inline-flex items-center justify-center h-24 w-24 rounded-full <?php echo $bg; ?> mb-6">
+                    <i class="fas <?php echo $icon; ?> <?php echo $color; ?> text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2"><?php echo $label; ?></h2>
+                <p class="text-gray-500 max-w-lg mx-auto">
+                    <?php echo $subtext; ?>
+                </p>
+
+                <?php if (!empty($verification) && !empty($verification['catatan_admin'])): ?>
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-2xl mx-auto text-left">
+                        <h4 class="font-bold text-gray-800 mb-1"><i
+                                class="fas fa-sticky-note mr-2 text-gray-400"></i>Catatan Verifikator:</h4>
+                        <p class="text-gray-700">
+                            <?php echo nl2br(htmlspecialchars($verification['catatan_admin'])); ?>
+                        </p>
                     </div>
                 <?php endif; ?>
             </div>
-
         </div>
+
+        <!-- Tab: Berita -->
+        <div x-show="activeTab === 'berita'" style="display: none;">
+            <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loaded via AJAX -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 text-gray-500">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat Berita...
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Hasil Seleksi -->
+        <div x-show="activeTab === 'hasil'" style="display: none;">
+            <?php
+            $hasil = $participant['hasil_seleksi'] ?? 'belum_ada';
+            if ($hasil == 'belum_ada'):
+                ?>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                    <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gray-100 mb-6">
+                        <i class="fas fa-clock text-gray-400 text-3xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Belum Ada Pengumuman</h2>
+                    <p class="text-gray-500">Hasil seleksi belum dimumumkan. Silakan cek secara berkala.</p>
+                </div>
+            <?php else:
+                $hColor = 'text-gray-800';
+                $hBg = 'bg-gray-100';
+                $hIcon = 'fa-info-circle';
+                $hText = 'Belum Ada';
+
+                if ($hasil == 'lulus') {
+                    $hColor = 'text-green-600';
+                    $hBg = 'bg-green-50';
+                    $hIcon = 'fa-graduation-cap';
+                    $hText = 'LULUS SELEKSI';
+                } elseif ($hasil == 'tidak_lulus') {
+                    $hColor = 'text-red-600';
+                    $hBg = 'bg-red-50';
+                    $hIcon = 'fa-times-circle';
+                    $hText = 'TIDAK LULUS';
+                } elseif ($hasil == 'cadangan') {
+                    $hColor = 'text-yellow-600';
+                    $hBg = 'bg-yellow-50';
+                    $hIcon = 'fa-exclamation-circle';
+                    $hText = 'CADANGAN';
+                }
+                ?>
+                <div
+                    class="bg-white rounded-xl shadow-lg border-2 <?php echo ($hasil == 'lulus' ? 'border-green-500' : ($hasil == 'tidak_lulus' ? 'border-red-500' : 'border-yellow-500')); ?> overflow-hidden">
+                    <div
+                        class="<?php echo $hBg; ?> p-8 text-center border-b <?php echo ($hasil == 'lulus' ? 'border-green-100' : ($hasil == 'tidak_lulus' ? 'border-red-100' : 'border-yellow-100')); ?>">
+                        <i class="fas <?php echo $hIcon; ?> <?php echo $hColor; ?> text-6xl mb-4"></i>
+                        <h2 class="text-3xl font-extrabold <?php echo $hColor; ?> tracking-tight"><?php echo $hText; ?>
+                        </h2>
+                        <p
+                            class="mt-2 text-<?php echo ($hasil == 'lulus' ? 'green' : ($hasil == 'tidak_lulus' ? 'red' : 'yellow')); ?>-800 font-medium">
+                            Program Studi <?php echo htmlspecialchars($participant['nama_prodi']); ?>
+                        </p>
+                    </div>
+                    <div class="p-8">
+                        <?php if (!empty($participant['hasil_seleksi_date'])): ?>
+                            <p class="text-center text-gray-500 text-sm mb-6">Ditetapkan pada:
+                                <?php echo formatDateIndo($participant['hasil_seleksi_date']); ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if (!empty($participant['hasil_seleksi_note'])): ?>
+                            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                <h4 class="font-bold text-gray-900 mb-2">Keterangan / Keputusan:</h4>
+                                <p class="text-gray-700 leading-relaxed">
+                                    <?php echo nl2br(htmlspecialchars($participant['hasil_seleksi_note'])); ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($hasil == 'lulus'): ?>
+                            <div class="mt-8 text-center">
+                                <p class="mb-4 text-gray-600">Silakan lakukan daftar ulang sesuai instruksi di bawah ini.
+                                </p>
+                                <button onclick="openGuideModal()"
+                                    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                    <i class="fas fa-book mr-2"></i> Lihat Panduan Daftar Ulang
+                                </button>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+
     </div>
+</div>
 </div>
 
 <!-- News Detail Modal -->

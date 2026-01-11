@@ -1,0 +1,89 @@
+{
+    "status": "success",
+    "db_path": "\/var\/www\/html\/storage\/database.sqlite",
+    "file_size": 1015808,
+    "tables": [
+        "users",
+        "sqlite_sequence",
+        "participants",
+        "settings",
+        "semesters",
+        "exam_rooms",
+        "exam_sessions",
+        "exam_attendances",
+        "sqlite_stat1",
+        "document_verifications",
+        "email_configurations",
+        "email_templates",
+        "email_reminders",
+        "email_logs",
+        "update_logs",
+        "assessment_components",
+        "assessment_scores",
+        "prodi_configs",
+        "prodi_quotas",
+        "news",
+        "guides",
+        "reregistrations",
+        "surveys",
+        "survey_questions",
+        "survey_responses",
+        "survey_answers"
+    ],
+    "participants_exists": true,
+    "participants_count": 1141,
+    "user_count": 14,
+    "semesters": [
+        {
+            "id": 2,
+            "kode": "20252-0",
+            "nama": "Genap 2025\/2026",
+            "is_active": 1,
+            "created_at": "2026-01-02 03:22:22",
+            "updated_at": "2026-01-02 03:22:22",
+            "periode": 0
+        },
+        {
+            "id": 3,
+            "kode": "20251-1",
+            "nama": "Ganjil 2025\/2026",
+            "is_active": 0,
+            "created_at": "2026-01-02 13:29:26",
+            "updated_at": "2026-01-02 13:29:26",
+            "periode": 1
+        },
+        {
+            "id": 4,
+            "kode": "20251-2",
+            "nama": "Ganjil 2025\/2026",
+            "is_active": 0,
+            "created_at": "2026-01-02 14:11:25",
+            "updated_at": "2026-01-02 14:11:25",
+            "periode": 2
+        }
+    ],
+    "active_semester": {
+        "id": 2,
+        "kode": "20252-0",
+        "nama": "Genap 2025\/2026",
+        "is_active": 1,
+        "created_at": "2026-01-02 03:22:22",
+        "updated_at": "2026-01-02 03:22:22",
+        "periode": 0
+    },
+    "participants_by_semester": [
+        {
+            "semester_id": 2,
+            "total": 101
+        },
+        {
+            "semester_id": 3,
+            "total": 403
+        },
+        {
+            "semester_id": 4,
+            "total": 637
+        }
+    ],
+    "integrity": "ok"
+}

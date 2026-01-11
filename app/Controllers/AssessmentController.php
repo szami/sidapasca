@@ -539,6 +539,14 @@ class AssessmentController
             }
         }
 
+        // PROTECT TPA COMPONENTS: Only Superadmin can delete TPA components
+        if ($comp['type'] === 'TPA') {
+            if (!\App\Utils\RoleHelper::isSuperadmin()) {
+                header('Location: /admin/assessment/components?error=unauthorized_tpa_deletion&msg=Hanya Superadmin yang dapat menghapus komponen TPA');
+                exit;
+            }
+        }
+
         // Get affected participants (those who have scores for this component)
         $affectedParticipants = $db->query("SELECT DISTINCT participant_id FROM assessment_scores WHERE component_id = ?")->bind($id)->fetchAll();
 
@@ -584,6 +592,45 @@ class AssessmentController
     }
 
     // --- Score Input ---
+
+    public function tpaScores()
+    {
+        $this->checkAuth();
+
+        $semesterId = Request::get('semester_id') ?? Semester::getActive()['id'] ?? null;
+        $activeSemester = $semesterId ? (new Semester())->find($semesterId) : Semester::getActive();
+
+        // 1. Get Participants for TPA Input (Filter: Exam Ready / Scheduled)
+        // We want participants who have a schedule (ruang_ujian IS NOT NULL) or at least paid?
+        // Usually TPA input happens after Exam.
+        // Let's filter by semester.
+        $db = Database::connection();
+
+        // Fetch components for TPA (usually global, prodi_id IS NULL)
+        $tpaComponents = $db->query("SELECT * FROM assessment_components WHERE type = 'TPA' ORDER BY id ASC")->fetchAll();
+
+        // 2. Get Prodi List (Only needed if NOT Admin Prodi)
+        $prodiList = [];
+        $isAdminProdi = \App\Utils\RoleHelper::isAdminProdi();
+
+        if (!$isAdminProdi) {
+            $prodiList = $db->query("SELECT DISTINCT nama_prodi FROM participants WHERE semester_id = ? AND nama_prodi IS NOT NULL ORDER BY nama_prodi ASC")->bind($semesterId)->fetchAll();
+        }
+
+        // Count Participants
+        // $total = $db->query("SELECT COUNT(*) as count FROM participants WHERE semester_id = ? AND status_berkas = 'lulus' AND status_pembayaran = 1")->bind($semesterId)->fetchAssoc()['count'];
+
+        // DataTables API will handle the heavy lifting for list, 
+        // but we need to pass TPA Components to the View for the Modal.
+
+        echo View::render('admin.assessment.tpa', [
+            'currentSemester' => $activeSemester['id'] ?? null,
+            'semesterName' => $activeSemester['nama'] ?? '-',
+            'tpaComponents' => $tpaComponents,
+            'prodiList' => $prodiList,
+            'isAdminProdi' => $isAdminProdi
+        ]);
+    }
 
     public function scores()
     {
@@ -635,6 +682,22 @@ class AssessmentController
         $semesterId = Request::get('semester_id') ?: ($activeSemester['id'] ?? null);
         $prodiFilter = Request::get('prodi') ?? 'all';
 
+        // Enforce Prodi Filter if Admin Prodi
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            // We need to know the 'nama_prodi' string that corresponds to the admin's prodi_id (code)
+            // Because participants table stores 'nama_prodi'.
+            // Best way: Query 'prodi_quotas' or just use LIKE?
+            // Or maybe participants table has 'kode_prodi'? Yes it does.
+
+            // Let's use kode_prodi filter instead!
+            // BUT DataTables View currently sends 'nama_prodi' in prompt.
+            // Ideally we filter by kode_prodi = $_SESSION['admin_prodi_id']
+
+            $prodiFilter = 'RESTRICTED_BY_SESSION';
+        }
+
+        $tpaFilter = Request::get('tpa_filter') ?? 'all';
+
         $columns = [
             0 => 'id',
             1 => 'nomor_peserta',
@@ -649,10 +712,44 @@ class AssessmentController
         // Base WHERE
         $whereClause = "WHERE p.semester_id = '$semesterId' AND p.status_berkas = 'lulus' AND p.status_pembayaran = 1";
 
-        // Prodi Filter
-        if ($prodiFilter !== 'all') {
+        // Prodi Filter Logic
+        if ($prodiFilter === 'RESTRICTED_BY_SESSION') {
+            $adminProdiCode = $_SESSION['admin_prodi_id'];
+            $whereClause .= " AND p.kode_prodi = '$adminProdiCode'";
+        } elseif ($prodiFilter !== 'all') {
             $prodiFilterEscaped = str_replace("'", "''", $prodiFilter);
             $whereClause .= " AND p.nama_prodi = '$prodiFilterEscaped'";
+        }
+
+        // TPA Filter
+        // Get TPA thresholds first for Filter usage
+        $thresholdS2 = floatval(\App\Models\Setting::get('tpa_threshold_s2', 450));
+        $thresholdS3 = floatval(\App\Models\Setting::get('tpa_threshold_s3', 500));
+
+        // Provider Filter
+        $providerFilter = Request::get('provider_filter') ?? 'all';
+        if ($providerFilter !== 'all') {
+            $providerEscaped = str_replace("'", "''", $providerFilter);
+            if ($providerEscaped === 'PPKPP ULM') {
+                // Include NULL as PPKPP ULM is default?
+                $whereClause .= " AND (p.tpa_provider = 'PPKPP ULM' OR p.tpa_provider IS NULL)";
+            } else {
+                $whereClause .= " AND p.tpa_provider = '$providerEscaped'";
+            }
+        }
+
+        if ($tpaFilter === 'empty') {
+            $whereClause .= " AND (p.nilai_tpa_total IS NULL OR p.nilai_tpa_total = 0)";
+        } elseif ($tpaFilter === 'below_min') {
+            // Complex logic for S2 vs S3 threshold
+            // S3 detection: 'S3' or 'Doktor' in nama_prodi or 'S3' in kode_prodi
+            $s3Condition = "(p.nama_prodi LIKE '%S3%' OR p.nama_prodi LIKE '%Doktor%' OR p.kode_prodi LIKE '%S3%')";
+
+            $whereClause .= " AND p.nilai_tpa_total > 0 AND (
+                ($s3Condition AND p.nilai_tpa_total < $thresholdS3)
+                OR
+                (NOT $s3Condition AND p.nilai_tpa_total < $thresholdS2)
+            )";
         }
 
         // Search
@@ -676,6 +773,7 @@ class AssessmentController
         $thresholdS3 = floatval(\App\Models\Setting::get('tpa_threshold_s3', 500));
 
         $sql = "SELECT p.*, 
+                p.tpa_provider, p.tpa_certificate_url,
                 (SELECT SUM(score) FROM assessment_scores s JOIN assessment_components c ON s.component_id = c.id WHERE s.participant_id = p.id AND c.type = 'TPA') as tpa_score_saved,
                 (SELECT SUM(score) FROM assessment_scores s JOIN assessment_components c ON s.component_id = c.id WHERE s.participant_id = p.id AND c.type = 'BIDANG') as bidang_score_saved
                 FROM participants p $whereClause 
@@ -743,6 +841,54 @@ class AssessmentController
             $db->query("UPDATE participants SET status_tes_bidang = ? WHERE id = ?")->bind($status, $participantId)->execute();
         }
 
+        // --- Handle TPA Provider & Certificate ---
+        if (isset($scores['tpa_provider'])) {
+            // SECURITY: Block Admin Prodi from changing TPA
+            if (\App\Utils\RoleHelper::isAdminProdi()) {
+                http_response_code(403);
+                echo "Unauthorized: Admin Prodi cannot change TPA scores.";
+                exit;
+            }
+
+            $provider = $scores['tpa_provider'];
+            $db->query("UPDATE participants SET tpa_provider = ? WHERE id = ?")->bind($provider, $participantId)->execute();
+
+            // Handle Certificate Upload
+            if (isset($_FILES['tpa_certificate']) && $_FILES['tpa_certificate']['error'] === UPLOAD_ERR_OK) {
+                // Get Participant Semester for Storage Organization
+                $pSem = $db->query("SELECT semester_id FROM participants WHERE id = ?")->bind($participantId)->fetchAssoc();
+                $semId = $pSem['semester_id'] ?? 'unknown'; // Fallback if missing
+
+                $file = $_FILES['tpa_certificate'];
+                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                $filename = 'tpa_cert_' . $participantId . '_' . time() . '.' . $ext;
+
+                // Storage Path: storage/{semester_id}/documents/tpa/
+                // Note: __DIR__ is app/Controllers, so storage is at ../../storage
+                $uploadDir = __DIR__ . '/../../storage/' . $semId . '/documents/tpa/';
+
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+
+                if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+                    $db->query("UPDATE participants SET tpa_certificate_url = ? WHERE id = ?")->bind($filename, $participantId)->execute();
+                }
+            }
+
+            // If Provider is NOT PPKPP ULM, we take the manual final score
+            if ($provider !== 'PPKPP ULM' && isset($scores['manual_tpa_score'])) {
+                $manualScore = floatval($scores['manual_tpa_score']);
+                $db->query("UPDATE participants SET nilai_tpa_total = ? WHERE id = ?")->bind($manualScore, $participantId)->execute();
+
+                // We should also clear any specific TPA component scores to avoid double counting or confusion
+                // But keeping them might be safer as history? 
+                // Let's decided: If using external, we assume NO component scores matter. 
+                // But to reset components, we'd need to fetch TPA components and delete scores.
+                // For now, let's just rely on nilai_tpa_total being authoritative.
+            }
+        }
+
         $totalTPA = 0;
         $totalBidang = 0;
 
@@ -759,8 +905,15 @@ class AssessmentController
                 // Permission Check:
                 // TPA: Admin/Superadmin ONLY.
                 // Bidang: Admin/Superadmin/Prodi.
-                if ($comp['type'] === 'TPA' && \App\Utils\RoleHelper::isAdminProdi()) {
-                    continue; // Skip saving TPA if user is prodi admin
+                if ($comp['type'] === 'TPA') {
+                    if (\App\Utils\RoleHelper::isAdminProdi())
+                        continue; // Skip if prodi admin
+
+                    // If TPA Provider is External, we SKIP saving component scores to avoid overriding the manual total
+                    // (Assuming the UI hides them, but backend should verify)
+                    if (isset($scores['tpa_provider']) && $scores['tpa_provider'] !== 'PPKPP ULM') {
+                        continue;
+                    }
                 }
 
                 // Save Score (Upsert logic or Delete-Insert)
@@ -786,10 +939,24 @@ class AssessmentController
         // Note: For partial updates, we should re-calculate total from DB.
 
         // Re-calc Total TPA (Sum always)
-        $tpaScores = $db->query("SELECT s.score FROM assessment_scores s JOIN assessment_components c ON s.component_id = c.id WHERE s.participant_id = ? AND c.type = 'TPA'")->bind($participantId)->fetchAll();
-        $tpaSum = 0;
-        foreach ($tpaScores as $s) {
-            $tpaSum += $s['score'];
+        // ONLY if Provider is PPKPP ULM (or not set)
+        // If Provider is External, we TRUST the manual total we just set above or exists in DB.
+        $pCheck = $db->query("SELECT tpa_provider, nilai_tpa_total FROM participants WHERE id = ?")->bind($participantId)->fetchAssoc();
+        $tpaSum = 0; // Initialize
+
+        if (!$pCheck || $pCheck['tpa_provider'] === 'PPKPP ULM') {
+            $tpaScores = $db->query("SELECT s.score FROM assessment_scores s JOIN assessment_components c ON s.component_id = c.id WHERE s.participant_id = ? AND c.type = 'TPA'")->bind($participantId)->fetchAll();
+            foreach ($tpaScores as $s) {
+                $tpaSum += $s['score'];
+            }
+            $db->query("UPDATE participants SET nilai_tpa_total = ? WHERE id = ?")->bind($tpaSum, $participantId)->execute();
+        } else {
+            // Use existing manual value for external providers
+            $tpaSum = $pCheck['nilai_tpa_total'] ?? 0;
+            // Note: If we just updated it above (lines 806-837), pCheck might be stale if triggered before commit?
+            // Actually, pCheck query happens NOW, so it should see the update if transaction committed or same connection.
+            // But wait, line 829 updates `nilai_tpa_total` manually.
+            // So fetching it here is correct.
         }
 
         // Re-calc Total Bidang (Weighted if weights exist, else Sum)
@@ -848,9 +1015,15 @@ class AssessmentController
         }
 
         // Redirect based on source
+        // Redirect based on source
         $from = Request::get('from');
-        if ($from === 'bidang' || \App\Utils\RoleHelper::isAdminProdi()) {
+        if ($from === 'bidang') {
             header("Location: /admin/assessment/bidang?success=saved");
+        } elseif ($from === 'tpa') {
+            header("Location: /admin/assessment/tpa?success=saved");
+        } elseif (\App\Utils\RoleHelper::isAdminProdi()) {
+            // Fallback for Admin Prodi
+            header("Location: /admin/assessment/tpa?success=saved");
         } else {
             header("Location: /admin/assessment/scores?success=saved&participant=$participantId");
         }
@@ -863,11 +1036,17 @@ class AssessmentController
 
         $db = Database::connection();
         $scores = $db->query("SELECT component_id, score FROM assessment_scores WHERE participant_id = ?")->bind($participantId)->fetchAll();
-        $participant = $db->query("SELECT status_tes_bidang FROM participants WHERE id = ?")->bind($participantId)->fetchAssoc();
+        $participant = $db->query("SELECT status_tes_bidang, tpa_provider, tpa_certificate_url, nilai_tpa_total FROM participants WHERE id = ?")->bind($participantId)->fetchAssoc();
 
         // Return JSON
         header('Content-Type: application/json');
-        echo json_encode(['scores' => $scores, 'status_tes_bidang' => $participant['status_tes_bidang'] ?? null]);
+        echo json_encode([
+            'scores' => $scores,
+            'status_tes_bidang' => $participant['status_tes_bidang'] ?? null,
+            'tpa_provider' => $participant['tpa_provider'] ?? 'PPKPP ULM',
+            'tpa_certificate_url' => $participant['tpa_certificate_url'] ?? null,
+            'nilai_tpa_total' => $participant['nilai_tpa_total'] ?? 0
+        ]);
         exit;
     }
 
@@ -1310,7 +1489,9 @@ class AssessmentController
             }
         }
 
-        $db->query("UPDATE participants SET nilai_tpa_total = ?, nilai_bidang_total = ? WHERE id = ?")
+        // Update value. ALWAYS set tpa_provider = 'PPKPP ULM' if we are calculating from components.
+        // Because Components = Internal Test.
+        $db->query("UPDATE participants SET nilai_tpa_total = ?, nilai_bidang_total = ?, tpa_provider = COALESCE(tpa_provider, 'PPKPP ULM') WHERE id = ?")
             ->bind($tpaTotal, $bidangSum, $participantId)
             ->execute();
     }
@@ -1352,6 +1533,212 @@ class AssessmentController
      * Import Keputusan Akhir from Excel
      * Reads NO PESERTA (Column B) and KEPUTUSAN AKHIR (Column K)
      */
+    public function importTPA()
+    {
+        $this->checkAuth();
+
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] != 0) {
+            header('Location: /admin/assessment/tpa?error=upload_failed');
+            exit;
+        }
+
+        $file = $_FILES['file']['tmp_name'];
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+        } catch (\Exception $e) {
+            header('Location: /admin/assessment/tpa?error=invalid_file');
+            exit;
+        }
+
+        $db = Database::connection();
+        $updatedCount = 0;
+
+        // Parse Header (Row 0)
+        $header = array_map(function ($v) {
+            return strtolower(trim($v ?? ''));
+        }, $rows[0] ?? []);
+
+        $colIndexNum = array_search('nomor peserta', $header);
+        if ($colIndexNum === false)
+            $colIndexNum = array_search('no peserta', $header);
+
+        if ($colIndexNum === false) {
+            header('Location: /admin/assessment/tpa?error=format_invalid&msg=Kolom Nomor Peserta tidak ditemukan');
+            exit;
+        }
+
+        // Map Component Names to IDs for TPA
+        $tpaComponents = $db->query("SELECT id, nama_komponen FROM assessment_components WHERE type = 'TPA'")->fetchAll();
+        $compMap = [];
+        foreach ($tpaComponents as $comp) {
+            $name = strtolower($comp['nama_komponen']);
+            foreach ($header as $idx => $h) {
+                if (strpos($h, $name) !== false) {
+                    $compMap[$idx] = $comp['id'];
+                }
+            }
+        }
+
+        // Check for "Nilai TPA" (Direct Import)
+        $colIndexTotal = array_search('nilai tpa', $header);
+        if ($colIndexTotal === false)
+            $colIndexTotal = array_search('total tpa', $header);
+
+        // Check for "Penyelenggara" column
+        $colIndexProvider = array_search('penyelenggara', $header);
+        if ($colIndexProvider === false)
+            $colIndexProvider = array_search('provider', $header);
+
+        // Process Rows
+        for ($i = 1; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            $nomorPeserta = trim($row[$colIndexNum] ?? '');
+
+            if (empty($nomorPeserta))
+                continue;
+
+            $participant = $db->query("SELECT id FROM participants WHERE nomor_peserta = ? LIMIT 1")->bind($nomorPeserta)->fetchAssoc();
+            if (!$participant)
+                continue;
+
+            $participantId = $participant['id'];
+            $isDirectImport = false;
+
+            // 1. Try Direct Total Import
+            if ($colIndexTotal !== false && !empty($row[$colIndexTotal])) {
+                $totalScore = floatval($row[$colIndexTotal]);
+                // Provider: from excel OR default 'External'
+                $provider = ($colIndexProvider !== false && !empty($row[$colIndexProvider]))
+                    ? trim($row[$colIndexProvider])
+                    : 'External';
+
+                $db->query("UPDATE participants SET nilai_tpa_total = ?, tpa_provider = ? WHERE id = ?")
+                    ->bind($totalScore, $provider, $participantId)->execute();
+
+                $updatedCount++;
+                $isDirectImport = true;
+            }
+
+            // 2. If NOT direct import, try Component Import
+            if (!$isDirectImport) {
+                $hasScoreUpdate = false;
+                foreach ($compMap as $idx => $compId) {
+                    $score = floatval($row[$idx] ?? 0);
+                    if ($score > 0) {
+                        $exist = $db->query("SELECT id FROM assessment_scores WHERE participant_id = ? AND component_id = ?")->bind($participantId, $compId)->fetchAssoc();
+                        if ($exist) {
+                            $db->query("UPDATE assessment_scores SET score = ?, created_by = ? WHERE id = ?")
+                                ->bind($score, 'import_cat', $exist['id'])->execute();
+                        } else {
+                            $db->query("INSERT INTO assessment_scores (participant_id, component_id, score, created_by) VALUES (?, ?, ?, ?)")
+                                ->bind($participantId, $compId, $score, 'import_cat')->execute();
+                        }
+                        $hasScoreUpdate = true;
+                    }
+                }
+
+                // Recalculate Total TPA
+                if ($hasScoreUpdate) {
+                    $updatedCount++;
+                    $result = $db->query("SELECT SUM(score) as total, COUNT(*) as count FROM assessment_scores s 
+                                    JOIN assessment_components c ON s.component_id = c.id 
+                                    WHERE s.participant_id = ? AND c.type = 'TPA'")
+                        ->bind($participantId)->fetchAssoc();
+
+                    $sum = floatval($result['total'] ?? 0);
+                    $count = intval($result['count'] ?? 1);
+                    $average = $count > 0 ? round($sum / $count) : 0;
+
+                    $db->query("UPDATE participants SET nilai_tpa_total = ?, tpa_provider = ? WHERE id = ?")
+                        ->bind($average, 'PPKPP ULM', $participantId)->execute();
+                }
+            }
+        }
+
+        header("Location: /admin/assessment/tpa?success=imported&count=$updatedCount");
+        exit;
+    }
+
+    public function exportTPATemplate()
+    {
+        $this->checkAuth();
+
+        $semesterId = Request::get('semester_id') ?? Semester::getActive()['id'] ?? null;
+        $db = Database::connection();
+
+        // 1. Fetch Participants (Status Lulus Berkas & Bayar)
+        $sql = "SELECT p.nomor_peserta, p.nama_lengkap, p.nama_prodi 
+                FROM participants p 
+                WHERE p.semester_id = ? 
+                AND p.status_berkas = 'lulus' 
+                AND p.status_pembayaran = 1
+                ORDER BY p.nama_prodi ASC, p.nama_lengkap ASC";
+
+        $participants = $db->query($sql)->bind($semesterId)->fetchAll();
+
+        // 2. Fetch TPA Components
+        $tpaComponents = $db->query("SELECT * FROM assessment_components WHERE type = 'TPA' ORDER BY id ASC")->fetchAll();
+
+        // 3. Create Spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template TPA');
+
+        // 4. Headers
+        $headers = ['NOMOR PESERTA', 'NAMA', 'PRODI'];
+        $colIndex = 1;
+
+        foreach ($headers as $h) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 1, $h);
+            $sheet->getColumnDimensionByColumn($colIndex)->setAutoSize(true);
+            $colIndex++;
+        }
+
+        // TPA Component Columns
+        foreach ($tpaComponents as $c) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 1, $c['nama_komponen']);
+            $sheet->getColumnDimensionByColumn($colIndex)->setAutoSize(true);
+            $colIndex++;
+        }
+
+        // Add Optional Columns for External Provider
+        $sheet->setCellValueByColumnAndRow($colIndex, 1, 'Nilai TPA (Opsional)');
+        $sheet->getColumnDimensionByColumn($colIndex)->setAutoSize(true);
+        $colIndex++;
+
+        $sheet->setCellValueByColumnAndRow($colIndex, 1, 'Penyelenggara (Opsional)');
+        $sheet->getColumnDimensionByColumn($colIndex)->setAutoSize(true);
+        $colIndex++;
+
+        // Style Header
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex - 1);
+        $sheet->getStyle("A1:{$lastCol}1")->getFont()->setBold(true);
+        $sheet->getStyle("A1:{$lastCol}1")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFCCCCCC');
+
+        // 5. Populate Data
+        $row = 2;
+        foreach ($participants as $p) {
+            $sheet->setCellValue('A' . $row, $p['nomor_peserta']);
+            $sheet->setCellValue('B' . $row, $p['nama_lengkap']);
+            $sheet->setCellValue('C' . $row, $p['nama_prodi']);
+            // Leave score columns empty for input
+            $row++;
+        }
+
+        // Output
+        $filename = 'Template_Input_TPA.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
     public function importFinal()
     {
         $this->checkAuth();
@@ -1417,5 +1804,47 @@ class AssessmentController
             header('Location: /admin/assessment/scores?error=import_error&msg=' . urlencode($e->getMessage()));
             exit;
         }
+    }
+
+    public function tpaCertificate($participantId)
+    {
+        $this->checkAuth();
+
+        $db = Database::connection();
+        $p = $db->query("SELECT semester_id, tpa_certificate_url FROM participants WHERE id = ?")->bind($participantId)->fetchAssoc();
+
+        if (!$p || empty($p['tpa_certificate_url'])) {
+            http_response_code(404);
+            echo "Certificate not found.";
+            exit;
+        }
+
+        $semId = $p['semester_id'] ?? 'unknown';
+        $filename = $p['tpa_certificate_url'];
+
+        // Prevent directory traversal
+        $filename = basename($filename);
+
+        $path = __DIR__ . '/../../storage/' . $semId . '/documents/tpa/' . $filename;
+
+        if (!file_exists($path)) {
+            // Fallback to legacy path for older uploads (Migration support)
+            $legacyPath = __DIR__ . '/../../public/uploads/documents/tpa/' . $filename;
+            if (file_exists($legacyPath)) {
+                $path = $legacyPath;
+            } else {
+                http_response_code(404);
+                echo "File not found on server.";
+                exit;
+            }
+        }
+
+        // Serve File
+        $mime = mime_content_type($path);
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: inline; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
     }
 }

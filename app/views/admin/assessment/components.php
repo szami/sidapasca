@@ -134,12 +134,25 @@ ob_start();
                                     </span>
                                 </td>
                                 <td class="px-4 text-end">
-                                    <a href="/admin/assessment/components/delete/<?php echo $c['id']; ?>"
-                                        class="btn btn-sm btn-outline-danger shadow-sm"
-                                        onclick="return confirm('Yakin hapus? Skor terkait akan ikut terhapus.')"
-                                        title="Hapus" data-toggle="tooltip">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    <?php
+                                    // Protect TPA Deletion: Hide if TPA and NOT Superadmin
+                                    $canDelete = true;
+                                    if ($c['type'] === 'TPA' && !\App\Utils\RoleHelper::isSuperadmin()) {
+                                        $canDelete = false;
+                                    }
+                                    ?>
+
+                                    <?php if ($canDelete): ?>
+                                        <a href="/admin/assessment/components/delete/<?php echo $c['id']; ?>"
+                                            class="btn btn-sm btn-outline-danger shadow-sm"
+                                            onclick="return confirm('Yakin hapus? Skor terkait akan ikut terhapus.')"
+                                            title="Hapus" data-toggle="tooltip">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-muted" title="Protected" data-toggle="tooltip"><i
+                                                class="bi bi-lock-fill"></i></span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

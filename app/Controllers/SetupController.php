@@ -226,7 +226,10 @@ class SetupController
                 // Transaction
                 'transaction_id' => "VARCHAR(50) NULL",
                 'payment_date' => "DATETIME NULL",
-                'payment_method' => "VARCHAR(50) NULL"
+                'payment_method' => "VARCHAR(50) NULL",
+                // TPA External Support
+                'tpa_provider' => "VARCHAR(100) DEFAULT 'PPKPP ULM'",
+                'tpa_certificate_url' => "VARCHAR(255) NULL"
             ];
             foreach ($participantCols as $col => $type) {
                 $ensureColumn('participants', $col, $type);
@@ -247,8 +250,12 @@ class SetupController
                 fakultas TEXT NULL,
                 nama_ruang TEXT NOT NULL,
                 kapasitas INTEGER DEFAULT 0,
+                google_map_link TEXT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
+
+            // Ensure column exists for existing tables
+            $ensureColumn('exam_rooms', 'google_map_link', 'TEXT NULL');
 
             $pdo->exec("CREATE TABLE IF NOT EXISTS exam_sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

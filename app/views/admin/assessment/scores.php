@@ -281,8 +281,8 @@ ob_start();
                         <span class="mr-2 text-muted">Aksi Massal:</span>
                         <button type="button" onclick="bulkSet('L')" class="btn btn-sm btn-success mr-2 shadow-sm"><i
                                 class="bi bi-check-circle"></i> Set Lulus</button>
-                        <button type="button" onclick="bulkSet('TL')"
-                            class="btn btn-sm btn-danger mr-2 shadow-sm"><i class="bi bi-x-circle"></i> Set Tidak
+                        <button type="button" onclick="bulkSet('TL')" class="btn btn-sm btn-danger mr-2 shadow-sm"><i
+                                class="bi bi-x-circle"></i> Set Tidak
                             Lulus</button>
                         <button type="button" onclick="bulkSet('T')" class="btn btn-sm btn-warning shadow-sm"><i
                                 class="bi bi-clock"></i> Set Tunda</button>
@@ -404,13 +404,13 @@ ob_start();
                             else if (status === 'TL') selectClass = 'bg-danger';
                             else if (status === 'T') selectClass = 'bg-warning text-dark';
                             return `
-                                    <select name="decision[${row.id}]" id="sel_${row.id}" onchange="updateDecisionColor(this)" class="custom-select custom-select-sm shadow-sm font-weight-bold text-white ${selectClass}" style="min-width:80px">
-                                        <option value="" class="bg-secondary text-white" ${!status ? 'selected' : ''}>-</option>
-                                        <option value="L" class="bg-success text-white" ${status === 'L' ? 'selected' : ''}>L (Lulus)</option>
-                                        <option value="TL" class="bg-danger text-white" ${status === 'TL' ? 'selected' : ''}>TL (Tidak Lulus)</option>
-                                        <option value="T" class="bg-warning text-dark" ${status === 'T' ? 'selected' : ''}>T (Tertunda)</option>
-                                    </select>
-                                `;
+                                                    <select name="decision[${row.id}]" id="sel_${row.id}" onchange="updateDecisionColor(this)" class="custom-select custom-select-sm shadow-sm font-weight-bold text-white ${selectClass}" style="min-width:80px">
+                                                        <option value="" class="bg-secondary text-white" ${!status ? 'selected' : ''}>-</option>
+                                                        <option value="L" class="bg-success text-white" ${status === 'L' ? 'selected' : ''}>L (Lulus)</option>
+                                                        <option value="TL" class="bg-danger text-white" ${status === 'TL' ? 'selected' : ''}>TL (Tidak Lulus)</option>
+                                                        <option value="T" class="bg-warning text-dark" ${status === 'T' ? 'selected' : ''}>T (Tertunda)</option>
+                                                    </select>
+                                                `;
                         }
                     }
                 ]
@@ -436,7 +436,7 @@ ob_start();
 <div class="modal fade" id="scoreModal" tabindex="-1" role="dialog" aria-labelledby="scoreModalTitle"
     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <form id="scoreForm" action="" method="POST">
+        <form id="scoreForm" action="" method="POST" enctype="multipart/form-data">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="scoreModalTitle">Input Nilai</h5>
@@ -464,7 +464,23 @@ ob_start();
                             <?php if (\App\Utils\RoleHelper::isAdminProdi()): ?>
                                 <div class="alert alert-warning">Admin Prodi tidak dapat mengubah nilai TPA.</div>
                             <?php else: ?>
-                                <div id="tpaInputs">
+                                <!-- Provider Selection -->
+                                <div class="mb-3 row">
+                                    <label class="col-sm-4 col-form-label fw-bold">Penyelenggara TPA</label>
+                                    <div class="col-sm-8">
+                                        <select class="form-control" name="tpa_provider" id="tpa_provider"
+                                            onchange="toggleTPAInputs()">
+                                            <option value="PPKPP ULM">PPKPP ULM (Internal)</option>
+                                            <option value="Bappenas">Bappenas</option>
+                                            <option value="PLTI">PLTI</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Internal (PPKPP) Inputs -->
+                                <div id="tpa_internal_inputs">
+                                    <h6 class="text-muted mb-3 border-bottom pb-2">Rincian Nilai Komponen</h6>
                                     <?php if (empty($tpaComponents)): ?>
                                         <p class="text-muted">Belum ada komponen TPA. Silakan tambahkan di menu Komponen.</p>
                                     <?php else: ?>
@@ -474,12 +490,38 @@ ob_start();
                                                     <?php echo htmlspecialchars($c['nama_komponen']); ?>
                                                 </label>
                                                 <div class="col-sm-8">
-                                                    <input type="number" step="0.01" class="form-control"
+                                                    <input type="number" step="0.01" class="form-control tpa-comp-input"
                                                         name="comp_<?php echo $c['id']; ?>" placeholder="Nilai (0-100)">
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
+                                </div>
+
+                                <!-- External Inputs -->
+                                <div id="tpa_external_inputs" style="display:none">
+                                    <div class="alert alert-light border">
+                                        <i class="fas fa-info-circle text-info"></i> Untuk penyelenggara luar, cukup input
+                                        <strong>Nilai Akhir</strong> dan upload Bukti.
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-4 col-form-label fw-bold">Nilai Akhir TPA</label>
+                                        <div class="col-sm-8">
+                                            <input type="number" step="0.01" class="form-control" name="manual_tpa_score"
+                                                id="manual_tpa_score" placeholder="Total Score">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-4 col-form-label">Upload Sertifikat</label>
+                                        <div class="col-sm-8">
+                                            <input type="file" class="form-control" name="tpa_certificate"
+                                                accept="image/jpeg,image/png,image/jpg">
+                                            <div id="current_cert_link" class="mt-2" style="display:none">
+                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary"><i
+                                                        class="fas fa-eye"></i> Lihat Sertifikat</a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -603,7 +645,8 @@ ob_start();
                     </div>
                     <div class="form-group">
                         <label for="filefinal">Pilih File Excel (.xlsx)</label>
-                        <input type="file" name="file" id="filefinal" class="form-control" required accept=".xlsx, .xls">
+                        <input type="file" name="file" id="filefinal" class="form-control" required
+                            accept=".xlsx, .xls">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -617,6 +660,17 @@ ob_start();
 
 <script>
     var bidangComponents = <?php echo json_encode($bidangComponents); ?>;
+
+    function toggleTPAInputs() {
+        var provider = document.getElementById('tpa_provider').value;
+        if (provider === 'PPKPP ULM') {
+            document.getElementById('tpa_internal_inputs').style.display = 'block';
+            document.getElementById('tpa_external_inputs').style.display = 'none';
+        } else {
+            document.getElementById('tpa_internal_inputs').style.display = 'none';
+            document.getElementById('tpa_external_inputs').style.display = 'block';
+        }
+    }
 
     function openScoreModal(id, name, prodiName) {
         // Show Modal (BS4)
@@ -632,6 +686,10 @@ ob_start();
         // Reset Inputs
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
         document.querySelectorAll('input[name="status_tes_bidang"]').forEach(i => i.checked = false);
+        document.getElementById('tpa_provider').value = 'PPKPP ULM';
+        document.getElementById('manual_tpa_score').value = '';
+        document.getElementById('current_cert_link').style.display = 'none';
+        toggleTPAInputs();
 
         // Populate Bidang Inputs based on Prodi
         var container = document.getElementById('bidangInputs');
@@ -640,12 +698,19 @@ ob_start();
 
         bidangComponents.forEach(function (c) {
             // Logic: Check if c.prodi_id matches prodiName (Name matching)
-            // or if c.prodi_id is null (Global Bidang? Unlikely but possible)
-            // Clean both strings for comparison
+            // c.prodi_id comes from assessment_components table (stored as Name or Code)
+            // prodiName comes from DataTables row (Nama Prodi)
+
             var cProdi = (c.prodi_id || '').trim().toLowerCase();
             var pProdi = (prodiName || '').trim().toLowerCase();
 
-            if (cProdi === pProdi) {
+            // Strict check: Show only if Prodi matches OR if component is Global (empty prodi_id)
+            // Also checking if cProdi is contained in pProdi (e.g. "Magister Manajemen" vs "S2 Manajemen")
+            // But user wants strict isolation: "hanya muncul untuk prodi tersebut"
+
+            var match = (cProdi === '' || cProdi === pProdi);
+
+            if (match) {
                 found = true;
                 var div = document.createElement('div');
                 div.className = 'mb-3 row';
@@ -670,6 +735,20 @@ ob_start();
                 var scores = data.scores || []; // Handle defined structure
                 var status = data.status_tes_bidang;
 
+                // Set Provider & TPA Details
+                var provider = data.tpa_provider || 'PPKPP ULM';
+                document.getElementById('tpa_provider').value = provider;
+
+                if (provider !== 'PPKPP ULM') {
+                    document.getElementById('manual_tpa_score').value = data.nilai_tpa_total;
+                    if (data.tpa_certificate_url) {
+                        var linkDir = document.getElementById('current_cert_link');
+                        linkDir.style.display = 'block';
+                        linkDir.querySelector('a').href = '/uploads/documents/tpa/' + data.tpa_certificate_url;
+                    }
+                }
+                toggleTPAInputs();
+
                 // Set Status
                 if (status === 'lulus') document.getElementById('status_lulus').checked = true;
                 if (status === 'tidak_lulus') document.getElementById('status_tidak').checked = true;
@@ -689,6 +768,15 @@ ob_start();
                 });
             })
             .catch(error => console.error('Error fetching scores:', error));
+
+        // Fetch Participant Detail for Provider & Certificate
+        // We can use the same API if it returns participant data, but the previous one returned just scores structure on GET /scores/get/{id}
+        // Wait, GET /scores/get/{id} returns what? AssessmentController::getScores 
+        // Let's check AssessmentController::getScores implementation.
+        // It returns { scores: [], status_tes_bidang: ... } only probably? 
+        // I need to check usage or just pass data via row object in datatable if possible, 
+        // OR simply fetch from api/assessment/scores with search? No that's inefficient.
+        // BETTER: Update getScores in Controller to return these fields.
     }
     function toggleAll(source) {
         var checkboxes = document.querySelectorAll('.row-checkbox');
