@@ -73,22 +73,27 @@ try {
     $success = false;
     $count = 0;
 
-    // We need to handle two cases:
-    // 1. Original Restored Data: IDs 86-94 -> Target 273-281 (+187)
-    // 2. Intermediate Fix Data: IDs 137-145 -> Target 273-281 (+136)
+    // We need to handle three cases now to be absolutely sure:
+    // 1. Original Restored Data: IDs 86-94 -> Target 290-298 (+204)
+    // 2. Fix v1 Data: IDs 137-145 -> Target 290-298 (+153)
+    // 3. Fix v2 Data: IDs 273-281 -> Target 290-298 (+17)
 
     $checkSqlA = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 86 AND 94";
-    $updateSqlA = "UPDATE survey_answers SET question_id = question_id + 187 WHERE question_id BETWEEN 86 AND 94";
+    $updateSqlA = "UPDATE survey_answers SET question_id = question_id + 204 WHERE question_id BETWEEN 86 AND 94";
 
     $checkSqlB = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 137 AND 145";
-    $updateSqlB = "UPDATE survey_answers SET question_id = question_id + 136 WHERE question_id BETWEEN 137 AND 145";
+    $updateSqlB = "UPDATE survey_answers SET question_id = question_id + 153 WHERE question_id BETWEEN 137 AND 145";
+
+    $checkSqlC = "SELECT COUNT(*) FROM survey_answers WHERE question_id BETWEEN 273 AND 281";
+    $updateSqlC = "UPDATE survey_answers SET question_id = question_id + 17 WHERE question_id BETWEEN 273 AND 281";
 
     while ($attempt < $max_retries && !$success) {
         try {
             $countA = fetchOne($dbType, $db, $checkSqlA);
             $countB = fetchOne($dbType, $db, $checkSqlB);
+            $countC = fetchOne($dbType, $db, $checkSqlC);
 
-            if ($countA == 0 && $countB == 0) {
+            if ($countA == 0 && $countB == 0 && $countC == 0) {
                 echo "No data to fix (0 rows in old ranges).\n";
                 $success = true;
                 break;
@@ -96,7 +101,8 @@ try {
 
             echo "Attempt " . ($attempt + 1) . ":\n";
             echo " - Found $countA rows in range 86-94 (Original)\n";
-            echo " - Found $countB rows in range 137-145 (Intermediate)\n";
+            echo " - Found $countB rows in range 137-145 (Fix v1)\n";
+            echo " - Found $countC rows in range 273-281 (Fix v2)\n";
 
             // BEGIN
             if ($dbType === 'leaf') {
@@ -105,6 +111,8 @@ try {
                     $db->query($updateSqlA)->execute();
                 if ($countB > 0)
                     $db->query($updateSqlB)->execute();
+                if ($countC > 0)
+                    $db->query($updateSqlC)->execute();
                 $db->query("COMMIT")->execute();
             } else {
                 $db->beginTransaction();
@@ -112,11 +120,13 @@ try {
                     $db->exec($updateSqlA);
                 if ($countB > 0)
                     $db->exec($updateSqlB);
+                if ($countC > 0)
+                    $db->exec($updateSqlC);
                 $db->commit();
             }
 
             $success = true;
-            echo "Successfully updated rows to target range 273-281.\n";
+            echo "Successfully updated rows to target range 290-298.\n";
 
         } catch (Exception $e) {
             // Rollback
