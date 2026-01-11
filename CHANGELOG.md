@@ -8,16 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.0] - 2026-01-11
 
 ### Added
+- **Data Management Hub** (`/admin/data`):
+  - New centralized hub for all data-related operations (Import, Document Helper, Download Berkas)
+  - Moved Import Data Peserta from System Tools to Data Management Hub
+  - Created `DataManagementController` with hub view
+  - Enhanced breadcrumbs for all sub-pages (Import, Document Helper, Download Berkas)
+  - Added "Kembali ke Data Management" back buttons on all sub-pages
+  
 - **Menu Reorganization**: Implemented hybrid hub-based navigation structure
   - **New Hubs**:
     - Registrasi / Daftar Ulang Hub (`/admin/registration`) - Houses Export Tagihan and future registration tools
-    - Master Data Hub (`/admin/master`) - Centralizes Semester, Ruang Ujian, and Sesi Ujian management
-    - System Tools Hub (`/admin/tools`) - Consolidates Migration, Settings, and User Management
+    - Master Data Hub (`/admin/master`) - Centralizes Semester, Ruang Ujian, Sesi Ujian, and Daya Tampung
+    - System Tools Hub (`/admin/tools`) - Database Tools (Migration) + System Configuration (Settings, User Management)
   - **Expanded Hubs**:
     - Assessment Hub - Added Input Nilai TPA (moved from direct sidebar access)
-  - **Controllers**: Created `RegistrationController`, `MasterDataController`, and `ToolsController`
-  - **Routes**: Added `/admin/registration`, `/admin/master`, `/admin/assessment`, `/admin/tools` hub routes
+  - **Controllers**: Created `RegistrationController`, `MasterDataController`, `ToolsController`, and `DataManagementController`
+  - **Routes**: Added `/admin/registration`, `/admin/master`, `/admin/assessment`, `/admin/tools`, `/admin/data` hub routes
   - Sidebar is now cleaner with consistent navigation UX across all user roles
+  
 - **Breadcrumb & Navigation Improvements**:
   - **Hierarchical Breadcrumbs**: All hub sub-pages now show proper hierarchy (Home > Hub > Current Page)
   - **Back Buttons**: Added "Kembali ke Hub" buttons below page titles for easier navigation
@@ -26,8 +34,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Master Data Module: Rooms and Sessions pages (2 pages)
     - System Tools Module: Migration page (1 page)
     - Registration Module: Payment Export page (1 page)
-  - Total: 8 pages with improved navigation hierarchy
+    - Data Management Module: Import, Document Helper, Download Berkas (3 pages)
+  - Total: 11 pages with improved navigation hierarchy
   - Improves user orientation and reduces clicks needed to navigate back to hub pages
+
+### Changed
+- **Menu Redundancy Cleanup**:
+  - Changed Data Management Hub icon from `fas fa-database` to `fas fa-folder-open` (to differentiate from Master Data)
+  - Removed duplicate "Deploy from Dev" direct link from superadmin menu (already in System Tools Hub)
+  - Removed "Manajemen User" direct link from superadmin menu (now only in System Tools Hub)
+  - Fixed broken HTML tags in superadmin menu (`</a></li>` orphan tags)
+  
+- **Module Reorganization**:
+  - **Moved Daya Tampung**: From Assessment Hub → Master Data Hub (better categorization)
+  - Updated Daya Tampung breadcrumb to `Dashboard > Master Data > Daya Tampung`
+  - Removed Import and Migration cards from System Tools Hub (Import moved to Data Management, Migration stays as Database Tools)
+  - System Tools Hub now organized as: Database Tools (Migration) + System Configuration (Settings, User Management)
+
+### Fixed
+- Conditional breadcrumb and back button for Download Berkas (only shows hierarchy for roles with canImportExport)
+- HTML structure inconsistencies across various menu files
+- Enhanced user navigation experience with consistent hub-based structure
+
 
 ## [1.5.0] - 2026-01-11
 
