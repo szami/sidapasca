@@ -90,14 +90,17 @@ class ExamRoomController
             return;
 
         $data = Request::body();
-        $insertData = [
-            'fakultas' => $data['fakultas'],
-            'nama_ruang' => $data['nama_ruang'],
-            'kapasitas' => $data['kapasitas'],
-            'google_map_link' => $data['google_map_link'] ?? null
-        ];
 
-        Database::connection()->insert('exam_rooms')->params($insertData)->execute();
+        $fakultas = $data['fakultas'];
+        $nama = $data['nama_ruang'];
+        $kapasitas = $data['kapasitas'];
+        $link = $data['google_map_link'] ?? null;
+
+        $db = Database::connection();
+        $db->query("INSERT INTO exam_rooms (fakultas, nama_ruang, kapasitas, google_map_link) VALUES (?, ?, ?, ?)")
+            ->bind($fakultas, $nama, $kapasitas, $link)
+            ->execute();
+
         header('Location: /admin/master/rooms');
         exit;
     }
@@ -117,14 +120,17 @@ class ExamRoomController
             return;
 
         $data = Request::body();
-        $updateData = [
-            'fakultas' => $data['fakultas'],
-            'nama_ruang' => $data['nama_ruang'],
-            'kapasitas' => $data['kapasitas'],
-            'google_map_link' => $data['google_map_link'] ?? null
-        ];
 
-        Database::connection()->update('exam_rooms')->params($updateData)->where('id', $id)->execute();
+        $fakultas = $data['fakultas'];
+        $nama = $data['nama_ruang'];
+        $kapasitas = $data['kapasitas'];
+        $link = $data['google_map_link'] ?? null;
+
+        $db = Database::connection();
+        $db->query("UPDATE exam_rooms SET fakultas = ?, nama_ruang = ?, kapasitas = ?, google_map_link = ? WHERE id = ?")
+            ->bind($fakultas, $nama, $kapasitas, $link, $id)
+            ->execute();
+
         header('Location: /admin/master/rooms');
         exit;
     }

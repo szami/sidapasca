@@ -303,9 +303,14 @@ ob_start();
 </div>
 
 <script>
-    // Initialize Bootstrap 5 Modals
-    var scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'), {});
-    var importTPAModal = new bootstrap.Modal(document.getElementById('importTPAModal'), {});
+    var scoreModal;
+    var importTPAModal;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Bootstrap 5 Modals
+        scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'), {});
+        importTPAModal = new bootstrap.Modal(document.getElementById('importTPAModal'), {});
+    });
 
     // Data TPA Components from PHP
     var tpaComponents = <?php echo json_encode($tpaComponents); ?>;
@@ -452,7 +457,7 @@ ob_start();
                     document.getElementById('manual_tpa_score').value = data.nilai_tpa_total;
                     if (data.tpa_certificate_url) {
                         // Use secure route
-                         linkDir.innerHTML = `<a href="/admin/assessment/tpa/certificate/${id}" target="_blank" class="btn btn-sm btn-info mt-1"><i class="fas fa-file"></i> Lihat Sertifikat</a>`;
+                        linkDir.innerHTML = `<a href="/admin/assessment/tpa/certificate/${id}" target="_blank" class="btn btn-sm btn-info mt-1"><i class="fas fa-file"></i> Lihat Sertifikat</a>`;
                     }
                 }
 

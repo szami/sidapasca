@@ -412,28 +412,7 @@ class AssessmentController
         exit;
     }
 
-    /**
-     * Save TPA Threshold Settings per Jenjang (S2, S3)
-     */
-    public function saveTpaThreshold()
-    {
-        $this->checkAuth();
 
-        // Only Admin/Superadmin
-        if (\App\Utils\RoleHelper::isAdminProdi()) {
-            header('Location: /admin/assessment/scores?error=unauthorized');
-            exit;
-        }
-
-        $thresholdS2 = intval(Request::get('threshold_s2') ?? 450);
-        $thresholdS3 = intval(Request::get('threshold_s3') ?? 500);
-
-        \App\Models\Setting::set('tpa_threshold_s2', strval($thresholdS2));
-        \App\Models\Setting::set('tpa_threshold_s3', strval($thresholdS3));
-
-        header('Location: /admin/assessment/scores?success=tpa_threshold_saved');
-        exit;
-    }
 
     /**
      * Save Bidang Assessment Schedule (Admin/Superadmin only)
@@ -1845,6 +1824,25 @@ class AssessmentController
         header('Content-Disposition: inline; filename="' . $filename . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
+        exit;
+    }
+    public function saveTpaThreshold()
+    {
+        $this->checkAuth();
+
+        // Only Admin/Superadmin
+        if (\App\Utils\RoleHelper::isAdminProdi()) {
+            header('Location: /admin/assessment/tpa?error=unauthorized');
+            exit;
+        }
+
+        $s2 = $_POST['threshold_s2'] ?? '450';
+        $s3 = $_POST['threshold_s3'] ?? '500';
+
+        \App\Models\Setting::set('tpa_threshold_s2', $s2);
+        \App\Models\Setting::set('tpa_threshold_s3', $s3);
+
+        header('Location: /admin/assessment/tpa?success=threshold_saved');
         exit;
     }
 }
